@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply m-0 p-0 overflow-hidden bg-slate-900 text-white;
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  #app {
+    @apply h-screen w-screen;
+  }
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
