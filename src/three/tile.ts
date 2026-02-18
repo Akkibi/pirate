@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { objectPool } from './instancedModelManger';
 
 export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
 
@@ -6,9 +7,13 @@ export class Tile {
   public position: THREE.Vector2;
   public tileGroup: THREE.Group;
   public state: TileStateType;
+  private idx: number;
+  private waterIdx: number;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
     this.position = position;
+    this.idx = -1;
+    this.waterIdx = -1;
     this.tileGroup = new THREE.Group();
     this.state = state;
     this.tileGroup.position.set(position.x, 0, position.y);
@@ -20,41 +25,37 @@ export class Tile {
     this.state = newState;
     this.tileGroup.remove(...this.tileGroup.children);
 
-    const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.99, 0.99),
-      new THREE.MeshBasicMaterial({ color: 0x00ffff })
-    );
-    water.position.y = -0.25;
-    water.rotation.x = -Math.PI / 2;
-    this.tileGroup.add(water);
+    if (this.idx !== -1) {
+      console.log('releasing tile', this.state, this.position);
+      objectPool.releaseInstance(this.state, this.idx);
+    }
+    if (this.waterIdx !== -1) {
+      console.log('releasing tile', 'water', this.position);
+      objectPool.releaseInstance(this.state, this.idx);
+    }
 
-    switch (this.state) {
-      case 'monster':
-        this.tileGroup.add(
-          new THREE.Mesh(
-            new THREE.SphereGeometry(0.25),
-            new THREE.MeshBasicMaterial({ color: 0xff0000 })
-          )
-        );
-        break;
-      case 'typhon':
-        this.tileGroup.add(
-          new THREE.Mesh(
-            new THREE.ConeGeometry(0.25, 0.25),
-            new THREE.MeshBasicMaterial({ color: 0xff00ff })
-          )
-        );
-        break;
-      case 'island':
-        this.tileGroup.add(
-          new THREE.Mesh(
-            new THREE.CylinderGeometry(0.25, 0.25, 0.25),
-            new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-          )
-        );
-        break;
-      default:
-        break;
+    // place tile with model
+    if (this.state !== 'water') {
+      this.idx = objectPool.reserveInstance(this.state);
+      objectPool.updateTransformFull(
+        this.state,
+        this.idx,
+        new THREE.Vector3(this.position.x, 0, this.position.y),
+        this.state === 'typhon'
+          ? new THREE.Euler(0, 0, 0)
+          : new THREE.Euler(0, Math.PI * 2 * Math.random(), 0),
+        new THREE.Vector3(0.5, 0.5, 0.5)
+      );
+    }
+    if (this.state !== 'typhon') {
+      // place water
+      this.waterIdx = objectPool.reserveInstance('water');
+      objectPool.updatePosition(
+        'water',
+        this.waterIdx,
+        new THREE.Vector3(this.position.x, 0, this.position.y)
+      );
+      objectPool.updateScale('water', this.waterIdx, new THREE.Vector3(0.5, 0.5, 0.5));
     }
   }
 }

@@ -26,8 +26,8 @@ export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyB
   const skyHorizon = vec3(0.2, 0.4, 1.0);
 
   // Water colors
-  const waterTop = vec3(0.1, 0.2, 0.4);
-  const waterBottom = vec3(0.02, 0.12, 0.22);
+  const waterTop = vec3(0.1, 0.1, 0.5);
+  const waterBottom = vec3(0.0, 0.3, 0.7);
 
   // Sky gradient
   const skyT = y.sub(horizon).div(float(1.0).sub(horizon)).clamp(0, 1);

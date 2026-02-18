@@ -10,7 +10,7 @@ export class Camera {
     this.cameraGroup.add(this.camera);
     scene.add(this.cameraGroup);
     this.camera.position.z = -5;
-    this.camera.position.x = -5;
+    this.camera.position.x = -3;
     this.camera.position.y = 5;
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
   }

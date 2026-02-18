@@ -1,5 +1,4 @@
 import * as THREE from 'three/webgpu';
-import { color } from 'three/src/nodes/TSL.js';
 import { Camera } from './camera';
 import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
@@ -9,7 +8,6 @@ export class SceneManager {
   private camera: Camera;
   private renderer: THREE.WebGPURenderer;
   private canvas: HTMLCanvasElement;
-  private torus: THREE.Mesh;
   private onWindowResize: () => void;
   private width: number;
   private height: number;
@@ -37,20 +35,6 @@ export class SceneManager {
     this.scene.add(this.seaSky.mesh);
 
     this.mapManager = new MapManager(this.scene);
-    this.mapManager.generateMap();
-
-    // Create geometry
-    const torusGeometry = new THREE.TorusGeometry(3.5, 0.3, 16, 100);
-
-    // Create materials
-    const torusColorNode = color(0xffe66d);
-    const torusMaterial = new THREE.MeshBasicNodeMaterial();
-    torusMaterial.colorNode = torusColorNode;
-    torusMaterial.opacity = 0.9;
-    this.torus = new THREE.Mesh(torusGeometry, torusMaterial);
-    this.torus.position.x = 2.5;
-
-    this.scene.add(this.torus);
 
     // Add lighting
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -82,11 +66,7 @@ export class SceneManager {
   startAnimation(): void {
     window.addEventListener('resize', this.onWindowResize);
     this.renderer.setAnimationLoop((time: number) => {
-      if (this.torus) {
-        this.torus.rotation.x += 0.008;
-        this.torus.rotation.y += 0.012;
-      }
-
+      this.mapManager.update(time);
       this.renderer.render(this.scene, this.camera.getNative());
       this.seaSky.update(time);
     });
