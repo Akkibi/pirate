@@ -1,0 +1,17 @@
+@font-face {
+	font-family: 'Black Crest';
+	src: url('/fonts/BlackCrest.woff2') format('woff2'),
+		url('/fonts/BlackCrest.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Black Crest Slant';
+	src: url('/fonts/Dika3AgustusLogo-PiratesItalic.woff2') format('woff2'),
+		url('/fonts/Dika3AgustusLogo-PiratesItalic.woff') format('woff');
+	font-weight: normal;
+	font-style: italic;
+	font-display: swap;
+}
