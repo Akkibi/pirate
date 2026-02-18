@@ -1,6 +1,12 @@
 <template>
-  <div ref="containerRef" class="w-full h-full inset-0 absolute overflow-hidden">
-    <canvas ref="canvasRef" class="block w-full h-full absolute inset-0"></canvas>
+  <div
+    ref="containerRef"
+    class="w-full h-full inset-0 absolute overflow-hidden"
+  >
+    <canvas
+      ref="canvasRef"
+      class="block w-full h-full absolute inset-0"
+    ></canvas>
     <div
       class="absolute bottom-4 left-4 bg-black bg-opacity-50 p-4 rounded text-sm text-white w-fit"
     >
@@ -10,8 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { SceneManager } from '../three/sceneManager';
+import { ref, onMounted, onUnmounted } from "vue";
+import { SceneManager } from "../three/sceneManager";
 
 const containerRef = ref<HTMLDivElement>();
 const canvasRef = ref<HTMLCanvasElement>();

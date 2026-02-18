@@ -11,16 +11,16 @@ export default [
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
-      // globals: {
-      //   window: 'readonly',
-      //   document: 'readonly',
-      //   navigator: 'readonly',
-      //   requestAnimationFrame: 'readonly',
-      //   cancelAnimationFrame: 'readonly',
-      //   HTMLCanvasElement: 'readonly',
-      //   HTMLDivElement: 'readonly',
-      //   GPUCanvasContext: 'readonly',
-      // },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        GPUCanvasContext: 'readonly',
+      },
       parserOptions: {
         parser: tseslint.parser,
         ecmaFeatures: {

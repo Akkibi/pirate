@@ -1,112 +1,120 @@
-import * as THREE from 'three/webgpu';
-import { color } from 'three/src/nodes/TSL.js';
-import { Camera } from './camera';
-import { MapManager } from './mapManager';
-import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
+import * as THREE from "three/webgpu";
+import { color } from "three/src/nodes/TSL.js";
+import { Camera } from "./camera";
+import { MapManager } from "./mapManager";
+import { createSeaSkyBackground, type SeaSkyBackground } from "./skytexture";
+import { gameEvents } from "../events/gameEvents";
 
 export class SceneManager {
-  private scene: THREE.Scene;
-  private camera: Camera;
-  private renderer: THREE.WebGPURenderer;
-  private canvas: HTMLCanvasElement;
-  private torus: THREE.Mesh;
-  private onWindowResize: () => void;
-  private width: number;
-  private height: number;
-  private mapManager: MapManager;
-  private seaSky: SeaSkyBackground;
+	private scene: THREE.Scene;
+	private camera: Camera;
+	private renderer: THREE.WebGPURenderer;
+	private canvas: HTMLCanvasElement;
+	private torus: THREE.Mesh;
+	private onWindowResize: () => void;
+	private width: number;
+	private height: number;
+	private mapManager: MapManager;
+	private seaSky: SeaSkyBackground;
 
-  constructor(canvas: HTMLCanvasElement, width: number, height: number) {
-    this.canvas = canvas;
-    this.width = width;
-    this.height = height;
+	constructor(canvas: HTMLCanvasElement, width: number, height: number) {
+		this.canvas = canvas;
+		this.width = width;
+		this.height = height;
 
-    // Initialize scene
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x00ffff);
+		// Initialize scene
+		this.scene = new THREE.Scene();
+		this.scene.background = new THREE.Color(0x00ffff);
 
-    // Initialize camera
-    this.camera = new Camera(this.scene, width, height);
-    this.camera.setPosition(0, 0, 0);
-    // Initialize renderer
-    this.renderer = new THREE.WebGPURenderer({
-      canvas: this.canvas,
-      forceWebGL: false,
-    });
-    this.seaSky = createSeaSkyBackground(this.camera.getNative());
-    this.scene.add(this.seaSky.mesh);
+		// Initialize camera
+		this.camera = new Camera(this.scene, width, height);
+		this.camera.setPosition(0, 0, 0);
+		// Initialize renderer
+		this.renderer = new THREE.WebGPURenderer({
+			canvas: this.canvas,
+			forceWebGL: false,
+		});
+		this.seaSky = createSeaSkyBackground(this.camera.getNative());
+		this.scene.add(this.seaSky.mesh);
 
-    this.mapManager = new MapManager(this.scene);
-    this.mapManager.generateMap();
+		this.mapManager = new MapManager(this.scene);
+		this.mapManager.generateMap();
 
-    // Create geometry
-    const torusGeometry = new THREE.TorusGeometry(3.5, 0.3, 16, 100);
+		// Create geometry
+		const torusGeometry = new THREE.TorusGeometry(3.5, 0.3, 16, 100);
 
-    // Create materials
-    const torusColorNode = color(0xffe66d);
-    const torusMaterial = new THREE.MeshBasicNodeMaterial();
-    torusMaterial.colorNode = torusColorNode;
-    torusMaterial.opacity = 0.9;
-    this.torus = new THREE.Mesh(torusGeometry, torusMaterial);
-    this.torus.position.x = 2.5;
+		// Create materials
+		const torusColorNode = color(0xffe66d);
+		const torusMaterial = new THREE.MeshBasicNodeMaterial();
+		torusMaterial.colorNode = torusColorNode;
+		torusMaterial.opacity = 0.9;
+		this.torus = new THREE.Mesh(torusGeometry, torusMaterial);
+		this.torus.position.x = 2.5;
 
-    this.scene.add(this.torus);
+		gameEvents.on("crew:move", ({ from, to }) => {
+			// animate boat movement in 3D
+			// when done:
+			gameEvents.emit("animation:complete", { name: "crew:move" });
+		});
 
-    // Add lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    this.scene.add(light);
+		this.scene.add(this.torus);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    this.scene.add(ambientLight);
+		// Add lighting
+		const light = new THREE.DirectionalLight(0xffffff, 1);
+		light.position.set(5, 5, 5);
+		this.scene.add(light);
 
-    // Setup resize handler
-    this.onWindowResize = this.handleWindowResize.bind(this);
-  }
+		const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+		this.scene.add(ambientLight);
 
-  async init(): Promise<void> {
-    await this.renderer.init();
-    console.log('Using WebGPU:', this.renderer.backend.renderer);
-    this.renderer.setSize(this.width, this.height);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-  }
+		// Setup resize handler
+		this.onWindowResize = this.handleWindowResize.bind(this);
+	}
 
-  private handleWindowResize(): void {
-    const newWidth = this.canvas.parentElement?.clientWidth || this.width;
-    const newHeight = this.canvas.parentElement?.clientHeight || this.height;
+	async init(): Promise<void> {
+		await this.renderer.init();
+		console.log("Using WebGPU:", this.renderer.backend.renderer);
+		this.renderer.setSize(this.width, this.height);
+		this.renderer.setPixelRatio(window.devicePixelRatio);
+	}
 
-    this.camera.updateAspect(newWidth, newHeight);
-    this.renderer.setSize(newWidth, newHeight);
-  }
+	private handleWindowResize(): void {
+		const newWidth = this.canvas.parentElement?.clientWidth || this.width;
+		const newHeight =
+			this.canvas.parentElement?.clientHeight || this.height;
 
-  startAnimation(): void {
-    window.addEventListener('resize', this.onWindowResize);
-    this.renderer.setAnimationLoop((time: number) => {
-      if (this.torus) {
-        this.torus.rotation.x += 0.008;
-        this.torus.rotation.y += 0.012;
-      }
+		this.camera.updateAspect(newWidth, newHeight);
+		this.renderer.setSize(newWidth, newHeight);
+	}
 
-      this.renderer.render(this.scene, this.camera.getNative());
-      this.seaSky.update(time);
-    });
-  }
+	startAnimation(): void {
+		window.addEventListener("resize", this.onWindowResize);
+		this.renderer.setAnimationLoop((time: number) => {
+			if (this.torus) {
+				this.torus.rotation.x += 0.008;
+				this.torus.rotation.y += 0.012;
+			}
 
-  dispose(): void {
-    window.removeEventListener('resize', this.onWindowResize);
-    this.renderer.setAnimationLoop(null);
-    this.renderer.dispose();
-  }
+			this.renderer.render(this.scene, this.camera.getNative());
+			this.seaSky.update(time);
+		});
+	}
 
-  getScene(): THREE.Scene {
-    return this.scene;
-  }
+	dispose(): void {
+		window.removeEventListener("resize", this.onWindowResize);
+		this.renderer.setAnimationLoop(null);
+		this.renderer.dispose();
+	}
 
-  getCamera(): Camera {
-    return this.camera;
-  }
+	getScene(): THREE.Scene {
+		return this.scene;
+	}
 
-  getRenderer(): THREE.WebGPURenderer {
-    return this.renderer;
-  }
+	getCamera(): Camera {
+		return this.camera;
+	}
+
+	getRenderer(): THREE.WebGPURenderer {
+		return this.renderer;
+	}
 }
