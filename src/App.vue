@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import Canvas from "./components/canvas.vue";
-import Landing from "./components/landing.vue";
-import { initGame } from "./main";
+import { ref } from 'vue';
+import Canvas from './components/canvas.vue';
+import Landing from './components/landing.vue';
+import { initGame } from './main';
 
 const started = ref(false);
 

@@ -3,16 +3,17 @@ import { Camera } from './camera';
 import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
+import { StoreAdapter } from '../storeAdapter';
 
 export class SceneManager {
   private scene: THREE.Scene;
-  private camera: Camera;
+  public camera: Camera;
   private renderer: THREE.WebGPURenderer;
   private canvas: HTMLCanvasElement;
   private onWindowResize: () => void;
   private width: number;
   private height: number;
-  private mapManager: MapManager;
+  public mapManager: MapManager;
   private seaSky: SeaSkyBackground;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
@@ -37,13 +38,7 @@ export class SceneManager {
 
     this.mapManager = new MapManager(this.scene);
 
-    // Add lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    this.scene.add(light);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    this.scene.add(ambientLight);
+    new StoreAdapter(this);
 
     // Setup resize handler
     this.onWindowResize = this.handleWindowResize.bind(this);
@@ -64,16 +59,7 @@ export class SceneManager {
     this.renderer.setSize(newWidth, newHeight);
   }
 
-  // startAnimation(): void {
-  //   window.addEventListener('resize', this.onWindowResize);
-  //   this.renderer.setAnimationLoop((time: number) => {
-  //     this.mapManager.update(time);
-  //     this.renderer.render(this.scene, this.camera.getNative());
-  //     this.seaSky.update(time);
-  //   });
-  // }
-
-  startAnimation(): void {
+  public startAnimation(): void {
     window.addEventListener('resize', this.onWindowResize);
     gsap.ticker.add(this.animate);
   }
