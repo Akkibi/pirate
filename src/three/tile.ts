@@ -98,7 +98,7 @@ export class Tile {
       this.state === 'typhon'
         ? new THREE.Euler(0, 0, 0)
         : new THREE.Euler(0, Math.PI * 2 * Math.random(), 0),
-      new THREE.Vector3(0.5, 0.5, 0.5)
+      this.state === 'typhon' ? new THREE.Vector3(0.5, 0.5, 0.5) : new THREE.Vector3(0.4, 0.4, 0.4)
     );
   }
 
@@ -124,7 +124,7 @@ export class Tile {
         onUpdate: () => {
           const eased = ease(tween.progress());
           const progress = eased * scale; // 0 to 1, eased
-          console.log('progress', progress);
+          // console.log('progress', progress);
           this.updateFogPosition(this.fogPosition, this.fogDistance + progress);
         },
         ease: 'bounce.inOut',
@@ -138,7 +138,7 @@ export class Tile {
         onUpdate: () => {
           const eased = ease(tween.progress());
           const progress = scale - eased * scale; // 0 to 1, eased
-          console.log('progress', progress);
+          // console.log('progress', progress);
           this.updateFogPosition(this.fogPosition, this.fogDistance + progress);
         },
         ease: 'bounce.inOut',

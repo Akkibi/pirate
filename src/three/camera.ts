@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import type { PhaseType } from '../utils/gameStore';
 
 export class Camera {
   private cameraGroup: THREE.Group;
@@ -9,10 +10,15 @@ export class Camera {
     this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     this.cameraGroup.add(this.camera);
     scene.add(this.cameraGroup);
-    this.camera.position.z = -5;
-    this.camera.position.x = -3;
-    this.camera.position.y = 5;
+    this.camera.position.z = 0;
+    this.camera.position.x = -6;
+    this.camera.position.y = 7;
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
+  }
+
+  setPhase(phase: PhaseType): void {
+    // Implement phase-specific camera settings here
+    console.log(phase);
   }
 
   getNative(): THREE.PerspectiveCamera {

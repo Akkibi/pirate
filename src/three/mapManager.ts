@@ -1,7 +1,9 @@
 import * as THREE from 'three/webgpu';
-import { Tile, type TileStateType } from './tile';
+import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { mapGenerator } from './mapGenerator';
+import type { PhaseType } from '../utils/gameStore';
 
 const TILE_AMOUNT_X = 11;
 const TILE_AMOUNT_Y = 15;
@@ -34,17 +36,18 @@ export class MapManager {
       console.log('all loaded');
       this.generateMap();
       this.tiles.forEach((tile) => {
-        const distance = 0.4;
+        // const distance = 0.4;
+        const distance = 10;
         tile.updateFogDistance(new THREE.Vector2(2, 2), distance);
       });
     });
 
-    setInterval(() => {
-      this.hideEntities();
-      setTimeout(() => {
-        this.displayEntities();
-      }, 5000);
-    }, 10000);
+    // setInterval(() => {
+    //   this.hideEntities();
+    //   setTimeout(() => {
+    //     this.displayEntities();
+    //   }, 5000);
+    // }, 15000);
   }
 
   generateMap(): void {
@@ -73,18 +76,41 @@ export class MapManager {
       this.mapGroup.add(this.bird);
     });
 
-    for (let x = 0; x < TILE_AMOUNT_X; x++) {
-      for (let y = 0; y < TILE_AMOUNT_Y; y++) {
-        const bad = Math.random() < 0.5 ? 'monster' : 'typhon';
-        const good = Math.random() < 0.5 ? 'island' : 'water';
+    const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
+    console.log(newMap);
+    newMap.map((mapArrayY, x) => {
+      mapArrayY.map((mapValue, y) => {
+        const flippedCoin = Math.random() < 0.15 ? 1 : 0;
 
-        const tileType = Math.random() < 0.5 ? bad : good;
+        const bad =
+          y % 2 === 0
+            ? x % 2 === flippedCoin
+              ? 'monster'
+              : 'typhon'
+            : x % 2 === 1
+              ? 'monster'
+              : 'typhon';
+        const good =
+          y % 2 === 0
+            ? x % 2 === flippedCoin
+              ? 'island'
+              : 'water'
+            : x % 2 === 1
+              ? 'island'
+              : 'water';
+
+        // const tileType = Math.random() < 0.5 ? bad : good;
+        console.log('tile :', mapValue);
+
+        const randomizedMapValue = Math.random() < 0.25 ? mapValue : !mapValue;
+
+        const tileType = randomizedMapValue ? bad : good;
 
         const tile = new Tile(new THREE.Vector2(x, y), tileType);
         this.tiles.push(tile);
         this.mapGroup.add(tile.tileGroup);
-      }
-    }
+      });
+    });
   }
 
   public update(time: number) {
@@ -105,5 +131,13 @@ export class MapManager {
     this.tiles.map((tile) => {
       tile.hide();
     });
+  }
+
+  public setPhase(phase: PhaseType): void {
+    if (phase === 'crew') {
+      this.displayEntities();
+    } else {
+      this.hideEntities();
+    }
   }
 }

@@ -14,20 +14,16 @@
     <button class="text-4xl p-8">Rules</button>
   </div>
   <div class="w-screen h-screen absolute top-0 -z-10 blur-md">
-    <img
-      class="object-cover w-full h-full"
-      src="/images/background.png"
-      alt="background"
-    />
+    <img class="object-cover w-full h-full" src="/images/background.png" alt="background" />
   </div>
 </template>
 
 <script setup lang="ts">
-const emit = defineEmits<{ (event: "start"): void }>();
+const emit = defineEmits<{ (event: 'start'): void }>();
 </script>
 
 <style>
 #title {
-  font-family: "Black Crest";
+  font-family: 'Black Crest';
 }
 </style>

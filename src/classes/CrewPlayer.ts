@@ -9,14 +9,22 @@ export class CrewPlayer {
 	constructor(position: Position, mapManager: MapManager) {
 		this.position = position;
 		this.life_points = 3;
-		this.mapManager = mapManager;
+    this.mapManager = mapManager;
+
+    // fake move data TODO:REMOVE
+    const positionList = [new ]
+
+
+    this.mapManager.moveBoat(new THREE.Vector2(0, 0));
+    this.
+
 	}
 
 	public function moveBoat(to: Position) {
-		
+
 		const nextTile: Tile;
 		// this.mapManager.getTile()
-		
+
 		if (nextTile.state === 'monster') {
 			if ()
 		}
