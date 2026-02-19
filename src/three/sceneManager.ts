@@ -1,21 +1,19 @@
-import * as THREE from "three/webgpu";
-import { color } from "three/src/nodes/TSL.js";
-import { Camera } from "./camera";
-import { MapManager } from "./mapManager";
-import { createSeaSkyBackground, type SeaSkyBackground } from "./skytexture";
-import { gameEvents } from "../events/gameEvents";
+import * as THREE from 'three/webgpu';
+import { Camera } from './camera';
+import { MapManager } from './mapManager';
+import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
+import { gsap } from 'gsap';
 
 export class SceneManager {
-	private scene: THREE.Scene;
-	private camera: Camera;
-	private renderer: THREE.WebGPURenderer;
-	private canvas: HTMLCanvasElement;
-	private torus: THREE.Mesh;
-	private onWindowResize: () => void;
-	private width: number;
-	private height: number;
-	private mapManager: MapManager;
-	private seaSky: SeaSkyBackground;
+  private scene: THREE.Scene;
+  private camera: Camera;
+  private renderer: THREE.WebGPURenderer;
+  private canvas: HTMLCanvasElement;
+  private onWindowResize: () => void;
+  private width: number;
+  private height: number;
+  private mapManager: MapManager;
+  private seaSky: SeaSkyBackground;
 
 	constructor(canvas: HTMLCanvasElement, width: number, height: number) {
 		this.canvas = canvas;
@@ -26,36 +24,18 @@ export class SceneManager {
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.Color(0x00ffff);
 
-		// Initialize camera
-		this.camera = new Camera(this.scene, width, height);
-		this.camera.setPosition(0, 0, 0);
-		// Initialize renderer
-		this.renderer = new THREE.WebGPURenderer({
-			canvas: this.canvas,
-			forceWebGL: false,
-		});
-		this.seaSky = createSeaSkyBackground(this.camera.getNative());
-		this.scene.add(this.seaSky.mesh);
+    // Initialize camera
+    this.camera = new Camera(this.scene, width, height);
+    this.camera.setPosition(2, -1, 2);
+    // Initialize renderer
+    this.renderer = new THREE.WebGPURenderer({
+      canvas: this.canvas,
+      forceWebGL: false,
+    });
+    this.seaSky = createSeaSkyBackground(this.camera.getNative());
+    this.scene.add(this.seaSky.mesh);
 
-		this.mapManager = new MapManager(this.scene);
-		this.mapManager.generateMap();
-
-		// Create geometry
-		const torusGeometry = new THREE.TorusGeometry(3.5, 0.3, 16, 100);
-
-		// Create materials
-		const torusColorNode = color(0xffe66d);
-		const torusMaterial = new THREE.MeshBasicNodeMaterial();
-		torusMaterial.colorNode = torusColorNode;
-		torusMaterial.opacity = 0.9;
-		this.torus = new THREE.Mesh(torusGeometry, torusMaterial);
-		this.torus.position.x = 2.5;
-
-		gameEvents.on("crew:move", ({ from, to }) => {
-			// animate boat movement in 3D
-			// when done:
-			gameEvents.emit("animation:complete", { name: "crew:move" });
-		});
+    this.mapManager = new MapManager(this.scene);
 
 		this.scene.add(this.torus);
 
@@ -83,22 +63,31 @@ export class SceneManager {
 		const newHeight =
 			this.canvas.parentElement?.clientHeight || this.height;
 
-		this.camera.updateAspect(newWidth, newHeight);
-		this.renderer.setSize(newWidth, newHeight);
-	}
+  // startAnimation(): void {
+  //   window.addEventListener('resize', this.onWindowResize);
+  //   this.renderer.setAnimationLoop((time: number) => {
+  //     this.mapManager.update(time);
+  //     this.renderer.render(this.scene, this.camera.getNative());
+  //     this.seaSky.update(time);
+  //   });
+  // }
 
-	startAnimation(): void {
-		window.addEventListener("resize", this.onWindowResize);
-		this.renderer.setAnimationLoop((time: number) => {
-			if (this.torus) {
-				this.torus.rotation.x += 0.008;
-				this.torus.rotation.y += 0.012;
-			}
+  startAnimation(): void {
+    window.addEventListener('resize', this.onWindowResize);
+    gsap.ticker.add(this.animate);
+  }
 
-			this.renderer.render(this.scene, this.camera.getNative());
-			this.seaSky.update(time);
-		});
-	}
+  private animate = (time: number) => {
+    this.mapManager.update(time * 1000);
+    this.renderer.render(this.scene, this.camera.getNative());
+    this.seaSky.update(time * 1000);
+  };
+
+  dispose(): void {
+    window.removeEventListener('resize', this.onWindowResize);
+    gsap.ticker.remove(this.animate);
+    this.renderer.dispose();
+  }
 
 	dispose(): void {
 		window.removeEventListener("resize", this.onWindowResize);
