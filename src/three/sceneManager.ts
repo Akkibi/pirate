@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { Camera } from './camera';
 import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
+import { gsap } from 'gsap';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -25,7 +26,7 @@ export class SceneManager {
 
     // Initialize camera
     this.camera = new Camera(this.scene, width, height);
-    this.camera.setPosition(0, 0, 0);
+    this.camera.setPosition(2, -1, 2);
     // Initialize renderer
     this.renderer = new THREE.WebGPURenderer({
       canvas: this.canvas,
@@ -63,18 +64,29 @@ export class SceneManager {
     this.renderer.setSize(newWidth, newHeight);
   }
 
+  // startAnimation(): void {
+  //   window.addEventListener('resize', this.onWindowResize);
+  //   this.renderer.setAnimationLoop((time: number) => {
+  //     this.mapManager.update(time);
+  //     this.renderer.render(this.scene, this.camera.getNative());
+  //     this.seaSky.update(time);
+  //   });
+  // }
+
   startAnimation(): void {
     window.addEventListener('resize', this.onWindowResize);
-    this.renderer.setAnimationLoop((time: number) => {
-      this.mapManager.update(time);
-      this.renderer.render(this.scene, this.camera.getNative());
-      this.seaSky.update(time);
-    });
+    gsap.ticker.add(this.animate);
   }
+
+  private animate = (time: number) => {
+    this.mapManager.update(time * 1000);
+    this.renderer.render(this.scene, this.camera.getNative());
+    this.seaSky.update(time * 1000);
+  };
 
   dispose(): void {
     window.removeEventListener('resize', this.onWindowResize);
-    this.renderer.setAnimationLoop(null);
+    gsap.ticker.remove(this.animate);
     this.renderer.dispose();
   }
 

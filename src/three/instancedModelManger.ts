@@ -279,7 +279,7 @@ export class InstancedModelManager {
 
   private getPool(name: string): InstancePool {
     const pool = this.pools.get(name);
-    console.log(`Getting pool "${name}"`, pool);
+    // console.log(`Getting pool "${name}"`, pool);
     if (!pool) throw new Error(`Unknown pool: "${name}"`);
     return pool;
   }

@@ -11,6 +11,7 @@ const tileTypes = [
   { name: 'island', url: './models/island.glb' },
   { name: 'monster', url: './models/monster.glb' },
   { name: 'typhon', url: './models/typhon.glb' },
+  { name: 'fog', url: './models/fog.glb' },
 ];
 
 export class MapManager {
@@ -32,7 +33,18 @@ export class MapManager {
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
       this.generateMap();
+      this.tiles.forEach((tile) => {
+        const distance = 0.4;
+        tile.updateFogDistance(new THREE.Vector2(2, 2), distance);
+      });
     });
+
+    setInterval(() => {
+      this.hideEntities();
+      setTimeout(() => {
+        this.displayEntities();
+      }, 5000);
+    }, 10000);
   }
 
   generateMap(): void {
@@ -77,15 +89,21 @@ export class MapManager {
 
   public update(time: number) {
     this.boat.rotation.y += 0.001;
-    this.boat.rotation.z = Math.sin(time * 0.001) * 0.5;
+    this.boat.rotation.z = Math.sin(time * 0.001 - 1) * 0.5;
 
     this.bird.rotation.y += 0.003;
+    this.bird.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
   }
 
-  updateTile(x: number, y: number, state: TileStateType): void {
-    const tile = this.tiles.find((t) => t.position.x === x && t.position.y === y);
-    if (tile) {
-      tile.updateState(state);
-    }
+  public displayEntities() {
+    this.tiles.map((tile) => {
+      tile.show();
+    });
+  }
+
+  public hideEntities() {
+    this.tiles.map((tile) => {
+      tile.hide();
+    });
   }
 }
