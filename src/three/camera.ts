@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import type { PhaseType } from '../utils/gameStore';
+import gsap from 'gsap';
 
 export class Camera {
   private cameraGroup: THREE.Group;
@@ -34,7 +35,15 @@ export class Camera {
     return this.cameraGroup.position;
   }
 
-  setPosition(x: number, y: number, z: number): void {
-    this.cameraGroup.position.set(x, y, z);
+  setPosition(position: THREE.Vector2): void {
+    console.log('position', position);
+    gsap.to(this.cameraGroup.position, {
+      x: position.x,
+      y: this.cameraGroup.position.y,
+      z: position.y,
+      duration: 0.5,
+      ease: 'expo.Out',
+      overwrite: true,
+    });
   }
 }

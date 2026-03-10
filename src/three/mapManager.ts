@@ -3,7 +3,7 @@ import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mapGenerator } from './mapGenerator';
-import type { PhaseType } from '../utils/gameStore';
+import { gameState, type PhaseType } from '../utils/gameStore';
 
 const TILE_AMOUNT_X = 11;
 const TILE_AMOUNT_Y = 15;
@@ -20,8 +20,6 @@ export class MapManager {
   private scene: THREE.Scene;
   private mapGroup: THREE.Group;
   private tiles: Tile[];
-  private boat: THREE.Object3D;
-  private bird: THREE.Object3D;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -29,51 +27,36 @@ export class MapManager {
     this.tiles = [];
     this.scene.add(this.mapGroup);
 
-    this.boat = new THREE.Object3D();
-    this.bird = new THREE.Group();
-
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
       this.generateMap();
-      this.tiles.forEach((tile) => {
-        // const distance = 0.4;
-        const distance = 10;
-        tile.updateFogDistance(new THREE.Vector2(2, 2), distance);
-      });
+      this.updateFog();
     });
 
-    // setInterval(() => {
-    //   this.hideEntities();
-    //   setTimeout(() => {
-    //     this.displayEntities();
-    //   }, 5000);
-    // }, 15000);
+    setInterval(() => {
+      this.hideEntities();
+      setTimeout(() => {
+        this.displayEntities();
+      }, 5000);
+    }, 15000);
+  }
+
+  updateFog() {
+    this.tiles.forEach((tile) => {
+      // const distance = 0.4;
+      const distance = 0.4;
+      tile.setFogPosition(new THREE.Vector2(2, 2));
+      tile.setFogAmount(distance);
+    });
   }
 
   generateMap(): void {
-    // Generate map logic here
-    this.mapGroup.remove(this.bird);
-
     // load gltf from model/board.gltf and put in scene
     const loader = new GLTFLoader();
     loader.load('models/board.glb', (gltf) => {
       const model = gltf.scene;
-      model.position.add(new THREE.Vector3(0, -0.5, 0));
+      model.position.add(new THREE.Vector3(0, -0.75, 0));
       this.mapGroup.add(model);
-    });
-
-    loader.load('models/boat.glb', (gltf) => {
-      this.boat = gltf.scene;
-      this.boat.scale.multiplyScalar(0.5);
-      this.boat.position.add(new THREE.Vector3(2, 0, 2));
-      this.mapGroup.add(this.boat);
-    });
-
-    loader.load('models/bird.glb', (gltf) => {
-      this.bird.add(gltf.scene);
-      this.bird.scale.multiplyScalar(0.5);
-      this.bird.position.add(new THREE.Vector3(2, 0, 2));
-      this.mapGroup.add(this.bird);
     });
 
     const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
@@ -113,14 +96,6 @@ export class MapManager {
     });
   }
 
-  public update(time: number) {
-    this.boat.rotation.y += 0.001;
-    this.boat.rotation.z = Math.sin(time * 0.001 - 1) * 0.5;
-
-    this.bird.rotation.y += 0.003;
-    this.bird.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
-  }
-
   public displayEntities() {
     this.tiles.map((tile) => {
       tile.show();
@@ -139,5 +114,18 @@ export class MapManager {
     } else {
       this.hideEntities();
     }
+  }
+
+  public setPlayerPosition(position: THREE.Vector2): void {
+    gameState.userPositionHistory.forEach(() => {});
+
+    this.tiles.forEach((tile) => {
+      tile.setFogPosition(position);
+      if (tile.position == position) {
+        tile.setActive();
+      } else {
+        tile.removeActive();
+      }
+    });
   }
 }

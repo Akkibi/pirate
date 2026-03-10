@@ -1,4 +1,4 @@
-import { reactive, watch } from 'vue';
+import { reactive } from 'vue';
 import * as THREE from 'three/webgpu';
 
 export type PhaseType = 'crew' | 'parrot';

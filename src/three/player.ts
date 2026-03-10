@@ -1,0 +1,66 @@
+import * as THREE from 'three/webgpu';
+import type { PhaseType } from '../utils/gameStore';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import gsap from 'gsap';
+
+export class Player {
+  private position: THREE.Vector2;
+  private playerGroup: THREE.Group;
+  private boatGroup: THREE.Group;
+  private birdGroup: THREE.Group;
+
+  constructor(scene: THREE.Scene) {
+    this.playerGroup = new THREE.Group();
+    this.boatGroup = new THREE.Group();
+    this.birdGroup = new THREE.Group();
+
+    this.playerGroup.add(this.boatGroup, this.birdGroup);
+    this.position = new THREE.Vector2();
+    scene.add(this.playerGroup);
+
+    const loader = new GLTFLoader();
+
+    this.playerGroup.position.add(new THREE.Vector3(2, 0, 2));
+    loader.load('models/boat.glb', (gltf) => {
+      const boat = gltf.scene;
+      boat.scale.multiplyScalar(0.5);
+      this.boatGroup.add(boat);
+    });
+
+    loader.load('models/bird.glb', (gltf) => {
+      this.birdGroup.add(gltf.scene);
+      this.birdGroup.scale.multiplyScalar(0.5);
+      this.playerGroup.add(this.birdGroup);
+    });
+  }
+
+  setPhase(phase: PhaseType): void {
+    // Implement phase-specific camera settings here
+    console.log(phase);
+  }
+
+  public setPosition(position: THREE.Vector2): void {
+    this.position.copy(position);
+
+    gsap.to(this.playerGroup.position, {
+      x: this.position.x,
+      y: this.playerGroup.position.y,
+      z: this.position.y,
+      duration: 1.5,
+      ease: 'expo.Out',
+      overwrite: true,
+    });
+  }
+
+  public update(time: number) {
+    this.boatGroup.rotation.y += 0.001;
+    this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.5;
+
+    this.birdGroup.rotation.y += 0.003;
+    this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
+  }
+
+  getPosition() {
+    return this.position;
+  }
+}
