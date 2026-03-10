@@ -3,10 +3,11 @@ import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mapGenerator } from './mapGenerator';
-import { gameState, type PhaseType } from '../utils/gameStore';
+import { type PhaseType, gameState } from '../utils/gameStore';
+import { watch } from 'vue';
 
-const TILE_AMOUNT_X = 11;
-const TILE_AMOUNT_Y = 15;
+const TILE_AMOUNT_X = 5;
+const TILE_AMOUNT_Y = 7;
 
 const tileTypes = [
   { name: 'water', url: './models/water.glb' },
@@ -33,19 +34,40 @@ export class MapManager {
       this.updateFog();
     });
 
-    setInterval(() => {
-      this.hideEntities();
-      setTimeout(() => {
-        this.displayEntities();
-      }, 5000);
-    }, 15000);
+    this.initWatchers();
+  }
+
+  private initWatchers(): void {
+    watch(
+      () => gameState.currentPhase,
+      (newPhase) => {
+        this.setPhase(newPhase);
+      }
+    );
+    watch(
+      () => gameState.userPosition,
+      (newPosition) => {
+        this.setPlayerPosition(newPosition);
+      },
+      { deep: true }
+    );
+    watch(
+      () => gameState.entitiesVisible,
+      (isVisible) => {
+        if (isVisible) {
+          this.displayEntities();
+        } else {
+          this.hideEntities();
+        }
+      }
+    );
   }
 
   updateFog() {
     this.tiles.forEach((tile) => {
       // const distance = 0.4;
       const distance = 0.4;
-      tile.setFogPosition(new THREE.Vector2(2, 2));
+      tile.setFogPosition();
       tile.setFogAmount(distance);
     });
   }
@@ -97,7 +119,7 @@ export class MapManager {
   }
 
   public displayEntities() {
-    this.tiles.map((tile) => {
+    this.tiles.forEach((tile) => {
       tile.show();
     });
   }
@@ -116,16 +138,9 @@ export class MapManager {
     }
   }
 
-  public setPlayerPosition(position: THREE.Vector2): void {
-    gameState.userPositionHistory.forEach(() => {});
-
+  public setPlayerPosition(_position: THREE.Vector2): void {
     this.tiles.forEach((tile) => {
-      tile.setFogPosition(position);
-      if (tile.position == position) {
-        tile.setActive();
-      } else {
-        tile.removeActive();
-      }
+      tile.setFogPosition();
     });
   }
 }

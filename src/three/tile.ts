@@ -14,10 +14,8 @@ export class Tile {
   private waterIdx: number;
   private fogDistance: number;
   private fogDistanceBuffer: number;
-  private fogPosition: THREE.Vector2;
   private fogAmount: number;
   private isHistory: boolean;
-  private hideFog: boolean;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
     this.position = position;
@@ -27,11 +25,9 @@ export class Tile {
     this.isHistory = false;
     this.tileGroup = new THREE.Group();
     this.fogDistance = 0.4;
-    this.fogPosition = new THREE.Vector2();
     this.state = state;
     this.fogAmount = 0.4;
     this.fogDistanceBuffer = 0.4;
-    this.hideFog = false;
     this.tileGroup.position.set(position.x, 0, position.y);
     console.log('new tile', this.state, position);
     this.updateObject(false);
@@ -43,7 +39,7 @@ export class Tile {
       () => gameState.userPosition,
       (newPosition) => {
         gameState.userPositionHistory.push(newPosition.clone());
-        this.setFogPosition(newPosition);
+        this.setFogPosition();
       },
       { deep: true }
     );
@@ -173,10 +169,8 @@ export class Tile {
     console.log('show fog');
   }
 
-  public setFogPosition(newPos: THREE.Vector2) {
-    this.fogPosition = newPos;
+  public setFogPosition(): void {
     this.updateFog();
-    // console.log('update fog position');
   }
 
   private updateFog() {
@@ -195,8 +189,4 @@ export class Tile {
       new THREE.Vector3(this.position.x, calculatedAmount, this.position.y)
     );
   }
-
-  public setActive() {}
-
-  public removeActive() {}
 }

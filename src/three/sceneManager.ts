@@ -3,7 +3,6 @@ import { Camera } from './camera';
 import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
-import { StoreAdapter } from '../utils/storeAdapter';
 import { Player } from './player';
 import { gameState } from '../utils/gameStore';
 
@@ -41,8 +40,6 @@ export class SceneManager {
 
     this.mapManager = new MapManager(this.scene);
     this.player = new Player(this.scene);
-
-    new StoreAdapter(this);
 
     // Setup resize handler
     this.onWindowResize = this.handleWindowResize.bind(this);

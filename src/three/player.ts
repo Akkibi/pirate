@@ -1,6 +1,8 @@
 import * as THREE from 'three/webgpu';
 import type { PhaseType } from '../utils/gameStore';
+import { gameState } from '../utils/gameStore';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { watch } from 'vue';
 import gsap from 'gsap';
 
 export class Player {
@@ -32,6 +34,24 @@ export class Player {
       this.birdGroup.scale.multiplyScalar(0.5);
       this.playerGroup.add(this.birdGroup);
     });
+
+    this.initWatchers();
+  }
+
+  private initWatchers(): void {
+    watch(
+      () => gameState.currentPhase,
+      (newPhase) => {
+        this.setPhase(newPhase);
+      }
+    );
+    watch(
+      () => gameState.userPosition,
+      (newPosition) => {
+        this.setPosition(newPosition);
+      },
+      { deep: true }
+    );
   }
 
   setPhase(phase: PhaseType): void {
@@ -46,8 +66,8 @@ export class Player {
       x: this.position.x,
       y: this.playerGroup.position.y,
       z: this.position.y,
-      duration: 1.5,
-      ease: 'expo.Out',
+      duration: 1.2,
+      ease: 'expo.out',
       overwrite: true,
     });
   }
@@ -58,6 +78,7 @@ export class Player {
 
     this.birdGroup.rotation.y += 0.003;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
+    this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;
   }
 
   getPosition() {

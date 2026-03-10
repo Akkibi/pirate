@@ -2,46 +2,47 @@
   <div ref="containerRef" class="w-full h-full inset-0 absolute overflow-hidden">
     <canvas ref="canvasRef" class="block w-full h-full absolute inset-0"></canvas>
     <div
-      class="absolute bottom-4 left-4 bg-amber-950 border-2 border-amber-900 bg-opacity-50 p-2 rounded-2xl text-sm text-white w-fit flex flex-row items-center justify-center gap-2"
+      class="absolute top-4 left-4 bg-amber-950 border-2 border-amber-900 bg-opacity-50 p-2 text-sm text-white w-fit flex flex-row items-center justify-center gap-2"
     >
       <p class="font-black px-2">PIRAT</p>
-      <input
-        type="number"
-        placeholder="X"
-        class="max-w-20 bg-amber-900 p-1 px-2 rounded-md"
-        :value="gameState.userPosition.x"
-        @input="
-          (e) => {
-            const positionx = parseFloat((e.target as HTMLInputElement).value);
-            gameState.userPosition.x = positionx ? positionx : 0;
-          }
-        "
-      />
-      <input
-        type="number"
-        placeholder="Y"
-        class="max-w-20 bg-amber-900 p-1 px-2 rounded-md"
-        :value="gameState.userPosition.y"
-        @input="
-          (e) => {
-            const positiony = parseFloat((e.target as HTMLInputElement).value);
-            gameState.userPosition.y = positiony ? positiony : 0;
-          }
-        "
-      />
-      <button class="bg-amber-500 p-1 px-2 rounded-md text-amber-950" @click="movePlayer('left')">
-        left
+    </div>
+  </div>
+  <button
+    class="bg-amber-700 p-1 px-2 text-amber-100 font-black border-3 border-amber-900 absolute bottom-4 left-4"
+    @click="toggleEntityVisibility"
+  >
+    {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
+  </button>
+  <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
+    <div
+      class="absolute inset-0 w-full h-full bg-amber-950 rounded-[50%] scale-75 border-3 border-amber-900"
+    ></div>
+    <button
+      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+      @click="movePlayer('left')"
+    >
+      Left
+    </button>
+    <div class="flex flex-col gap-2">
+      <button
+        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+        @click="movePlayer('up')"
+      >
+        Up
       </button>
-      <button class="bg-amber-500 p-1 px-2 rounded-md text-amber-950" @click="movePlayer('right')">
-        right
-      </button>
-      <button class="bg-amber-500 p-1 px-2 rounded-md text-amber-950" @click="movePlayer('up')">
-        up
-      </button>
-      <button class="bg-amber-500 p-1 px-2 rounded-md text-amber-950" @click="movePlayer('down')">
-        down
+      <button
+        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+        @click="movePlayer('down')"
+      >
+        Down
       </button>
     </div>
+    <button
+      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+      @click="movePlayer('right')"
+    >
+      Right
+    </button>
   </div>
 </template>
 
@@ -69,6 +70,10 @@ const movePlayer = (direction: string) => {
       gameState.userPosition.x -= 1;
       break;
   }
+};
+
+const toggleEntityVisibility = () => {
+  gameState.entitiesVisible = !gameState.entitiesVisible;
 };
 
 onMounted(async () => {

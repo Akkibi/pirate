@@ -11,12 +11,12 @@ export const mapGenerator = (width: number, height: number, isOnPairTile = false
 
   const visited: boolean[][] = Array.from({ length: cellH }, () => Array(cellW).fill(false));
 
-  const directions = [
+  const directions: readonly [number, number][] = [
     [0, -1], // up
     [0, 1], // down
     [-1, 0], // left
     [1, 0], // right
-  ];
+  ] as const;
 
   // Convert cell coords to maze coords
   const toMaze = (cx: number, cy: number): [number, number] => [cx * 2 + 1, cy * 2 + 1];
@@ -25,9 +25,9 @@ export const mapGenerator = (width: number, height: number, isOnPairTile = false
   const startCX = isOnPairTile ? 0 : Math.floor(Math.random() * cellW);
   const startCY = isOnPairTile ? 0 : Math.floor(Math.random() * cellH);
 
-  visited[startCY][startCX] = true;
+  visited[startCY]![startCX] = true;
   const [sx, sy] = toMaze(startCX, startCY);
-  maze[sy][sx] = 1;
+  maze[sy]![sx] = 1;
 
   const activeList: [number, number][] = [[startCX, startCY]];
 
@@ -35,26 +35,28 @@ export const mapGenerator = (width: number, height: number, isOnPairTile = false
     // Pick from active list — mix of newest (recursive backtracker) and random (Prim's)
     const useNewest = Math.random() < 0.7;
     const index = useNewest ? activeList.length - 1 : Math.floor(Math.random() * activeList.length);
-    const [cx, cy] = activeList[index];
+    const current = activeList[index];
+    if (!current) break;
+    const [cx, cy] = current;
 
     // Shuffle directions
-    const shuffled = directions.slice().sort(() => Math.random() - 0.5);
+    const shuffled = [...directions].sort(() => Math.random() - 0.5);
 
     let carved = false;
     for (const [dx, dy] of shuffled) {
       const nx = cx + dx;
       const ny = cy + dy;
 
-      if (nx >= 0 && nx < cellW && ny >= 0 && ny < cellH && !visited[ny][nx]) {
-        visited[ny][nx] = true;
+      if (nx >= 0 && nx < cellW && ny >= 0 && ny < cellH && !visited[ny]![nx]) {
+        visited[ny]![nx] = true;
 
         // Carve the neighbor cell
         const [mx, my] = toMaze(nx, ny);
-        maze[my][mx] = 1;
+        maze[my]![mx] = 1;
 
         // Carve the wall between current and neighbor
         const [curMx, curMy] = toMaze(cx, cy);
-        maze[curMy + dy][curMx + dx] = 1;
+        maze[curMy + dy]![curMx + dx] = 1;
 
         activeList.push([nx, ny]);
         carved = true;
