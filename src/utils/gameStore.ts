@@ -1,4 +1,4 @@
-import { reactive, watch } from 'vue';
+import { reactive } from 'vue';
 import * as THREE from 'three/webgpu';
 
 export type PhaseType = 'crew' | 'parrot';
@@ -12,6 +12,7 @@ interface StoreInterface {
   crewHP: number;
   userPosition: THREE.Vector2;
   userPositionHistory: Array<THREE.Vector2>;
+  entitiesVisible: boolean;
 }
 
 export const gameState = reactive({
@@ -23,4 +24,5 @@ export const gameState = reactive({
   crewHP: 3,
   userPosition: new THREE.Vector2(0, 0),
   userPositionHistory: [new THREE.Vector2(0, 0)],
+  entitiesVisible: true,
 } as StoreInterface);

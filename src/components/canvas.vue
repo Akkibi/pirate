@@ -2,20 +2,79 @@
   <div ref="containerRef" class="w-full h-full inset-0 absolute overflow-hidden">
     <canvas ref="canvasRef" class="block w-full h-full absolute inset-0"></canvas>
     <div
-      class="absolute bottom-4 left-4 bg-black bg-opacity-50 p-4 rounded text-sm text-white w-fit"
+      class="absolute top-4 left-4 bg-amber-950 border-2 border-amber-900 bg-opacity-50 p-2 text-sm text-white w-fit flex flex-row items-center justify-center gap-2"
     >
-      <p>PIRAT</p>
+      <p class="font-black px-2">PIRAT</p>
     </div>
+  </div>
+  <button
+    class="bg-amber-700 p-1 px-2 text-amber-100 font-black border-3 border-amber-900 absolute bottom-4 left-4"
+    @click="toggleEntityVisibility"
+  >
+    {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
+  </button>
+  <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
+    <div
+      class="absolute inset-0 w-full h-full bg-amber-950 rounded-[50%] scale-75 border-3 border-amber-900"
+    ></div>
+    <button
+      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+      @click="movePlayer('left')"
+    >
+      Left
+    </button>
+    <div class="flex flex-col gap-2">
+      <button
+        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+        @click="movePlayer('up')"
+      >
+        Up
+      </button>
+      <button
+        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+        @click="movePlayer('down')"
+      >
+        Down
+      </button>
+    </div>
+    <button
+      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
+      @click="movePlayer('right')"
+    >
+      Right
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { SceneManager } from '../three/sceneManager';
+import { gameState } from '../utils/gameStore';
 
 const containerRef = ref<HTMLDivElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 let sceneManager: SceneManager | null = null;
+
+const movePlayer = (direction: string) => {
+  switch (direction) {
+    case 'left':
+      gameState.userPosition.y -= 1;
+      break;
+    case 'right':
+      gameState.userPosition.y += 1;
+      break;
+    case 'up':
+      gameState.userPosition.x += 1;
+      break;
+    case 'down':
+      gameState.userPosition.x -= 1;
+      break;
+  }
+};
+
+const toggleEntityVisibility = () => {
+  gameState.entitiesVisible = !gameState.entitiesVisible;
+};
 
 onMounted(async () => {
   if (!containerRef.value || !canvasRef.value) return;

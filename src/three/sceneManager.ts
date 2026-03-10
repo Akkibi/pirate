@@ -3,7 +3,8 @@ import { Camera } from './camera';
 import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
-import { StoreAdapter } from '../storeAdapter';
+import { Player } from './player';
+import { gameState } from '../utils/gameStore';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -15,6 +16,7 @@ export class SceneManager {
   private height: number;
   public mapManager: MapManager;
   private seaSky: SeaSkyBackground;
+  public player: Player;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -27,7 +29,7 @@ export class SceneManager {
 
     // Initialize camera
     this.camera = new Camera(this.scene, width, height);
-    this.camera.setPosition(2, -1, 2);
+    this.camera.setPosition(gameState.userPosition);
     // Initialize renderer
     this.renderer = new THREE.WebGPURenderer({
       canvas: this.canvas,
@@ -37,8 +39,7 @@ export class SceneManager {
     this.scene.add(this.seaSky.mesh);
 
     this.mapManager = new MapManager(this.scene);
-
-    new StoreAdapter(this);
+    this.player = new Player(this.scene);
 
     // Setup resize handler
     this.onWindowResize = this.handleWindowResize.bind(this);
@@ -65,9 +66,9 @@ export class SceneManager {
   }
 
   private animate = (time: number) => {
-    this.mapManager.update(time * 1000);
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(time * 1000);
+    this.player.update(time * 1000);
   };
 
   dispose(): void {

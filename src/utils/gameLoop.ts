@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { gameEvents } from '../events/gameEvents';
 import { gameState } from './gameStore';
 
@@ -25,15 +26,26 @@ export class GameLoop {
 
   waitForEvent(event: string): Promise<void> {
     return new Promise((resolve) => {
-      gameEvents.on(event, resolve, { once: true });
+      const handler = () => {
+        gameEvents.off(event as any, handler);
+        resolve();
+      };
+      gameEvents.on(event as any, handler);
     });
   }
 
   waitForCrewAction(): Promise<any> {
     return new Promise((resolve) => {
-      gameEvents.on('crew:actionSelected', resolve, {
-        once: true,
-      });
+      const handler = (action: any) => {
+        gameEvents.off('crew:actionSelected', handler);
+        resolve(action);
+      };
+      gameEvents.on('crew:actionSelected', handler);
     });
+  }
+
+  private computeParrotAction(): any {
+    // TODO: Implement parrot AI logic
+    return {};
   }
 }
