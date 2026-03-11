@@ -144,11 +144,12 @@ export class MapManager {
   }
 
   public setPhase(phase: PhaseType): void {
-    if (phase === 'crew') {
-      this.displayEntities();
-    } else {
-      this.hideEntities();
-    }
+    console.log(phase);
+    // if (phase === 'crew') {
+    //   this.displayEntities();
+    // } else {
+    //   this.hideEntities();
+    // }
   }
 
   public setPlayerPosition(_position: THREE.Vector2): void {

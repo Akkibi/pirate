@@ -6,12 +6,21 @@
     >
       <p class="font-black px-2">PIRAT</p>
     </div>
-    <button
-      class="bg-amber-700 p-1 px-2 text-amber-100 font-black border-3 border-amber-900 absolute bottom-4 left-4"
-      @click="toggleEntityVisibility"
-    >
-      {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
-    </button>
+    <div class="absolute bottom-4 left-4 flex flex-row gap-2">
+      <button
+        class="bg-amber-700 min-w-20 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+        @click="toggleEntityVisibility"
+      >
+        {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
+      </button>
+      <button
+        class="bg-amber-700 min-w-30 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+        @click="toggleTurn"
+      >
+        <span class="text-xs opacity-55"> Turn : </span>
+        {{ gameState.currentPhase === 'crew' ? 'Crew' : 'Parrot' }}
+      </button>
+    </div>
     <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
       <div
         class="absolute inset-0 w-full h-full bg-amber-950 rounded-[50%] scale-75 border-3 border-amber-900"
@@ -74,6 +83,10 @@ const movePlayer = (direction: string) => {
 
 const toggleEntityVisibility = () => {
   gameState.entitiesVisible = !gameState.entitiesVisible;
+};
+
+const toggleTurn = () => {
+  gameState.currentPhase = gameState.currentPhase === 'crew' ? 'parrot' : 'crew';
 };
 
 onMounted(async () => {
