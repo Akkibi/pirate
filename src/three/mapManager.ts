@@ -144,6 +144,7 @@ export class MapManager {
   }
 
   public setPhase(phase: PhaseType): void {
+    console.log(phase);
     // if (phase === 'crew') {
     //   this.displayEntities();
     // } else {

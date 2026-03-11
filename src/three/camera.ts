@@ -42,7 +42,6 @@ export class Camera {
 
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
-    console.log(phase);
     gsap.to(this.camera.position, {
       duration: 0.1,
       x: defaultPositions[phase].x,
