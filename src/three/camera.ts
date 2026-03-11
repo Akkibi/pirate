@@ -43,7 +43,8 @@ export class Camera {
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
     gsap.to(this.camera.position, {
-      duration: 0.1,
+      duration: 1,
+      ease: 'expo.inOut',
       x: defaultPositions[phase].x,
       y: defaultPositions[phase].y,
       z: defaultPositions[phase].z,

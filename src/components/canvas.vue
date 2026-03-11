@@ -23,7 +23,7 @@
     </div>
     <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
       <div
-        class="absolute inset-0 w-full h-full bg-amber-950 rounded-[50%] scale-75 border-3 border-amber-900"
+        class="absolute inset-0 w-full h-full bg-amber-950 rounded-[40%] scale-75 border-3 border-amber-900"
       ></div>
       <button
         class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"

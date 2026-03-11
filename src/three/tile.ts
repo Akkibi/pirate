@@ -5,7 +5,7 @@ import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
 
-const FOG_MIN_DISTANCE = 0.61;
+const FOG_MIN_DISTANCE = 0.612;
 
 export class Tile {
   public position: THREE.Vector2;
