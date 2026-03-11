@@ -32,7 +32,6 @@ export class MapManager {
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
       this.generateMap();
-      this.updateFog();
     });
 
     this.initWatchers();
