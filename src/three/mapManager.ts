@@ -85,15 +85,6 @@ export class MapManager {
     this.scene.remove(this.mapGroup);
   }
 
-  updateFog() {
-    this.tiles.forEach((tile) => {
-      // const distance = 0.4;
-      const distance = 0.4;
-      tile.setFogPosition();
-      tile.setFogAmount(distance);
-    });
-  }
-
   generateMap(): void {
     // load gltf from model/board.gltf and put in scene
     const loader = new GLTFLoader();
@@ -147,6 +138,7 @@ export class MapManager {
   }
 
   public hideEntities() {
+    console.log(gameState.userPositionHistory);
     this.tiles.map((tile) => {
       tile.hide();
     });

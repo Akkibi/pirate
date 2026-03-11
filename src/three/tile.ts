@@ -5,6 +5,8 @@ import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
 
+const FOG_MIN_DISTANCE = 0.61;
+
 export class Tile {
   public position: THREE.Vector2;
   public tileGroup: THREE.Group;
@@ -14,7 +16,6 @@ export class Tile {
   private waterIdx: number;
   private fogDistance: number;
   private fogDistanceBuffer: number;
-  private fogAmount: number;
   private isHistory: boolean;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
@@ -24,17 +25,16 @@ export class Tile {
     this.fogIdx = -1;
     this.isHistory = false;
     this.tileGroup = new THREE.Group();
-    this.fogDistance = 0.4;
+    this.fogDistance = FOG_MIN_DISTANCE;
     this.state = state;
-    this.fogAmount = 0.4;
-    this.fogDistanceBuffer = 0.4;
+    this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     this.tileGroup.position.set(position.x, 0, position.y);
     console.log('new tile', this.state, position);
     this.updateObject(false);
 
     // add fog
     this.placeFog();
-
+    this.hide();
     watch(
       () => gameState.userPosition,
       (newPosition) => {
@@ -78,10 +78,6 @@ export class Tile {
     }
   }
 
-  public setFogAmount(amount: number) {
-    this.fogAmount = amount;
-  }
-
   private placeFog() {
     if (this.fogIdx !== -1) return;
     this.fogIdx = objectPool.reserveInstance('fog');
@@ -121,10 +117,9 @@ export class Tile {
   smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
     const emptyObject = {};
     const scale = 4;
-    this.fogDistanceBuffer = this.fogDistance;
+    this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     if (hideFog) {
       const ease = gsap.parseEase('expo.in');
-      // console.log('hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 1,
         onUpdate: () => {
@@ -139,7 +134,6 @@ export class Tile {
       });
     } else {
       const ease = gsap.parseEase('expo.out');
-      console.log('reverse hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 2,
         onUpdate: () => {
@@ -177,11 +171,18 @@ export class Tile {
     const playerPosition = gameState.userPosition;
     // const isHistory = gameState.userPositionHistory.includes(this.position);
 
-    const distance = Math.sqrt(
-      Math.pow(playerPosition.x - this.position.x, 2) +
-        Math.pow(playerPosition.y - this.position.y, 2)
-    );
-    const calculatedAmount = -Math.max(0, 5 - distance / this.fogAmount);
+    // circle distance
+    // const distance = Math.sqrt(
+    //   Math.pow(playerPosition.x - this.position.x, 2) +
+    //     Math.pow(playerPosition.y - this.position.y, 2)
+    // );
+
+    // dismond distance
+    const distance =
+      Math.abs(playerPosition.x - this.position.x) + Math.abs(playerPosition.y - this.position.y);
+
+    const calculatedAmount = -Math.max(0, 5 - distance / this.fogDistance);
+    // console.log(this.fogDistance, calculatedAmount);
 
     objectPool.updatePosition(
       'fog',
