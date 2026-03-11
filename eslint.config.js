@@ -17,9 +17,11 @@ export default [
         navigator: 'readonly',
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
+        HTMLElement: 'readonly',
         HTMLCanvasElement: 'readonly',
         HTMLDivElement: 'readonly',
         GPUCanvasContext: 'readonly',
+        console: 'readonly',
       },
       parserOptions: {
         parser: tseslint.parser,

@@ -5,6 +5,7 @@ import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
 import { Player } from './player';
 import { gameState } from '../utils/gameStore';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -17,6 +18,7 @@ export class SceneManager {
   public mapManager: MapManager;
   private seaSky: SeaSkyBackground;
   public player: Player;
+  private stats: Stats;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -40,6 +42,10 @@ export class SceneManager {
 
     this.mapManager = new MapManager(this.scene);
     this.player = new Player(this.scene);
+
+    // Setup stats panel
+    this.stats = new Stats();
+    document.body.appendChild(this.stats.dom);
 
     // Setup resize handler
     this.onWindowResize = this.handleWindowResize.bind(this);
@@ -66,6 +72,7 @@ export class SceneManager {
   }
 
   private animate = (time: number) => {
+    this.stats.update();
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(time * 1000);
     this.player.update(time * 1000);
@@ -75,6 +82,9 @@ export class SceneManager {
     window.removeEventListener('resize', this.onWindowResize);
     gsap.ticker.remove(this.animate);
     this.renderer.dispose();
+    if (this.stats.dom.parentElement) {
+      this.stats.dom.parentElement.removeChild(this.stats.dom);
+    }
   }
 
   getScene(): THREE.Scene {
