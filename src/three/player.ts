@@ -22,7 +22,6 @@ export class Player {
 
     const loader = new GLTFLoader();
 
-    this.playerGroup.position.add(new THREE.Vector3(2, 0, 2));
     loader.load('models/boat.glb', (gltf) => {
       const boat = gltf.scene;
       boat.scale.multiplyScalar(0.5);
