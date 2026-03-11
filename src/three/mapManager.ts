@@ -32,7 +32,6 @@ export class MapManager {
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
       this.generateMap();
-      this.updateFog();
     });
 
     this.initWatchers();
@@ -83,15 +82,6 @@ export class MapManager {
 
     // Remove mapGroup from scene
     this.scene.remove(this.mapGroup);
-  }
-
-  updateFog() {
-    this.tiles.forEach((tile) => {
-      // const distance = 0.4;
-      const distance = 0.4;
-      tile.setFogPosition();
-      tile.setFogAmount(distance);
-    });
   }
 
   generateMap(): void {
@@ -147,6 +137,7 @@ export class MapManager {
   }
 
   public hideEntities() {
+    console.log(gameState.userPositionHistory);
     this.tiles.map((tile) => {
       tile.hide();
     });
