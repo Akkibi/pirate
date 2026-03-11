@@ -21,6 +21,7 @@ export class MapManager {
   private scene: THREE.Scene;
   private mapGroup: THREE.Group;
   private tiles: Tile[];
+  private stopWatchers: Array<() => void> = [];
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -38,29 +39,50 @@ export class MapManager {
   }
 
   private initWatchers(): void {
-    watch(
-      () => gameState.currentPhase,
-      (newPhase) => {
-        this.setPhase(newPhase);
-      }
-    );
-    watch(
-      () => gameState.userPosition,
-      (newPosition) => {
-        this.setPlayerPosition(newPosition);
-      },
-      { deep: true }
-    );
-    watch(
-      () => gameState.entitiesVisible,
-      (isVisible) => {
-        if (isVisible) {
-          this.displayEntities();
-        } else {
-          this.hideEntities();
+    this.stopWatchers.push(
+      watch(
+        () => gameState.currentPhase,
+        (newPhase) => {
+          this.setPhase(newPhase);
         }
-      }
+      )
     );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.userPosition,
+        (newPosition) => {
+          this.setPlayerPosition(newPosition);
+        },
+        { deep: true }
+      )
+    );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.entitiesVisible,
+        (isVisible) => {
+          if (isVisible) {
+            this.displayEntities();
+          } else {
+            this.hideEntities();
+          }
+        }
+      )
+    );
+  }
+
+  public destroy(): void {
+    // Stop all watchers
+    this.stopWatchers.forEach((stop) => stop());
+    this.stopWatchers = [];
+
+    // Destroy all tiles
+    this.tiles.forEach((tile) => {
+      tile.destroy();
+    });
+    this.tiles = [];
+
+    // Remove mapGroup from scene
+    this.scene.remove(this.mapGroup);
   }
 
   updateFog() {
