@@ -34,7 +34,7 @@ export class Tile {
 
     // add fog
     this.placeFog();
-    this.hide();
+    this.show();
     watch(
       () => gameState.userPosition,
       (newPosition) => {

@@ -4,6 +4,11 @@ import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 import gsap from 'gsap';
 
+const defaultPositions = {
+  parrot: new THREE.Vector3(-6, 7, 0),
+  crew: new THREE.Vector3(-3, 4, 0),
+};
+
 export class Camera {
   private cameraGroup: THREE.Group;
   private camera: THREE.PerspectiveCamera;
@@ -13,9 +18,7 @@ export class Camera {
     this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     this.cameraGroup.add(this.camera);
     scene.add(this.cameraGroup);
-    this.camera.position.z = 0;
-    this.camera.position.x = -6;
-    this.camera.position.y = 7;
+    this.camera.position.copy(defaultPositions.parrot);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
 
     this.initWatchers();
@@ -40,6 +43,12 @@ export class Camera {
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
     console.log(phase);
+    gsap.to(this.camera.position, {
+      duration: 0.1,
+      x: defaultPositions[phase].x,
+      y: defaultPositions[phase].y,
+      z: defaultPositions[phase].z,
+    });
   }
 
   getNative(): THREE.PerspectiveCamera {
