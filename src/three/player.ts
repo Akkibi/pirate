@@ -25,6 +25,7 @@ export class Player {
     loader.load('models/boat.glb', (gltf) => {
       const boat = gltf.scene;
       boat.scale.multiplyScalar(0.5);
+      boat.position.y = -0.1;
       this.boatGroup.add(boat);
     });
 
@@ -51,6 +52,8 @@ export class Player {
       },
       { deep: true }
     );
+    this.setPhase(gameState.currentPhase);
+    this.setPosition(gameState.userPosition);
   }
 
   setPhase(phase: PhaseType): void {
@@ -65,7 +68,7 @@ export class Player {
       x: this.position.x,
       y: this.playerGroup.position.y,
       z: this.position.y,
-      duration: 1.2,
+      duration: 2,
       ease: 'expo.out',
       overwrite: true,
     });
@@ -73,7 +76,7 @@ export class Player {
 
   public update(time: number) {
     this.boatGroup.rotation.y += 0.001;
-    this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.5;
+    this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
 
     this.birdGroup.rotation.y += 0.003;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;

@@ -9,11 +9,11 @@
       @click="handleClick"
     >
       <div :class="surfaceClasses">
-        <div class="flex w-6 h-full bg-green-500"></div>
+        <div class="flex w-6 h-full bg-green-500/50"></div>
         <div ref="contentRef" :class="contentClasses">
           <slot>{{ text }}</slot>
         </div>
-        <div class="flex w-6 h-full bg-green-500"></div>
+        <div class="flex w-6 h-full bg-green-500/50"></div>
       </div>
     </component>
   </div>
@@ -95,7 +95,7 @@ const parchmentClasses = computed(() => [
 ]);
 
 const surfaceClasses = computed(() => [
-  'flex flex-row justify-center items-center bg-red-500',
+  'flex flex-row justify-center items-center bg-red-500/50',
   sizeClasses[props.size],
 ]);
 

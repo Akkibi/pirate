@@ -3,16 +3,19 @@
 
 @layer base {
   body {
-    @apply m-0 p-0 overflow-hidden bg-slate-900 text-white;
+    @apply m-0 p-0 absolute inset-0 overflow-hidden bg-black text-white;
     font-family: 'IM Fell English', Georgia, serif;
+    overflow: hidden;
   }
 
   html {
-    @apply h-full;
+    @apply absolute inset-0;
+    overflow: hidden;
   }
 
   #app {
-    @apply h-screen w-screen;
+    @apply absolute inset-0;
+    overflow: hidden;
   }
 }
 
@@ -20,6 +23,8 @@ canvas {
   display: block;
   width: 100%;
   height: 100%;
+  position: absolute;
+  inset: 0;
 }
 
 button {
