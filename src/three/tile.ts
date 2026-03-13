@@ -37,8 +37,7 @@ export class Tile {
     this.show();
     watch(
       () => gameState.userPosition,
-      (newPosition) => {
-        gameState.userPositionHistory.push(newPosition.clone());
+      () => {
         this.setFogPosition();
       },
       { deep: true }

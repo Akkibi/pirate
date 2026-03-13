@@ -5,21 +5,37 @@ import { watch } from 'vue';
 import gsap from 'gsap';
 
 const defaultPositions = {
-  parrot: new THREE.Vector3(-6, 7, 0),
-  crew: new THREE.Vector3(-3, 4, 0),
+  default: new THREE.Vector3(-10, 3.5, 0),
+  parrot: new THREE.Vector3(-5, 10, 0),
+  crew: new THREE.Vector3(-10, 5, 0),
 };
 
 export class Camera {
+  private cameraPositionGroup: THREE.Group;
   private cameraGroup: THREE.Group;
   private camera: THREE.PerspectiveCamera;
+  private isFocused: boolean = true;
+  private targetPosition: THREE.Vector2;
+  private phase: PhaseType;
 
   constructor(scene: THREE.Scene, width: number, height: number) {
     this.cameraGroup = new THREE.Group();
-    this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    this.cameraGroup.add(this.camera);
+    this.cameraPositionGroup = new THREE.Group();
+    this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
+
+    this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
+    this.phase = gameState.currentPhase;
+
+    const helper = new THREE.PolarGridHelper(4, 2, 4, 32);
+    helper.position.y = 0.1;
+    this.cameraGroup.add(helper);
+
+    this.cameraPositionGroup.add(this.camera);
+    this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
-    this.camera.position.copy(defaultPositions.parrot);
-    this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
+
+    this.cameraPositionGroup.position.copy(defaultPositions.crew);
+    this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));
 
     this.initWatchers();
   }
@@ -38,17 +54,27 @@ export class Camera {
       },
       { deep: true }
     );
+    watch(
+      () => gameState.focusedView,
+      (newFocused) => {
+        this.setFocused(newFocused);
+      }
+    );
+    this.setPhase(gameState.currentPhase);
+    this.setPosition(gameState.userPosition);
+    this.setFocused(gameState.focusedView);
+  }
+
+  setFocused(focused: boolean): void {
+    this.isFocused = focused;
+    this.updatePosition();
+    this.updateView();
   }
 
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
-    gsap.to(this.camera.position, {
-      duration: 1,
-      ease: 'expo.inOut',
-      x: defaultPositions[phase].x,
-      y: defaultPositions[phase].y,
-      z: defaultPositions[phase].z,
-    });
+    this.phase = phase;
+    this.updateView();
   }
 
   getNative(): THREE.PerspectiveCamera {
@@ -61,18 +87,43 @@ export class Camera {
   }
 
   getPosition() {
-    return this.cameraGroup.position;
+    return new THREE.Vector3(this.targetPosition.x, 0, this.targetPosition.y);
   }
 
-  setPosition(position: THREE.Vector2): void {
-    console.log('position', position);
+  updateView(): void {
+    const newViewPos = this.isFocused ? defaultPositions.default : defaultPositions[this.phase];
+    gsap.to(this.cameraPositionGroup.position, {
+      duration: 1,
+      ease: 'expo.out',
+      x: newViewPos.x,
+      y: newViewPos.y,
+      z: newViewPos.z,
+      onUpdate: () => {
+        this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 0.1, 0)));
+      },
+    });
+  }
+
+  updatePosition(): void {
+    const newPos = this.isFocused
+      ? new THREE.Vector3(1.75, this.cameraGroup.position.y, 3)
+      : new THREE.Vector3(
+          this.targetPosition.x,
+          this.cameraGroup.position.y,
+          this.targetPosition.y
+        );
     gsap.to(this.cameraGroup.position, {
-      x: position.x,
-      y: this.cameraGroup.position.y,
-      z: position.y,
-      duration: 0.5,
+      x: newPos.x,
+      y: newPos.y,
+      z: newPos.z,
+      duration: 1,
       ease: 'expo.Out',
       overwrite: true,
     });
+  }
+
+  setPosition(position: THREE.Vector2): void {
+    this.targetPosition.copy(position);
+    this.updatePosition();
   }
 }

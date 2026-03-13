@@ -20,6 +20,12 @@
         <span class="text-xs opacity-55"> Turn : </span>
         {{ gameState.currentPhase === 'crew' ? 'Crew' : 'Parrot' }}
       </button>
+      <button
+        class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+        @click="toggleFocus"
+      >
+        {{ gameState.focusedView ? 'Focus' : 'Unfocussed' }}
+      </button>
     </div>
     <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
       <div
@@ -87,6 +93,10 @@ const toggleEntityVisibility = () => {
 
 const toggleTurn = () => {
   gameState.currentPhase = gameState.currentPhase === 'crew' ? 'parrot' : 'crew';
+};
+
+const toggleFocus = () => {
+  gameState.focusedView = !gameState.focusedView;
 };
 
 onMounted(async () => {

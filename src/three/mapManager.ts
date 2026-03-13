@@ -38,6 +38,14 @@ export class MapManager {
   }
 
   private initWatchers(): void {
+    watch(
+      () => gameState.userPosition,
+      (newPosition) => {
+        gameState.userPositionHistory.push(newPosition.clone());
+      },
+      { deep: true }
+    );
+
     this.stopWatchers.push(
       watch(
         () => gameState.currentPhase,
@@ -89,7 +97,7 @@ export class MapManager {
     const loader = new GLTFLoader();
     loader.load('models/board.glb', (gltf) => {
       const model = gltf.scene;
-      model.position.add(new THREE.Vector3(0, -0.75, 0));
+      model.position.add(new THREE.Vector3(0.5, 0, 0.5));
       this.mapGroup.add(model);
     });
 
@@ -156,5 +164,6 @@ export class MapManager {
     this.tiles.forEach((tile) => {
       tile.setFogPosition();
     });
+    console.log('position list:', gameState.userPositionHistory);
   }
 }

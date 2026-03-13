@@ -13,6 +13,7 @@ interface StoreInterface {
   userPosition: THREE.Vector2;
   userPositionHistory: Array<THREE.Vector2>;
   entitiesVisible: boolean;
+  focusedView: boolean;
 }
 
 export const gameState = reactive({
@@ -22,6 +23,7 @@ export const gameState = reactive({
   showVideoOverlay: false,
   turnCount: 0,
   crewHP: 3,
+  focusedView: false,
   userPosition: new THREE.Vector2(0, 0),
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: true,
