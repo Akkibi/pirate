@@ -34,11 +34,28 @@ export class Tile {
 
     // add fog
     this.placeFog();
-    this.show();
+    if (gameState.entitiesVisible) {
+      this.show();
+    } else {
+      this.hide();
+    }
+
     watch(
       () => gameState.userPosition,
       () => {
         this.setFogPosition();
+        // console.log('history tile', this.position.x, gameState.userPosition.x);
+        if (
+          gameState.userPosition.x === this.position.x &&
+          gameState.userPosition.y === this.position.y &&
+          !this.isHistory
+        ) {
+          this.isHistory = true;
+          console.log('history tile', this.position);
+          setTimeout(() => {
+            this.updateObject(false);
+          }, 400);
+        }
       },
       { deep: true }
     );
@@ -149,6 +166,7 @@ export class Tile {
   }
 
   public hide() {
+    if (this.isHistory) return;
     this.updateObject(true);
     this.smoothMoveFog(true);
     console.log('hide fog');
@@ -167,6 +185,7 @@ export class Tile {
   }
 
   private updateFog() {
+    if (this.isHistory) return;
     const playerPosition = gameState.userPosition;
     // const isHistory = gameState.userPositionHistory.includes(this.position);
 

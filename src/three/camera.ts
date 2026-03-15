@@ -4,7 +4,7 @@ import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 import gsap from 'gsap';
 
-const defaultPositions = {
+export const cameraPositions = {
   default: new THREE.Vector3(-10, 3.5, 0),
   parrot: new THREE.Vector3(-5, 10, 0),
   crew: new THREE.Vector3(-10, 5, 0),
@@ -26,7 +26,7 @@ export class Camera {
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.phase = gameState.currentPhase;
 
-    const helper = new THREE.PolarGridHelper(4, 2, 4, 32);
+    const helper = new THREE.PolarGridHelper(4, 2, 4, 0);
     helper.position.y = 0.1;
     this.cameraGroup.add(helper);
 
@@ -34,7 +34,7 @@ export class Camera {
     this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
 
-    this.cameraPositionGroup.position.copy(defaultPositions.crew);
+    this.cameraPositionGroup.position.copy(cameraPositions.crew);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));
 
     this.initWatchers();
@@ -91,9 +91,9 @@ export class Camera {
   }
 
   updateView(): void {
-    const newViewPos = this.isFocused ? defaultPositions.default : defaultPositions[this.phase];
+    const newViewPos = this.isFocused ? cameraPositions.default : cameraPositions[this.phase];
     gsap.to(this.cameraPositionGroup.position, {
-      duration: 1,
+      duration: 2,
       ease: 'expo.out',
       x: newViewPos.x,
       y: newViewPos.y,
@@ -116,7 +116,7 @@ export class Camera {
       x: newPos.x,
       y: newPos.y,
       z: newPos.z,
-      duration: 1,
+      duration: 2,
       ease: 'expo.Out',
       overwrite: true,
     });
