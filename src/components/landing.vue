@@ -30,8 +30,12 @@
   <div class="flex w-full h-1/3 justify-center items-center">
     <Parchment text="Rules Coming Soon" size="sm" />
   </div>
-  <div class="inset-0 absolute top-0 -z-10 blur-md">
-    <img class="object-cover w-full h-full" src="/images/background.png" alt="background" />
+  <div class="inset-0 absolute top-0 -z-10">
+    <img
+      class="object-cover w-full h-full blur-md scale-105"
+      src="/images/background.png"
+      alt="background"
+    />
   </div>
 </template>
 
