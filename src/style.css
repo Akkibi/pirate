@@ -2,17 +2,21 @@
 @import "stylesheet.css";
 
 @layer base {
+	html,
 	body {
 		@apply m-0 p-0 overflow-hidden bg-slate-900 text-white;
 		font-family: "IM Fell English", Georgia, serif;
 	}
 
-	html {
-		@apply h-full;
+	html,
+	body,
+	#app {
+		height: 100dvh;
+		min-height: 100dvh;
 	}
 
 	#app {
-		@apply h-screen w-screen;
+		@apply w-screen overflow-hidden;
 	}
 }
 

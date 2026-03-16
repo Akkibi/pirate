@@ -2,20 +2,75 @@
 import { computed, ref } from "vue";
 import Canvas from "./components/canvas.vue";
 import Landing from "./components/landing.vue";
+import FullMessageButtonScreen from "./components/screens/FullMessageButtonScreen.vue";
+import LookingAroundTimerScreen from "./components/screens/LookingAroundTimerScreen.vue";
+import TopMessageLowerButtonScreen from "./components/screens/TopMessageLowerButtonScreen.vue";
+import TopMessageLowerButtonCardsScreen from "./components/screens/TopMessageLowerButtonCardsScreen.vue";
 import { initGame } from "./main";
-import Parchment from "./components/parchment.vue";
-import { gameState } from "./utils/gameStore";
+import { currentScreen, resolveScreen } from "./utils/uiFlowStore";
 
 const started = ref(false);
-const overlayVisible = computed(
-  () => started.value && (gameState.showActionPanel || gameState.showVideoOverlay),
-);
-const overlayText = computed(() =>
-  gameState.currentPhase === "crew" ? "Crew Turn" : "Parrot Turn",
-);
-const overlayReplayKey = computed(
-  () => `${gameState.currentPhase}-${gameState.turnCount}`,
-);
+
+const screenComponentMap = {
+  "full-message-button": FullMessageButtonScreen,
+  "looking-around-timer": LookingAroundTimerScreen,
+  "top-message-lower-button": TopMessageLowerButtonScreen,
+  "top-message-lower-button-cards": TopMessageLowerButtonCardsScreen,
+} as const;
+
+const activeScreenComponent = computed(() => {
+  if (!currentScreen.value) {
+    return null;
+  }
+
+  return screenComponentMap[currentScreen.value.type];
+});
+
+const activeScreenProps = computed<Record<string, unknown> | null>(() => {
+  const screen = currentScreen.value;
+
+  if (!screen) {
+    return null;
+  }
+
+  switch (screen.type) {
+    case "full-message-button":
+      return {
+        ...screen.props,
+        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onUndoClick: () => resolveScreen({ action: "undo" }),
+      };
+
+    case "looking-around-timer":
+      return {
+        ...screen.props,
+        onComplete: () => resolveScreen({ action: "timer-complete" }),
+      };
+
+    case "top-message-lower-button":
+      return {
+        ...screen.props,
+        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onUndoClick: () => resolveScreen({ action: "undo" }),
+      };
+
+    case "top-message-lower-button-cards":
+      return {
+        ...screen.props,
+        cards: screen.props.cards.map((card) => ({
+          ...card,
+          onSelect: () => resolveScreen({ action: "card", cardId: card.id }),
+        })),
+        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onUndoClick: () => resolveScreen({ action: "undo" }),
+      };
+  }
+
+  return null;
+});
 
 function startGame() {
   started.value = true;
@@ -26,16 +81,36 @@ function startGame() {
 
 <template>
   <Landing v-if="!started" @start="startGame" />
-  <template v-else>
-    <Parchment
-      :text="overlayText"
-      size="bg"
-      display-mode="overlay"
-      dismiss-mode="auto"
-      :dismiss-delay="2600"
-      :visible="overlayVisible"
-      :replay-key="overlayReplayKey"
-    />
+  <div v-else class="relative h-full w-full">
     <Canvas />
-  </template>
+    <component
+      :is="activeScreenComponent"
+      v-if="activeScreenComponent && activeScreenProps && currentScreen"
+      :key="currentScreen.instanceId"
+      v-bind="activeScreenProps"
+    >
+      <template #message>
+        <div
+          v-if="currentScreen.content"
+          class="flex h-full w-full flex-col items-center justify-center gap-2 text-center"
+        >
+          <p
+            v-if="currentScreen.content.title"
+            class="text-2xl font-semibold sm:text-4xl"
+          >
+            {{ currentScreen.content.title }}
+          </p>
+          <p v-if="currentScreen.content.body" class="text-sm sm:text-base">
+            {{ currentScreen.content.body }}
+          </p>
+          <p v-if="currentScreen.content.caption" class="text-xs sm:text-sm">
+            {{ currentScreen.content.caption }}
+          </p>
+          <p v-if="currentScreen.content.footer" class="text-xs sm:text-sm">
+            {{ currentScreen.content.footer }}
+          </p>
+        </div>
+      </template>
+    </component>
+  </div>
 </template>
