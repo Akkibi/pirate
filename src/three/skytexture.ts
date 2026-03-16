@@ -1,13 +1,25 @@
 // skytexture.ts
-import * as THREE from 'three/webgpu';
-import { uniform, uv, mix, vec3, float, sin, exp, pow, smoothstep } from 'three/src/nodes/TSL.js';
+import * as THREE from "three/webgpu";
+import {
+  uniform,
+  uv,
+  mix,
+  vec3,
+  float,
+  sin,
+  exp,
+  pow,
+  smoothstep,
+} from "three/src/nodes/TSL.js";
 
 export interface SeaSkyBackground {
   mesh: THREE.Mesh;
   update: (time: number) => void;
 }
 
-export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyBackground {
+export function createSeaSkyBackground(
+  camera: THREE.PerspectiveCamera,
+): SeaSkyBackground {
   const uTime = uniform(0);
 
   const geometry = new THREE.SphereGeometry(500, 32, 32);
@@ -40,7 +52,9 @@ export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyB
   const wave = sin(x.mul(80.0).add(uTime.mul(0.001)))
     .mul(0.015)
     .mul(float(1.0).sub(waterT));
-  const waterColor = mix(waterBottom, waterTop, waterT).add(vec3(wave, wave, wave));
+  const waterColor = mix(waterBottom, waterTop, waterT).add(
+    vec3(wave, wave, wave),
+  );
 
   // Blend at horizon
   const isAboveHorizon = smoothstep(horizon.sub(0.005), horizon.add(0.005), y);
@@ -49,7 +63,9 @@ export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyB
   // Horizon glow
   const horizonDist = y.sub(horizon).mul(12.0);
   const horizonGlow = exp(pow(horizonDist, 2).negate());
-  const finalColor = baseColor.add(vec3(0.95, 0.9, 0.8).mul(horizonGlow).mul(0.3));
+  const finalColor = baseColor.add(
+    vec3(0.95, 0.9, 0.8).mul(horizonGlow).mul(0.3),
+  );
 
   material.colorNode = finalColor;
 

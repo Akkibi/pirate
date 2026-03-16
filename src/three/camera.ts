@@ -1,8 +1,8 @@
-import * as THREE from 'three/webgpu';
-import type { PhaseType } from '../utils/gameStore';
-import { gameState } from '../utils/gameStore';
-import { watch } from 'vue';
-import gsap from 'gsap';
+import * as THREE from "three/webgpu";
+import type { PhaseType } from "../utils/gameStore";
+import { gameState } from "../utils/gameStore";
+import { watch } from "vue";
+import gsap from "gsap";
 
 export class Camera {
   private cameraGroup: THREE.Group;
@@ -16,7 +16,9 @@ export class Camera {
     this.camera.position.z = 0;
     this.camera.position.x = -6;
     this.camera.position.y = 7;
-    this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
+    this.camera.lookAt(
+      this.cameraGroup.position.clone().add(new THREE.Vector3(0, 1, 0)),
+    );
 
     this.initWatchers();
   }
@@ -26,14 +28,14 @@ export class Camera {
       () => gameState.currentPhase,
       (newPhase) => {
         this.setPhase(newPhase);
-      }
+      },
     );
     watch(
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
       },
-      { deep: true }
+      { deep: true },
     );
   }
 
@@ -56,13 +58,13 @@ export class Camera {
   }
 
   setPosition(position: THREE.Vector2): void {
-    console.log('position', position);
+    console.log("position", position);
     gsap.to(this.cameraGroup.position, {
       x: position.x,
       y: this.cameraGroup.position.y,
       z: position.y,
       duration: 0.5,
-      ease: 'expo.Out',
+      ease: "expo.Out",
       overwrite: true,
     });
   }

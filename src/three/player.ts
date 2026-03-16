@@ -1,9 +1,9 @@
-import * as THREE from 'three/webgpu';
-import type { PhaseType } from '../utils/gameStore';
-import { gameState } from '../utils/gameStore';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { watch } from 'vue';
-import gsap from 'gsap';
+import * as THREE from "three/webgpu";
+import type { PhaseType } from "../utils/gameStore";
+import { gameState } from "../utils/gameStore";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { watch } from "vue";
+import gsap from "gsap";
 
 export class Player {
   private position: THREE.Vector2;
@@ -22,13 +22,13 @@ export class Player {
 
     const loader = new GLTFLoader();
 
-    loader.load('models/boat.glb', (gltf) => {
+    loader.load("models/boat.glb", (gltf) => {
       const boat = gltf.scene;
       boat.scale.multiplyScalar(0.5);
       this.boatGroup.add(boat);
     });
 
-    loader.load('models/bird.glb', (gltf) => {
+    loader.load("models/bird.glb", (gltf) => {
       this.birdGroup.add(gltf.scene);
       this.birdGroup.scale.multiplyScalar(0.5);
       this.playerGroup.add(this.birdGroup);
@@ -42,14 +42,14 @@ export class Player {
       () => gameState.currentPhase,
       (newPhase) => {
         this.setPhase(newPhase);
-      }
+      },
     );
     watch(
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
       },
-      { deep: true }
+      { deep: true },
     );
   }
 
@@ -66,7 +66,7 @@ export class Player {
       y: this.playerGroup.position.y,
       z: this.position.y,
       duration: 1.2,
-      ease: 'expo.out',
+      ease: "expo.out",
       overwrite: true,
     });
   }

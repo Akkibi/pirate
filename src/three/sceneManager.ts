@@ -1,11 +1,11 @@
-import * as THREE from 'three/webgpu';
-import { Camera } from './camera';
-import { MapManager } from './mapManager';
-import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
-import { gsap } from 'gsap';
-import { Player } from './player';
-import { gameState } from '../utils/gameStore';
-import Stats from 'three/examples/jsm/libs/stats.module.js';
+import * as THREE from "three/webgpu";
+import { Camera } from "./camera";
+import { MapManager } from "./mapManager";
+import { createSeaSkyBackground, type SeaSkyBackground } from "./skytexture";
+import { gsap } from "gsap";
+import { Player } from "./player";
+import { gameState } from "../utils/gameStore";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -53,7 +53,7 @@ export class SceneManager {
 
   async init(): Promise<void> {
     await this.renderer.init();
-    console.log('Using WebGPU:', this.renderer.backend.renderer);
+    console.log("Using WebGPU:", this.renderer.backend.renderer);
     this.renderer.setSize(this.width, this.height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
   }
@@ -67,7 +67,7 @@ export class SceneManager {
   }
 
   public startAnimation(): void {
-    window.addEventListener('resize', this.onWindowResize);
+    window.addEventListener("resize", this.onWindowResize);
     gsap.ticker.add(this.animate);
   }
 
@@ -79,7 +79,7 @@ export class SceneManager {
   };
 
   dispose(): void {
-    window.removeEventListener('resize', this.onWindowResize);
+    window.removeEventListener("resize", this.onWindowResize);
     gsap.ticker.remove(this.animate);
     this.renderer.dispose();
     if (this.stats.dom.parentElement) {

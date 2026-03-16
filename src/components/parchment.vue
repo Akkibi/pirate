@@ -57,7 +57,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (event: "clicked", mouseEvent: MouseEvent): void;
+  (event: "clicked", mouseEvent: globalThis.MouseEvent): void;
   (event: "shown"): void;
   (event: "hidden", reason: HideReason): void;
 }>();
@@ -216,7 +216,7 @@ async function animateOut(reason: HideReason = "manual") {
     });
 }
 
-function handleClick(mouseEvent: MouseEvent) {
+function handleClick(mouseEvent: globalThis.MouseEvent) {
   if (!props.clickable || props.disabled) return;
 
   emit("clicked", mouseEvent);

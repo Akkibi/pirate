@@ -1,7 +1,7 @@
-import { reactive } from 'vue';
-import * as THREE from 'three/webgpu';
+import { reactive } from "vue";
+import * as THREE from "three/webgpu";
 
-export type PhaseType = 'crew' | 'parrot';
+export type PhaseType = "crew" | "parrot";
 
 interface StoreInterface {
   currentPhase: PhaseType;
@@ -16,7 +16,7 @@ interface StoreInterface {
 }
 
 export const gameState = reactive({
-  currentPhase: 'crew',
+  currentPhase: "crew",
   currentAction: null as string | null,
   showActionPanel: false,
   showVideoOverlay: false,

@@ -1,9 +1,9 @@
-import * as THREE from 'three/webgpu';
-import { objectPool } from './instancedModelManger';
-import { gsap } from 'gsap';
-import { gameState } from '../utils/gameStore';
-import { watch } from 'vue';
-export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
+import * as THREE from "three/webgpu";
+import { objectPool } from "./instancedModelManger";
+import { gsap } from "gsap";
+import { gameState } from "../utils/gameStore";
+import { watch } from "vue";
+export type TileStateType = "monster" | "typhon" | "water" | "island";
 
 export class Tile {
   public position: THREE.Vector2;
@@ -29,7 +29,7 @@ export class Tile {
     this.fogAmount = 0.4;
     this.fogDistanceBuffer = 0.4;
     this.tileGroup.position.set(position.x, 0, position.y);
-    console.log('new tile', this.state, position);
+    console.log("new tile", this.state, position);
     this.updateObject(false);
 
     // add fog
@@ -41,7 +41,7 @@ export class Tile {
         gameState.userPositionHistory.push(newPosition.clone());
         this.setFogPosition();
       },
-      { deep: true }
+      { deep: true },
     );
   }
 
@@ -55,13 +55,13 @@ export class Tile {
 
     // release previous instance
     if (this.idx !== -1) {
-      console.log('releasing tile', this.state, this.position);
+      console.log("releasing tile", this.state, this.position);
       objectPool.releaseInstance(this.state, this.idx);
       this.idx = -1;
     }
     if (this.waterIdx !== -1) {
-      console.log('releasing tile', 'water', this.position);
-      objectPool.releaseInstance('water', this.waterIdx);
+      console.log("releasing tile", "water", this.position);
+      objectPool.releaseInstance("water", this.waterIdx);
       this.waterIdx = -1;
     }
 
@@ -70,10 +70,10 @@ export class Tile {
       return;
     }
 
-    if (this.state !== 'water') {
+    if (this.state !== "water") {
       this.placeTile();
     }
-    if (this.state !== 'typhon') {
+    if (this.state !== "typhon") {
       this.placeWater();
     }
   }
@@ -84,13 +84,17 @@ export class Tile {
 
   private placeFog() {
     if (this.fogIdx !== -1) return;
-    this.fogIdx = objectPool.reserveInstance('fog');
+    this.fogIdx = objectPool.reserveInstance("fog");
     objectPool.updatePosition(
-      'fog',
+      "fog",
       this.fogIdx,
-      new THREE.Vector3(this.position.x, 0, this.position.y)
+      new THREE.Vector3(this.position.x, 0, this.position.y),
     );
-    objectPool.updateScale('fog', this.fogIdx, new THREE.Vector3(0.5, 0.5, 0.5));
+    objectPool.updateScale(
+      "fog",
+      this.fogIdx,
+      new THREE.Vector3(0.5, 0.5, 0.5),
+    );
   }
 
   private placeTile() {
@@ -100,22 +104,28 @@ export class Tile {
       this.state,
       this.idx,
       new THREE.Vector3(this.position.x, 0, this.position.y),
-      this.state === 'typhon'
+      this.state === "typhon"
         ? new THREE.Euler(0, 0, 0)
         : new THREE.Euler(0, Math.PI * 2 * Math.random(), 0),
-      this.state === 'typhon' ? new THREE.Vector3(0.5, 0.5, 0.5) : new THREE.Vector3(0.4, 0.4, 0.4)
+      this.state === "typhon"
+        ? new THREE.Vector3(0.5, 0.5, 0.5)
+        : new THREE.Vector3(0.4, 0.4, 0.4),
     );
   }
 
   private placeWater() {
     if (this.waterIdx !== -1) return;
-    this.waterIdx = objectPool.reserveInstance('water');
+    this.waterIdx = objectPool.reserveInstance("water");
     objectPool.updatePosition(
-      'water',
+      "water",
       this.waterIdx,
-      new THREE.Vector3(this.position.x, 0, this.position.y)
+      new THREE.Vector3(this.position.x, 0, this.position.y),
     );
-    objectPool.updateScale('water', this.waterIdx, new THREE.Vector3(0.5, 0.5, 0.5));
+    objectPool.updateScale(
+      "water",
+      this.waterIdx,
+      new THREE.Vector3(0.5, 0.5, 0.5),
+    );
   }
 
   smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
@@ -123,7 +133,7 @@ export class Tile {
     const scale = 4;
     this.fogDistanceBuffer = this.fogDistance;
     if (hideFog) {
-      const ease = gsap.parseEase('expo.in');
+      const ease = gsap.parseEase("expo.in");
       // console.log('hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 1,
@@ -134,12 +144,12 @@ export class Tile {
           this.fogDistance = this.fogDistanceBuffer + progress;
           this.updateFog();
         },
-        ease: 'bounce.inOut',
+        ease: "bounce.inOut",
         onComplete: oncomplete,
       });
     } else {
-      const ease = gsap.parseEase('expo.out');
-      console.log('reverse hide clouds');
+      const ease = gsap.parseEase("expo.out");
+      console.log("reverse hide clouds");
       const tween = gsap.to(emptyObject, {
         duration: 2,
         onUpdate: () => {
@@ -149,7 +159,7 @@ export class Tile {
           this.fogDistance = this.fogDistanceBuffer + progress;
           this.updateFog();
         },
-        ease: 'bounce.inOut',
+        ease: "bounce.inOut",
         onComplete: oncomplete,
       });
     }
@@ -158,7 +168,7 @@ export class Tile {
   public hide() {
     this.updateObject(true);
     this.smoothMoveFog(true);
-    console.log('hide fog');
+    console.log("hide fog");
   }
 
   public show() {
@@ -166,7 +176,7 @@ export class Tile {
     this.smoothMoveFog(false, () => {
       this.updateObject(false);
     });
-    console.log('show fog');
+    console.log("show fog");
   }
 
   public setFogPosition(): void {
@@ -179,14 +189,14 @@ export class Tile {
 
     const distance = Math.sqrt(
       Math.pow(playerPosition.x - this.position.x, 2) +
-        Math.pow(playerPosition.y - this.position.y, 2)
+        Math.pow(playerPosition.y - this.position.y, 2),
     );
     const calculatedAmount = -Math.max(0, 5 - distance / this.fogAmount);
 
     objectPool.updatePosition(
-      'fog',
+      "fog",
       this.fogIdx,
-      new THREE.Vector3(this.position.x, calculatedAmount, this.position.y)
+      new THREE.Vector3(this.position.x, calculatedAmount, this.position.y),
     );
   }
 }

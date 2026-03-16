@@ -1,6 +1,12 @@
 <template>
-  <div ref="containerRef" class="w-full h-full inset-0 absolute overflow-hidden">
-    <canvas ref="canvasRef" class="block w-full h-full absolute inset-0"></canvas>
+  <div
+    ref="containerRef"
+    class="w-full h-full inset-0 absolute overflow-hidden"
+  >
+    <canvas
+      ref="canvasRef"
+      class="block w-full h-full absolute inset-0"
+    ></canvas>
     <div
       class="absolute top-4 left-4 bg-amber-950 border-2 border-amber-900 bg-opacity-50 p-2 text-sm text-white w-fit flex flex-row items-center justify-center gap-2"
     >
@@ -32,9 +38,11 @@
       class="bg-amber-700 p-1 px-2 text-amber-100 font-black border-3 border-amber-900 absolute bottom-4 left-4"
       @click="toggleEntityVisibility"
     >
-      {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
+      {{ gameState.entitiesVisible ? "Hide" : "Show" }}
     </button>
-    <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
+    <div
+      class="absolute bottom-4 right-4 flex gap-2 justify-center items-center"
+    >
       <div
         class="absolute inset-0 w-full h-full bg-amber-950 rounded-[50%] scale-75 border-3 border-amber-900"
       ></div>
@@ -69,9 +77,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { SceneManager } from '../three/sceneManager';
-import { gameState } from '../utils/gameStore';
+import { ref, onMounted, onUnmounted } from "vue";
+import { SceneManager } from "../three/sceneManager";
+import { gameState } from "../utils/gameStore";
 
 interface FullscreenHTMLElement extends HTMLElement {
   mozRequestFullScreen?: () => Promise<void>;
@@ -85,16 +93,16 @@ let sceneManager: SceneManager | null = null;
 
 const movePlayer = (direction: string) => {
   switch (direction) {
-    case 'left':
+    case "left":
       gameState.userPosition.y -= 1;
       break;
-    case 'right':
+    case "right":
       gameState.userPosition.y += 1;
       break;
-    case 'up':
+    case "up":
       gameState.userPosition.x += 1;
       break;
-    case 'down':
+    case "down":
       gameState.userPosition.x -= 1;
       break;
   }
@@ -112,11 +120,13 @@ const requestFullscreen = async () => {
       await handleFullscreen(document.documentElement);
     }
   } catch (error) {
-    console.error('Fullscreen request failed:', error);
+    console.error("Fullscreen request failed:", error);
   }
 };
 
-const handleFullscreen = async (element: FullscreenHTMLElement): Promise<void> => {
+const handleFullscreen = async (
+  element: FullscreenHTMLElement,
+): Promise<void> => {
   if (element.requestFullscreen) {
     return element.requestFullscreen();
   } else if (element.mozRequestFullScreen) {
