@@ -3,7 +3,7 @@
     <button
       v-for="(card, index) in limitedCards"
       :key="card.id ?? card.title"
-      class="pointer-events-auto flex h-full min-h-[15rem] flex-col overflow-hidden bg-green-600 text-left text-black"
+      class="pointer-events-auto flex h-full flex-col overflow-hidden bg-green-600 text-left text-black"
       :style="cardStyles(index)"
       @click="handleCardClick(card)"
     >

@@ -27,11 +27,25 @@
         <GameButton label="Start Game" :on-click="startGame" />
       </div>
 
-      <div class="col-span-3 col-start-2 row-start-7 min-h-0">
+      <div v-if="showResume" class="col-span-6 col-start-2 row-start-7 min-h-0">
+        <GameButton label="Resume" :on-click="resumeGame" />
+      </div>
+
+      <div
+        :class="[
+          'col-span-3 col-start-2 min-h-0',
+          showResume ? 'row-start-8' : 'row-start-7',
+        ]"
+      >
         <GameButton label="Settings" :on-click="startGame" />
       </div>
 
-      <div class="col-span-3 col-start-5 row-start-7 min-h-0">
+      <div
+        :class="[
+          'col-span-3 col-start-5 min-h-0',
+          showResume ? 'row-start-8' : 'row-start-7',
+        ]"
+      >
         <GameButton label="Tutorial" :on-click="startGame" />
       </div>
     </ScreenGrid>
@@ -42,10 +56,26 @@
 import ScreenGrid from "./ui/ScreenGrid.vue";
 import GameButton from "./ui/GameButton.vue";
 
-const emit = defineEmits<{ (event: "start"): void }>();
+withDefaults(
+  defineProps<{
+    showResume?: boolean;
+  }>(),
+  {
+    showResume: false,
+  },
+);
+
+const emit = defineEmits<{
+  (event: "start"): void;
+  (event: "resume"): void;
+}>();
 
 function startGame() {
   emit("start");
+}
+
+function resumeGame() {
+  emit("resume");
 }
 </script>
 

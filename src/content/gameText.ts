@@ -13,7 +13,7 @@ export const gameText = {
       primaryButton: "Commencer la partie",
     },
     boatPlacement: {
-      title: "Le navire se situe en XX",
+      title: "Le navire se situe en ",
       body: "Place le bateau sur la case correspondante.",
       primaryButton: "Suivant",
     },
@@ -51,7 +51,7 @@ export const gameText = {
       },
       afterRoll: {
         primaryButton: "Passer à l’après-midi",
-        secondaryButton: "J’ai une carte clé",
+        secondaryButton: "J’ai une carte dé",
       },
       chooseCard: {
         title: "Laquelle ?",
@@ -76,6 +76,7 @@ export const gameText = {
         title: "C’est l’après-midi",
         body: "Cap vers... ?",
         undoLabel: "Undo",
+        primaryButton: "Suivant",
       },
       directionConfirm: {
         title: "T’es sûr de ton choix ?",
@@ -153,7 +154,11 @@ export const gameText = {
       },
       diceRoll: {
         title: "Lancé de dés",
-        body: "Le dé révèle le nombre de cases que tu peux parcourir.",
+        body: "Fais rouler le dé pour connaître ton déplacement.",
+      },
+      afterRoll: {
+        primaryButton: "Passer à l’après-midi",
+        secondaryButton: "J’ai une carte dé",
       },
       chooseCard: {
         title: "Laquelle ?",
@@ -177,13 +182,12 @@ export const gameText = {
       afternoonIntro: {
         title: "C’est l’après-midi",
         body: "Cap vers... ?",
-        caption: "ancienne position",
         undoLabel: "Undo",
+        primaryButton: "Suivant",
       },
       directionConfirm: {
         title: "T’es sûr de ton choix ?",
         body: "Clique sur une autre flèche pour changer.",
-        caption: "ancienne position",
         primaryButton: "Suivant",
       },
     },

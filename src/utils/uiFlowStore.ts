@@ -16,6 +16,8 @@ type BaseButtonProps = {
   secondaryButtonLabel?: string;
   showUndo?: boolean;
   undoLabel?: string;
+  primaryButtonOnClick?: () => void;
+  secondaryButtonOnClick?: () => void;
 };
 
 export type UIScreen =
@@ -32,6 +34,7 @@ export type UIScreen =
       props: {
         replayKey?: string | number | boolean | null;
         stepDuration?: number;
+        onComplete?: () => void;
       };
     }
   | {
@@ -44,6 +47,16 @@ export type UIScreen =
       content?: ScreenContent;
       props: BaseButtonProps & {
         cards: ChoiceCardInput[];
+      };
+    }
+  | {
+      type: "top-message-lower-button-dice";
+      content?: ScreenContent;
+      props: BaseButtonProps & {
+        rollDuration?: number;
+        throwDice?: boolean;
+        resultValue?: number;
+        onRollComplete?: (value: number) => void;
       };
     };
 

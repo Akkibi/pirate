@@ -172,14 +172,14 @@ async function animateIn() {
     .to(parchmentRef.value, {
       opacity: 1,
       scaleX: 1,
-      duration: 0.8,
+      duration: 0.5,
       ease: "power2.out",
     })
     .to(
       contentRef.value,
       {
         opacity: 1,
-        duration: 1,
+        duration: 0.5,
         ease: "power2.out",
       },
       ">",

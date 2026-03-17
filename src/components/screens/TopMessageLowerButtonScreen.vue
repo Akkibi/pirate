@@ -1,6 +1,6 @@
 <template>
   <ScreenGrid overlay>
-    <div v-if="showParchment" class="col-span-8 row-span-2 row-start-1">
+    <div v-if="showParcement" class="col-span-8 row-span-2 row-start-1">
       <Parchment
         size="fill"
         surface-class="h-full"
@@ -79,7 +79,6 @@ import type { ButtonHandler } from "../../types/ui";
 const props = withDefaults(
   defineProps<{
     message?: string;
-    showParchment?: boolean;
     primaryButtonLabel?: string;
     onPrimaryButtonClick?: ButtonHandler;
     secondaryButtonLabel?: string;
@@ -90,7 +89,6 @@ const props = withDefaults(
   }>(),
   {
     message: "",
-    showParchment: true,
     primaryButtonLabel: "",
     onPrimaryButtonClick: undefined,
     secondaryButtonLabel: "",
@@ -102,6 +100,8 @@ const props = withDefaults(
 );
 
 const slots = useSlots();
+
+const showParcement = computed(() => Boolean(slots.message));
 
 const hasPrimaryButton = computed(
   () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary),
@@ -132,14 +132,14 @@ function revealButtonsAfterCards() {
   clearButtonsTimer();
   buttonsTimer = window.setTimeout(() => {
     buttonsVisible.value = true;
-  }, 700);
+  }, 300);
 }
 
 function startRevealSequence() {
   cardsVisible.value = false;
   buttonsVisible.value = false;
 
-  if (!props.showParchment) {
+  if (!showParcement.value) {
     if (hasCards.value) {
       cardsVisible.value = true;
       revealButtonsAfterCards();

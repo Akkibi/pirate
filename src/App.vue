@@ -6,16 +6,20 @@ import FullMessageButtonScreen from "./components/screens/FullMessageButtonScree
 import LookingAroundTimerScreen from "./components/screens/LookingAroundTimerScreen.vue";
 import TopMessageLowerButtonScreen from "./components/screens/TopMessageLowerButtonScreen.vue";
 import TopMessageLowerButtonCardsScreen from "./components/screens/TopMessageLowerButtonCardsScreen.vue";
+import TopMessageLowerButtonDiceScreen from "./components/screens/TopMessageLowerButtonDiceScreen.vue";
 import { initGame } from "./main";
+import { hasSavedGameProgress } from "./utils/gameProgress";
 import { currentScreen, resolveScreen } from "./utils/uiFlowStore";
 
 const started = ref(false);
+const canResume = ref(hasSavedGameProgress());
 
 const screenComponentMap = {
   "full-message-button": FullMessageButtonScreen,
   "looking-around-timer": LookingAroundTimerScreen,
   "top-message-lower-button": TopMessageLowerButtonScreen,
   "top-message-lower-button-cards": TopMessageLowerButtonCardsScreen,
+  "top-message-lower-button-dice": TopMessageLowerButtonDiceScreen,
 } as const;
 
 const activeScreenComponent = computed(() => {
@@ -37,22 +41,32 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
     case "full-message-button":
       return {
         ...screen.props,
-        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
-        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: screen.props.secondaryButtonOnClick
+          ? screen.props.secondaryButtonOnClick
+          : () => resolveScreen({ action: "secondary" }),
         onUndoClick: () => resolveScreen({ action: "undo" }),
       };
 
     case "looking-around-timer":
       return {
         ...screen.props,
-        onComplete: () => resolveScreen({ action: "timer-complete" }),
+        onComplete: screen.props.onComplete
+          ? screen.props.onComplete
+          : () => resolveScreen({ action: "timer-complete" }),
       };
 
     case "top-message-lower-button":
       return {
         ...screen.props,
-        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
-        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: screen.props.secondaryButtonOnClick
+          ? screen.props.secondaryButtonOnClick
+          : () => resolveScreen({ action: "secondary" }),
         onUndoClick: () => resolveScreen({ action: "undo" }),
       };
 
@@ -63,8 +77,24 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
           ...card,
           onSelect: () => resolveScreen({ action: "card", cardId: card.id }),
         })),
-        onPrimaryButtonClick: () => resolveScreen({ action: "primary" }),
-        onSecondaryButtonClick: () => resolveScreen({ action: "secondary" }),
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: screen.props.secondaryButtonOnClick
+          ? screen.props.secondaryButtonOnClick
+          : () => resolveScreen({ action: "secondary" }),
+        onUndoClick: () => resolveScreen({ action: "undo" }),
+      };
+
+    case "top-message-lower-button-dice":
+      return {
+        ...screen.props,
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : () => resolveScreen({ action: "primary" }),
+        onSecondaryButtonClick: screen.props.secondaryButtonOnClick
+          ? screen.props.secondaryButtonOnClick
+          : () => resolveScreen({ action: "secondary" }),
         onUndoClick: () => resolveScreen({ action: "undo" }),
       };
   }
@@ -77,10 +107,21 @@ function startGame() {
 
   initGame();
 }
+
+function resumeGame() {
+  started.value = true;
+
+  initGame({ resume: true });
+}
 </script>
 
 <template>
-  <Landing v-if="!started" @start="startGame" />
+  <Landing
+    v-if="!started"
+    :show-resume="canResume"
+    @resume="resumeGame"
+    @start="startGame"
+  />
   <div v-else class="relative h-full w-full">
     <Canvas />
     <component
@@ -89,9 +130,8 @@ function startGame() {
       :key="currentScreen.instanceId"
       v-bind="activeScreenProps"
     >
-      <template #message>
+      <template #message v-if="currentScreen.content">
         <div
-          v-if="currentScreen.content"
           class="flex h-full w-full flex-col items-center justify-center gap-2 text-center"
         >
           <p

@@ -1,24 +1,13 @@
 <template>
   <ScreenGrid overlay>
-    <div class="col-span-6 col-start-2 row-span-3 row-start-1">
+    <div class="col-span-8 row-span-2 flex items-center justify-center">
       <div
-        class="relative flex h-full min-h-[12rem] items-center justify-center overflow-hidden rounded-[30px] border-[3px] border-[#5b3a1f] bg-[#d9bc87] shadow-[0_18px_40px_rgba(38,24,12,0.35)]"
+        v-for="step in countdownSteps"
+        v-show="currentStep === step"
+        :key="step"
+        class="text-[clamp(4rem,22vw,8rem)] leading-none"
       >
-        <div
-          class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,246,217,0.92)_0%,rgba(228,197,139,0.95)_52%,rgba(190,142,85,0.98)_100%)]"
-        ></div>
-        <div
-          v-for="step in countdownSteps"
-          v-show="currentStep === step"
-          :key="step"
-          class="relative flex h-full w-full items-center justify-center px-6 py-4"
-        >
-          <div
-            class="timer-number flex h-full w-full items-center justify-center rounded-[24px] border border-[#8d5d2d]/40 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_50%),linear-gradient(180deg,rgba(121,79,39,0.18),rgba(91,58,31,0.08))] text-[clamp(4rem,22vw,8rem)] text-[#533116]"
-          >
-            {{ step }}
-          </div>
-        </div>
+        {{ currentStep }}
       </div>
     </div>
   </ScreenGrid>
@@ -112,9 +101,3 @@ onBeforeUnmount(() => {
   clearCountdownTimer();
 });
 </script>
-
-<style scoped>
-.timer-number {
-  font-family: "Black Crest", "IM Fell English", Georgia, serif;
-}
-</style>
