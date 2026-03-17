@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "stylesheet.css";
+@import 'tailwindcss';
+@import 'stylesheet.css';
 
 @layer base {
 	html,
@@ -24,4 +24,9 @@ canvas {
 	display: block;
 	width: 100%;
 	height: 100%;
+}
+
+button {
+  border-radius: 5px;
+  corner-shape: scoop;
 }

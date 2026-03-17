@@ -1,7 +1,7 @@
-import { reactive } from "vue";
-import * as THREE from "three/webgpu";
+import { reactive } from 'vue';
+import * as THREE from 'three/webgpu';
 
-export type PhaseType = "crew" | "parrot";
+export type PhaseType = 'crew' | 'parrot';
 
 interface StoreInterface {
   currentPhase: PhaseType;
@@ -14,6 +14,8 @@ interface StoreInterface {
   userPosition: THREE.Vector2;
   userPositionHistory: Array<THREE.Vector2>;
   entitiesVisible: boolean;
+  focusedView: boolean;
+  displayArrows: boolean;
 }
 
 export interface GameStateSnapshot {
@@ -36,21 +38,23 @@ export interface GameStateSnapshot {
 }
 
 export const gameState = reactive({
-  currentPhase: "crew",
+  currentPhase: 'crew',
   currentAction: null as string | null,
   showActionPanel: false,
   showVideoOverlay: false,
   turnCount: 0,
   crewHP: 3,
   diceResult: null,
+  focusedView: false,
   userPosition: new THREE.Vector2(0, 0),
   userPositionHistory: [new THREE.Vector2(0, 0)],
-  entitiesVisible: true,
+  entitiesVisible: false,
+  displayArrows: false,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
   return {
-    currentPhase: "crew",
+    currentPhase: 'crew',
     currentAction: null,
     showActionPanel: false,
     showVideoOverlay: false,
@@ -99,9 +103,7 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.userPositionHistory.splice(
     0,
     gameState.userPositionHistory.length,
-    ...snapshot.userPositionHistory.map(
-      (position) => new THREE.Vector2(position.x, position.y),
-    ),
+    ...snapshot.userPositionHistory.map((position) => new THREE.Vector2(position.x, position.y))
   );
   gameState.entitiesVisible = snapshot.entitiesVisible;
 }

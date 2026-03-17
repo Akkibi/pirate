@@ -1,13 +1,16 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite';
+import mkcert from 'vite-plugin-mkcert';
+import vue from '@vitejs/plugin-vue';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [mkcert(), vue()],
   optimizeDeps: {
-    exclude: ["three"],
+    exclude: ['three'],
   },
   ssr: {
-    noExternal: ["three"],
+    noExternal: ['three'],
+  },
+  server: {
+    host: true,
   },
 });
