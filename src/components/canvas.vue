@@ -71,12 +71,16 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { SceneManager } from '../three/sceneManager';
 import { gameState } from '../utils/gameStore';
+import { gameEvents } from '../events/gameEvents';
 
 const containerRef = ref<HTMLDivElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 let sceneManager: SceneManager | null = null;
 
+gameEvents.on('crew:move_confirmation', (e) => movePlayer(e.direction));
+
 const movePlayer = (direction: string) => {
+  console.log('move', direction);
   switch (direction) {
     case 'left':
       gameState.userPosition.y -= 1;

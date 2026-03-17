@@ -16,6 +16,7 @@ interface StoreInterface {
   entitiesVisible: boolean;
   focusedView: boolean;
   displayArrows: boolean;
+  arrowClicked: string | null;
 }
 
 export interface GameStateSnapshot {
@@ -35,6 +36,7 @@ export interface GameStateSnapshot {
     y: number;
   }>;
   entitiesVisible: boolean;
+  arrowClicked: string | null;
 }
 
 export const gameState = reactive({
@@ -50,6 +52,7 @@ export const gameState = reactive({
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: false,
   displayArrows: false,
+  arrowClicked: null,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
@@ -67,6 +70,7 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
     },
     userPositionHistory: [{ x: 0, y: 0 }],
     entitiesVisible: true,
+    arrowClicked: null,
   };
 }
 
@@ -88,6 +92,7 @@ export function createGameStateSnapshot(): GameStateSnapshot {
       y: position.y,
     })),
     entitiesVisible: gameState.entitiesVisible,
+    arrowClicked: null,
   };
 }
 

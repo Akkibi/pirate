@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
+import { gameEvents } from '../events/gameEvents';
 
 export class Player {
   private position: THREE.Vector2;
@@ -49,17 +50,18 @@ export class Player {
     const textureLoader = new THREE.TextureLoader();
 
     const arrows = [
-      { name: 'front', position: new THREE.Vector3(0, 0, -0.75) },
-      { name: 'back', position: new THREE.Vector3(0, 0, 0.75) },
-      { name: 'left', position: new THREE.Vector3(-0.75, 0, 0) },
-      { name: 'right', position: new THREE.Vector3(0.75, 0, 0) },
+      { name: 'left', position: new THREE.Vector3(0, 0, -0.75) },
+      { name: 'right', position: new THREE.Vector3(0, 0, 0.75) },
+      { name: 'down', position: new THREE.Vector3(-0.75, 0, 0) },
+      { name: 'up', position: new THREE.Vector3(0.75, 0, 0) },
     ];
 
     arrows.forEach((arrow) => {
       textureLoader.load(`images/arrow-${arrow.name}.png`, (texture) => {
-        const geometry = new THREE.PlaneGeometry(0.3, 0.3);
+        const geometry = new THREE.PlaneGeometry(0.5, 0.5);
         const material = new THREE.MeshBasicMaterial({
           map: texture,
+          color: '#ffffff',
           transparent: true,
           side: THREE.DoubleSide,
         });
@@ -122,6 +124,18 @@ export class Player {
     });
   }
 
+  private updateArrowHighlight(selectedArrowName: string): void {
+    for (const [name, mesh] of this.arrowMeshes) {
+      const material = mesh.material;
+
+      if (!(material instanceof THREE.MeshBasicMaterial)) {
+        continue;
+      }
+
+      material.color.set(name === selectedArrowName ? '#22c55e' : '#ffffff');
+    }
+  }
+
   public update(time: number) {
     this.boatGroup.rotation.y += 0.001;
     this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
@@ -150,7 +164,10 @@ export class Player {
       // Find the arrow name
       for (const [name, mesh] of this.arrowMeshes) {
         if (mesh === clickedMesh) {
+          this.updateArrowHighlight(name);
           console.log(`Arrow clicked: ${name}`);
+          gameEvents.emit('crew:arrow_click', { direction: name });
+          gameState.arrowClicked = name;
           break;
         }
       }

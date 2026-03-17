@@ -1,5 +1,5 @@
-import { shallowRef } from "vue";
-import type { ChoiceCard } from "../types/ui";
+import { shallowRef } from 'vue';
+import type { ChoiceCard } from '../types/ui';
 
 export interface ScreenContent {
   title?: string;
@@ -8,7 +8,7 @@ export interface ScreenContent {
   footer?: string;
 }
 
-type ChoiceCardInput = Omit<ChoiceCard, "onSelect">;
+type ChoiceCardInput = Omit<ChoiceCard, 'onSelect'>;
 
 type BaseButtonProps = {
   showParchment?: boolean;
@@ -22,14 +22,14 @@ type BaseButtonProps = {
 
 export type UIScreen =
   | {
-      type: "full-message-button";
+      type: 'full-message-button';
       content?: ScreenContent;
       props: BaseButtonProps & {
         primaryButtonLabel: string;
       };
     }
   | {
-      type: "looking-around-timer";
+      type: 'looking-around-timer';
       content?: ScreenContent;
       props: {
         replayKey?: string | number | boolean | null;
@@ -38,19 +38,19 @@ export type UIScreen =
       };
     }
   | {
-      type: "top-message-lower-button";
+      type: 'top-message-lower-button';
       content?: ScreenContent;
       props: BaseButtonProps;
     }
   | {
-      type: "top-message-lower-button-cards";
+      type: 'top-message-lower-button-cards';
       content?: ScreenContent;
       props: BaseButtonProps & {
         cards: ChoiceCardInput[];
       };
     }
   | {
-      type: "top-message-lower-button-dice";
+      type: 'top-message-lower-button-dice';
       content?: ScreenContent;
       props: BaseButtonProps & {
         rollDuration?: number;
@@ -65,11 +65,11 @@ type ActiveUIScreen = UIScreen & {
 };
 
 export type UIScreenResult =
-  | { action: "primary" }
-  | { action: "secondary" }
-  | { action: "undo" }
-  | { action: "timer-complete" }
-  | { action: "card"; cardId: string | number | undefined };
+  | { action: 'primary' }
+  | { action: 'secondary' }
+  | { action: 'undo' }
+  | { action: 'timer-complete' }
+  | { action: 'card'; cardId: string | number | undefined };
 
 export const currentScreen = shallowRef<ActiveUIScreen | null>(null);
 
@@ -77,9 +77,9 @@ let nextScreenInstanceId = 1;
 let pendingResolve: ((value: UIScreenResult) => void) | null = null;
 
 export function showScreen(screen: UIScreen): Promise<UIScreenResult> {
-  if (currentScreen.value) {
-    throw new Error("A screen is already active.");
-  }
+  //   if (currentScreen.value) {
+  //     throw new Error("A screen is already active.");
+  //   }
 
   currentScreen.value = {
     ...screen,
