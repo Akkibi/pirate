@@ -1,6 +1,6 @@
-import * as THREE from 'three/webgpu';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import * as THREE from "three/webgpu";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 interface ModelConfig {
   name: string;
@@ -35,7 +35,7 @@ export class InstancedModelManager {
   async init(
     scene: THREE.Scene,
     configs: ModelConfig[],
-    maxInstances = MAX_INSTANCES
+    maxInstances = MAX_INSTANCES,
   ): Promise<void> {
     this.scene = scene;
 
@@ -85,7 +85,9 @@ export class InstancedModelManager {
       } else {
         // Normalize attributes: ensure every geometry has the same attributes.
         // Remove attributes that aren't shared by all geometries.
-        const attributeSets = geometries.map((g) => new Set(Object.keys(g.attributes)));
+        const attributeSets = geometries.map(
+          (g) => new Set(Object.keys(g.attributes)),
+        );
         const commonAttributes = attributeSets.reduce((acc, set) => {
           return new Set([...acc].filter((attr) => set.has(attr)));
         });
@@ -123,10 +125,14 @@ export class InstancedModelManager {
         `generateInstances of "${config.name}": merged ${geometries.length} meshes, ` +
           `${uniqueMaterials.length} unique material(s)`,
         gltf,
-        config
+        config,
       );
 
-      const instancedMesh = new THREE.InstancedMesh(mergedGeometry, finalMaterial, maxInstances);
+      const instancedMesh = new THREE.InstancedMesh(
+        mergedGeometry,
+        finalMaterial,
+        maxInstances,
+      );
       instancedMesh.count = 0; // start with nothing visible
       instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       instancedMesh.frustumCulled = false;
@@ -245,7 +251,7 @@ export class InstancedModelManager {
     index: number,
     position: THREE.Vector3,
     rotation: THREE.Euler,
-    scale: THREE.Vector3
+    scale: THREE.Vector3,
   ): void {
     const pool = this.getPool(name);
     DUMMY.position.copy(position);
@@ -289,7 +295,7 @@ export class InstancedModelManager {
   private updateTransform(
     pool: InstancePool,
     index: number,
-    updater: (matrix: THREE.Matrix4) => THREE.Matrix4
+    updater: (matrix: THREE.Matrix4) => THREE.Matrix4,
   ): void {
     pool.mesh.getMatrixAt(index, this._tempMatrix);
     const result = updater(this._tempMatrix);

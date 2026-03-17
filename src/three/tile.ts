@@ -136,6 +136,7 @@ export class Tile {
     this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     if (hideFog) {
       const ease = gsap.parseEase('expo.in');
+      // console.log('hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 1,
         onUpdate: () => {
@@ -150,6 +151,7 @@ export class Tile {
       });
     } else {
       const ease = gsap.parseEase('expo.out');
+      console.log('reverse hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 2,
         onUpdate: () => {
