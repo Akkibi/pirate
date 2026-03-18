@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Tile, type TileStateType } from './tile';
+import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mapGenerator } from './mapGenerator';
