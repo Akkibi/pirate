@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { gameText } from "../content/gameText";
-import { gameEvents } from "../events/gameEvents";
-import { gameState } from "./gameStore";
+import { watch } from 'vue';
+import { gameText } from '../content/gameText';
+import { gameEvents, type GameEvents } from '../events/gameEvents';
+import { gameState } from './gameStore';
 import {
   peekSavedGameProgress,
   popSavedGameProgress,
@@ -11,48 +12,46 @@ import {
   type GameCheckpoint,
   type GameProgressData,
   type SavedGameProgress,
-} from "./gameProgress";
-import {
-  resolveScreen,
-  showScreen,
-  type UIScreen,
-  type UIScreenResult,
-} from "./uiFlowStore";
+} from './gameProgress';
+import { showScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
+import { runParrotTurn, type ParrotCheckpoint } from './gameLoopParrotTurn';
+import { runCrewTurn, type CrewCheckpoint } from './gameLoopCrewTurn';
 
-type IntroCheckpoint = "intro.gameStart" | "intro.boatPlacement";
-type ParrotCheckpoint =
-  | "parrot.dawnIntro"
-  | "parrot.observeSurroundings"
-  | "parrot.lookAroundTimer"
-  | "parrot.helpCrew";
-type CrewCheckpoint =
-  | "crew.morningIntro"
-  | "crew.diceRoll"
-  | "crew.cardChoice"
-  | "crew.afternoonIntro"
-  | "crew.directionConfirm";
+type IntroCheckpoint = 'intro.gameStart' | 'intro.boatPlacement';
 
 class UndoNavigationError extends Error {
   constructor() {
-    super("Undo navigation handled");
+    super('Undo navigation handled');
   }
 }
 
 export class GameLoop {
   private skipNextHistoryPushFor: GameCheckpoint | null = null;
 
+  initWatchers = () => {
+    watch(
+      () => gameState.diceResult,
+      (res) => {
+        console.log('diceResult', res);
+      },
+      { deep: true }
+    );
+  };
+
   async startTurn(): Promise<void> {
     try {
       gameState.turnCount++;
+
+      gameState.entitiesVisible = false;
 
       if (gameState.turnCount === 1) {
         await this.introGame();
       }
 
-      gameState.currentPhase = "parrot";
+      gameState.currentPhase = 'parrot';
       await this.parrotTurn();
 
-      gameState.currentPhase = "crew";
+      gameState.currentPhase = 'crew';
       await this.crewTurn();
 
       return this.startTurn();
@@ -86,52 +85,64 @@ export class GameLoop {
     }
   }
 
-  waitForEvent(event: string): Promise<void> {
+  waitForEvent<K extends keyof GameEvents>(event: K, fn?: () => void): Promise<GameEvents[K]> {
     return new Promise((resolve) => {
-      const handler = () => {
+      const handler = (payload: GameEvents[K]) => {
+        if (fn) fn();
+        console.log('received', event);
         gameEvents.off(event as any, handler);
-        resolve();
+        resolve(payload);
       };
+
       gameEvents.on(event as any, handler);
     });
   }
 
-  private async runFromHistoryEntryToTurnEnd(
-    entry: SavedGameProgress,
-  ): Promise<void> {
+  private saveCheckpointHistory(checkpoint: GameCheckpoint, data?: GameProgressData): void {
+    const shouldPushHistory = this.skipNextHistoryPushFor !== checkpoint;
+
+    if (shouldPushHistory) {
+      saveGameProgress(checkpoint, data);
+      return;
+    }
+
+    this.skipNextHistoryPushFor = null;
+  }
+
+  private async runFromHistoryEntryToTurnEnd(entry: SavedGameProgress): Promise<void> {
     switch (entry.checkpoint) {
-      case "intro.gameStart":
-      case "intro.boatPlacement":
+      case 'intro.gameStart':
+      case 'intro.boatPlacement':
         await this.introGame(entry.checkpoint);
-        gameState.currentPhase = "parrot";
+        gameState.currentPhase = 'parrot';
         await this.parrotTurn();
-        gameState.currentPhase = "crew";
+        gameState.currentPhase = 'crew';
         await this.crewTurn();
         return;
 
-      case "parrot.dawnIntro":
-      case "parrot.observeSurroundings":
-      case "parrot.lookAroundTimer":
-      case "parrot.helpCrew":
-        gameState.currentPhase = "parrot";
-        await this.parrotTurn(entry.checkpoint);
-        gameState.currentPhase = "crew";
+      case 'parrot.dawnIntro':
+      case 'parrot.foodChoice':
+      case 'parrot.observeSurroundings':
+      case 'parrot.lookAroundTimer':
+      case 'parrot.helpCrew':
+        gameState.currentPhase = 'parrot';
+        await this.parrotTurn(entry.checkpoint, entry.data);
+        gameState.currentPhase = 'crew';
         await this.crewTurn();
         return;
 
-      case "crew.morningIntro":
-      case "crew.diceRoll":
-      case "crew.cardChoice":
-      case "crew.afternoonIntro":
-      case "crew.directionConfirm":
-        gameState.currentPhase = "crew";
-        await this.crewTurn(
-          entry.checkpoint,
-          entry.checkpoint === "crew.diceRoll" ||
-            entry.checkpoint === "crew.cardChoice"
-            ? entry.data
-            : undefined,
-        );
+      case 'crew.morningIntro':
+      case 'crew.diceRoll':
+      case 'crew.cardChoice':
+      case 'crew.afternoonIntro':
+      case 'crew.directionConfirm':
+      case 'crew.revealCalmSea':
+      case 'crew.revealEncounter':
+      case 'crew.revealDefenseCards':
+      case 'crew.revealIsland':
+      case 'crew.nightFalls':
+        gameState.currentPhase = 'crew';
+        await this.crewTurn(entry.checkpoint, entry.data);
         return;
     }
   }
@@ -139,28 +150,34 @@ export class GameLoop {
   private async showCheckpointScreen(
     checkpoint: GameCheckpoint,
     screen: UIScreen,
-    data?: GameProgressData,
+    data?: GameProgressData
   ): Promise<UIScreenResult> {
-    const shouldPushHistory = this.skipNextHistoryPushFor !== checkpoint;
+    const isCardsScreen = screen.type === 'top-message-lower-button-cards';
 
-    if (shouldPushHistory) {
-      saveGameProgress(checkpoint, data);
-    } else {
-      this.skipNextHistoryPushFor = null;
+    if (!isCardsScreen) {
+      this.saveCheckpointHistory(checkpoint, data);
     }
 
     const result = await showScreen(screen);
 
-    if (result.action === "undo") {
-      await this.undoToPreviousScreen();
+    if (result.action === 'undo') {
+      await this.undoToPreviousScreen({
+        popCurrentCheckpoint: !isCardsScreen,
+        restorePreviousProgress: !isCardsScreen,
+      });
       throw new UndoNavigationError();
     }
 
     return result;
   }
 
-  private async undoToPreviousScreen(): Promise<void> {
-    popSavedGameProgress();
+  private async undoToPreviousScreen(options?: {
+    popCurrentCheckpoint?: boolean;
+    restorePreviousProgress?: boolean;
+  }): Promise<void> {
+    if (options?.popCurrentCheckpoint ?? true) {
+      popSavedGameProgress();
+    }
 
     const previousProgress = peekSavedGameProgress();
 
@@ -168,7 +185,9 @@ export class GameLoop {
       return;
     }
 
-    restoreGameProgress(previousProgress);
+    if (options?.restorePreviousProgress ?? true) {
+      restoreGameProgress(previousProgress);
+    }
     this.skipNextHistoryPushFor = previousProgress.checkpoint;
 
     try {
@@ -183,12 +202,10 @@ export class GameLoop {
     }
   }
 
-  private async introGame(
-    startAt: IntroCheckpoint = "intro.gameStart",
-  ): Promise<void> {
-    if (startAt === "intro.gameStart") {
-      await this.showCheckpointScreen("intro.gameStart", {
-        type: "full-message-button",
+  private async introGame(startAt: IntroCheckpoint = 'intro.gameStart'): Promise<void> {
+    if (startAt === 'intro.gameStart') {
+      await this.showCheckpointScreen('intro.gameStart', {
+        type: 'full-message-button',
         content: gameText.setup.gameStart,
         props: {
           primaryButtonLabel: gameText.setup.gameStart.primaryButton,
@@ -198,8 +215,8 @@ export class GameLoop {
 
     const boatStartPosition = gameState.userPosition;
 
-    await this.showCheckpointScreen("intro.boatPlacement", {
-      type: "full-message-button",
+    await this.showCheckpointScreen('intro.boatPlacement', {
+      type: 'full-message-button',
       content: {
         ...gameText.setup.boatPlacement,
         title: `${gameText.setup.boatPlacement.title}
@@ -213,187 +230,27 @@ export class GameLoop {
   }
 
   private async parrotTurn(
-    startAt: ParrotCheckpoint = "parrot.dawnIntro",
+    startAt: ParrotCheckpoint = 'parrot.dawnIntro',
+    progressData?: GameProgressData
   ): Promise<void> {
-    if (startAt === "parrot.dawnIntro") {
-      await this.showCheckpointScreen("parrot.dawnIntro", {
-        type: "full-message-button",
-        content: gameText.turn1.parrot.dawnIntro,
-        props: {
-          primaryButtonLabel: "Suivant",
-          showUndo: true,
-        },
-      });
-      startAt = "parrot.observeSurroundings";
-    }
-
-    if (startAt === "parrot.observeSurroundings") {
-      await this.showCheckpointScreen("parrot.observeSurroundings", {
-        type: "top-message-lower-button",
-        props: {
-          primaryButtonLabel:
-            gameText.turn1.parrot.observeSurroundings.primaryButton,
-          showUndo: true,
-          primaryButtonOnClick: () => {
-            gameState.entitiesVisible = true;
-            resolveScreen({ action: "primary" });
-          },
-        },
-      });
-      startAt = "parrot.lookAroundTimer";
-    }
-
-    if (startAt === "parrot.lookAroundTimer") {
-      await this.showCheckpointScreen("parrot.lookAroundTimer", {
-        type: "looking-around-timer",
-        props: {
-          onComplete: () => {
-            gameState.entitiesVisible = false;
-            resolveScreen({ action: "timer-complete" });
-          },
-          replayKey: true,
-        },
-      });
-    }
-
-    await this.showCheckpointScreen("parrot.helpCrew", {
-      type: "full-message-button",
-      content: gameText.turn1.parrot.helpCrew,
-      props: {
-        primaryButtonLabel: gameText.turn1.parrot.helpCrew.primaryButton,
-      },
+    await runParrotTurn({
+      showCheckpointScreen: this.showCheckpointScreen.bind(this),
+      waitForEvent: this.waitForEvent.bind(this),
+      startAt,
+      progressData,
     });
   }
 
-  private getAdjustedDiceResult(step: 1 | -1): number {
-    const currentValue = gameState.diceResult ?? 0;
-    const nextValue = currentValue + step;
-
-    if (nextValue < 0) {
-      return currentValue;
-    }
-
-    return Math.min(3, nextValue);
-  }
-
-  private async diceCardsOptions(options?: {
-    throwDice?: boolean;
-    resultValue?: number;
-    resumeFrom?: "crew.diceRoll" | "crew.cardChoice";
-  }): Promise<void> {
-    const crewText =
-      gameState.turnCount === 1 ? gameText.turn1.crew : gameText.turn2Plus.crew;
-
-    if (options?.resumeFrom !== "crew.cardChoice") {
-      const choice = await this.showCheckpointScreen(
-        "crew.diceRoll",
-        {
-          type: "top-message-lower-button-dice",
-          content: crewText.diceRoll,
-          props: {
-            throwDice: options?.throwDice ?? true,
-            resultValue: options?.resultValue,
-            showUndo: true,
-            primaryButtonLabel: crewText.afterRoll.primaryButton,
-            secondaryButtonLabel: crewText.afterRoll.secondaryButton,
-          },
-        },
-        {
-          throwDice: options?.throwDice ?? true,
-          resultValue: options?.resultValue,
-        },
-      );
-
-      if (choice.action !== "secondary") {
-        return;
-      }
-    }
-
-    while (true) {
-      const cardChoice = await this.showCheckpointScreen("crew.cardChoice", {
-        type: "top-message-lower-button-cards",
-        content: crewText.chooseCard,
-        props: {
-          showUndo: true,
-          cards: crewText.chooseCard.cards.map((card) => ({
-            ...card,
-            id: card.title,
-          })),
-        },
-      });
-
-      if (cardChoice.action !== "card") {
-        continue;
-      }
-
-      if (cardChoice.cardId === "Coup de burst") {
-        return this.diceCardsOptions({
-          throwDice: false,
-          resultValue: this.getAdjustedDiceResult(1),
-        });
-      }
-
-      if (cardChoice.cardId === "Accalmie") {
-        return this.diceCardsOptions({
-          throwDice: false,
-          resultValue: this.getAdjustedDiceResult(-1),
-        });
-      }
-
-      return this.diceCardsOptions({ throwDice: true });
-    }
-  }
-
   private async crewTurn(
-    startAt: CrewCheckpoint = "crew.morningIntro",
-    diceOptions?: GameProgressData,
+    startAt: CrewCheckpoint = 'crew.morningIntro',
+    progressData?: GameProgressData
   ): Promise<void> {
-    const crewText =
-      gameState.turnCount === 1 ? gameText.turn1.crew : gameText.turn2Plus.crew;
-
-    if (startAt === "crew.morningIntro") {
-      await this.showCheckpointScreen("crew.morningIntro", {
-        type: "full-message-button",
-        content: crewText.morningIntro,
-        props: {
-          primaryButtonLabel: "Lancer les dés!",
-          //   showUndo: true,
-        },
-      });
-      startAt = "crew.diceRoll";
-    }
-
-    if (startAt === "crew.diceRoll" || startAt === "crew.cardChoice") {
-      await this.diceCardsOptions({
-        throwDice: diceOptions?.throwDice,
-        resultValue: diceOptions?.resultValue,
-        resumeFrom:
-          startAt === "crew.cardChoice" ? "crew.cardChoice" : "crew.diceRoll",
-      });
-      startAt = "crew.afternoonIntro";
-    }
-
-    if (startAt === "crew.afternoonIntro") {
-      await this.showCheckpointScreen("crew.afternoonIntro", {
-        type: "top-message-lower-button",
-        content: crewText.afternoonIntro,
-        props: {
-          showUndo: true,
-          secondaryButtonLabel: "Fleches",
-        },
-      });
-      startAt = "crew.directionConfirm";
-    }
-
-    if (startAt === "crew.directionConfirm") {
-      await this.showCheckpointScreen("crew.directionConfirm", {
-        type: "top-message-lower-button",
-        content: crewText.directionConfirm,
-        props: {
-          showUndo: true,
-          secondaryButtonLabel: "Confirmer",
-        },
-      });
-    }
+    await runCrewTurn({
+      showCheckpointScreen: this.showCheckpointScreen.bind(this),
+      waitForEvent: this.waitForEvent.bind(this),
+      saveCheckpointHistory: this.saveCheckpointHistory.bind(this),
+      startAt,
+      progressData,
+    });
   }
 }

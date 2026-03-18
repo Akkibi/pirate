@@ -1,27 +1,38 @@
 import {
   applyGameStateSnapshot,
+  type BoardTileState,
   createGameStateSnapshot,
   type GameStateSnapshot,
-} from "./gameStore";
+} from './gameStore';
 
-const GAME_PROGRESS_STORAGE_KEY = "pirate.game.progress";
+const GAME_PROGRESS_STORAGE_KEY = 'pirate.game.progress';
 
 export type GameCheckpoint =
-  | "intro.gameStart"
-  | "intro.boatPlacement"
-  | "parrot.dawnIntro"
-  | "parrot.observeSurroundings"
-  | "parrot.lookAroundTimer"
-  | "parrot.helpCrew"
-  | "crew.morningIntro"
-  | "crew.diceRoll"
-  | "crew.cardChoice"
-  | "crew.afternoonIntro"
-  | "crew.directionConfirm";
+  | 'intro.gameStart'
+  | 'intro.boatPlacement'
+  | 'parrot.dawnIntro'
+  | 'parrot.foodChoice'
+  | 'parrot.observeSurroundings'
+  | 'parrot.lookAroundTimer'
+  | 'parrot.helpCrew'
+  | 'crew.morningIntro'
+  | 'crew.diceRoll'
+  | 'crew.cardChoice'
+  | 'crew.afternoonIntro'
+  | 'crew.directionConfirm'
+  | 'crew.revealCalmSea'
+  | 'crew.revealEncounter'
+  | 'crew.revealDefenseCards'
+  | 'crew.revealIsland'
+  | 'crew.nightFalls';
 
 export interface GameProgressData {
   throwDice?: boolean;
   resultValue?: number;
+  remainingMoves?: number;
+  remainingParrotActions?: number;
+  direction?: string;
+  tileState?: BoardTileState;
 }
 
 export interface SavedGameProgress {
@@ -31,11 +42,11 @@ export interface SavedGameProgress {
 }
 
 function canUseLocalStorage(): boolean {
-  return typeof window !== "undefined" && "localStorage" in window;
+  return typeof window !== 'undefined' && 'localStorage' in window;
 }
 
 function isSavedGameProgress(value: unknown): value is SavedGameProgress {
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return false;
   }
 
@@ -55,9 +66,7 @@ function loadGameProgressHistory(): SavedGameProgress[] {
   }
 
   try {
-    const parsedProgress = JSON.parse(rawProgress) as
-      | SavedGameProgress
-      | SavedGameProgress[];
+    const parsedProgress = JSON.parse(rawProgress) as SavedGameProgress | SavedGameProgress[];
 
     if (Array.isArray(parsedProgress)) {
       return parsedProgress.filter(isSavedGameProgress);
@@ -79,10 +88,7 @@ function persistGameProgressHistory(history: SavedGameProgress[]): void {
     return;
   }
 
-  window.localStorage.setItem(
-    GAME_PROGRESS_STORAGE_KEY,
-    JSON.stringify(history),
-  );
+  window.localStorage.setItem(GAME_PROGRESS_STORAGE_KEY, JSON.stringify(history));
 }
 
 export function getSavedGameProgressCount(): number {
@@ -95,17 +101,20 @@ export function peekSavedGameProgress(): SavedGameProgress | null {
   return history[history.length - 1] ?? null;
 }
 
-export function saveGameProgress(
-  checkpoint: GameCheckpoint,
-  data?: GameProgressData,
-): void {
+export function saveGameProgress(checkpoint: GameCheckpoint, data?: GameProgressData): void {
   const history = loadGameProgressHistory();
-
-  history.push({
+  const nextEntry: SavedGameProgress = {
     checkpoint,
     state: createGameStateSnapshot(),
     data,
-  });
+  };
+  const latestEntry = history[history.length - 1];
+
+  if (latestEntry?.checkpoint === checkpoint) {
+    history[history.length - 1] = nextEntry;
+  } else {
+    history.push(nextEntry);
+  }
 
   persistGameProgressHistory(history);
 }
@@ -119,9 +128,7 @@ export function popSavedGameProgress(): SavedGameProgress | null {
   return poppedEntry;
 }
 
-export function restoreGameProgress(
-  progress: SavedGameProgress,
-): SavedGameProgress {
+export function restoreGameProgress(progress: SavedGameProgress): SavedGameProgress {
   applyGameStateSnapshot(progress.state);
   return progress;
 }

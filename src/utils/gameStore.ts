@@ -2,6 +2,13 @@ import { reactive } from 'vue';
 import * as THREE from 'three/webgpu';
 
 export type PhaseType = 'crew' | 'parrot';
+export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island';
+
+export interface BoardTileSnapshot {
+  x: number;
+  y: number;
+  state: BoardTileState;
+}
 
 interface StoreInterface {
   currentPhase: PhaseType;
@@ -16,6 +23,8 @@ interface StoreInterface {
   entitiesVisible: boolean;
   focusedView: boolean;
   displayArrows: boolean;
+  arrowClicked: string | null;
+  boardTiles: BoardTileSnapshot[];
 }
 
 export interface GameStateSnapshot {
@@ -35,6 +44,8 @@ export interface GameStateSnapshot {
     y: number;
   }>;
   entitiesVisible: boolean;
+  arrowClicked: string | null;
+  boardTiles: BoardTileSnapshot[];
 }
 
 export const gameState = reactive({
@@ -50,6 +61,8 @@ export const gameState = reactive({
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: false,
   displayArrows: false,
+  arrowClicked: null,
+  boardTiles: [],
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
@@ -67,6 +80,8 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
     },
     userPositionHistory: [{ x: 0, y: 0 }],
     entitiesVisible: true,
+    arrowClicked: null,
+    boardTiles: [],
   };
 }
 
@@ -88,6 +103,12 @@ export function createGameStateSnapshot(): GameStateSnapshot {
       y: position.y,
     })),
     entitiesVisible: gameState.entitiesVisible,
+    arrowClicked: null,
+    boardTiles: gameState.boardTiles.map((tile) => ({
+      x: tile.x,
+      y: tile.y,
+      state: tile.state,
+    })),
   };
 }
 
@@ -106,8 +127,31 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
     ...snapshot.userPositionHistory.map((position) => new THREE.Vector2(position.x, position.y))
   );
   gameState.entitiesVisible = snapshot.entitiesVisible;
+  gameState.boardTiles.splice(
+    0,
+    gameState.boardTiles.length,
+    ...(snapshot.boardTiles ?? []).map((tile) => ({
+      x: tile.x,
+      y: tile.y,
+      state: tile.state,
+    }))
+  );
 }
 
 export function resetGameState(): void {
   applyGameStateSnapshot(createDefaultGameStateSnapshot());
+}
+
+export function setBoardTiles(tiles: BoardTileSnapshot[]): void {
+  gameState.boardTiles.splice(0, gameState.boardTiles.length, ...tiles);
+}
+
+export function getBoardTileStateAtPosition(
+  position: Pick<THREE.Vector2, 'x' | 'y'>
+): BoardTileState | null {
+  const matchingTile = gameState.boardTiles.find(
+    (tile) => tile.x === position.x && tile.y === position.y
+  );
+
+  return matchingTile?.state ?? null;
 }

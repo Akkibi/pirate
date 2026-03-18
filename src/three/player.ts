@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
+import { gameEvents } from '../events/gameEvents';
 
 export class Player {
   private position: THREE.Vector2;
@@ -49,17 +50,18 @@ export class Player {
     const textureLoader = new THREE.TextureLoader();
 
     const arrows = [
-      { name: 'front', position: new THREE.Vector3(0, 0, -0.75) },
-      { name: 'back', position: new THREE.Vector3(0, 0, 0.75) },
-      { name: 'left', position: new THREE.Vector3(-0.75, 0, 0) },
-      { name: 'right', position: new THREE.Vector3(0.75, 0, 0) },
+      { name: 'left', position: new THREE.Vector3(0, 0, -0.75) },
+      { name: 'right', position: new THREE.Vector3(0, 0, 0.75) },
+      { name: 'down', position: new THREE.Vector3(-0.75, 0, 0) },
+      { name: 'up', position: new THREE.Vector3(0.75, 0, 0) },
     ];
 
     arrows.forEach((arrow) => {
       textureLoader.load(`images/arrow-${arrow.name}.png`, (texture) => {
-        const geometry = new THREE.PlaneGeometry(0.3, 0.3);
+        const geometry = new THREE.PlaneGeometry(0.5, 0.5);
         const material = new THREE.MeshBasicMaterial({
           map: texture,
+          color: '#ffffff',
           transparent: true,
           side: THREE.DoubleSide,
         });
@@ -70,6 +72,7 @@ export class Player {
 
         this.arrowMeshes.set(arrow.name, mesh);
         this.arrowGroup.add(mesh);
+        this.updateArrowVisibility(gameState.displayArrows);
       });
     });
   }
@@ -88,6 +91,14 @@ export class Player {
       }
     );
     watch(
+      () => gameState.userPositionHistory.length,
+      () => {
+        if (gameState.displayArrows) {
+          this.updateArrowVisibility(true);
+        }
+      }
+    );
+    watch(
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
@@ -98,10 +109,61 @@ export class Player {
     this.setPosition(gameState.userPosition);
   }
 
+  private resetArrowHighlight(): void {
+    for (const mesh of this.arrowMeshes.values()) {
+      const material = mesh.material;
+
+      if (!(material instanceof THREE.MeshBasicMaterial)) {
+        continue;
+      }
+
+      material.color.set('#ffffff');
+    }
+  }
+
+  private getBlockedArrowDirection(): string | null {
+    if (gameState.turnCount < 2 || gameState.userPositionHistory.length < 2) {
+      return null;
+    }
+
+    const previousPosition =
+      gameState.userPositionHistory[gameState.userPositionHistory.length - 2];
+
+    if (!previousPosition) {
+      return null;
+    }
+
+    const deltaX = previousPosition.x - gameState.userPosition.x;
+    const deltaY = previousPosition.y - gameState.userPosition.y;
+
+    if (deltaX === 1 && deltaY === 0) {
+      return 'up';
+    }
+
+    if (deltaX === -1 && deltaY === 0) {
+      return 'down';
+    }
+
+    if (deltaX === 0 && deltaY === 1) {
+      return 'right';
+    }
+
+    if (deltaX === 0 && deltaY === -1) {
+      return 'left';
+    }
+
+    return null;
+  }
+
   private updateArrowVisibility(isDisplayed: boolean): void {
-    this.arrowGroup.children.forEach((child) => {
-      child.visible = isDisplayed;
-    });
+    this.resetArrowHighlight();
+    gameState.arrowClicked = null;
+
+    const blockedArrowDirection = this.getBlockedArrowDirection();
+
+    for (const [name, mesh] of this.arrowMeshes) {
+      mesh.visible = isDisplayed && name !== blockedArrowDirection;
+    }
   }
 
   private setPhase(phase: PhaseType): void {
@@ -120,6 +182,18 @@ export class Player {
       ease: 'expo.out',
       overwrite: true,
     });
+  }
+
+  private updateArrowHighlight(selectedArrowName: string): void {
+    for (const [name, mesh] of this.arrowMeshes) {
+      const material = mesh.material;
+
+      if (!(material instanceof THREE.MeshBasicMaterial)) {
+        continue;
+      }
+
+      material.color.set(name === selectedArrowName ? '#22c55e' : '#ffffff');
+    }
   }
 
   public update(time: number) {
@@ -150,7 +224,10 @@ export class Player {
       // Find the arrow name
       for (const [name, mesh] of this.arrowMeshes) {
         if (mesh === clickedMesh) {
+          this.updateArrowHighlight(name);
           console.log(`Arrow clicked: ${name}`);
+          gameEvents.emit('crew:arrow_click', { direction: name });
+          gameState.arrowClicked = name;
           break;
         }
       }
