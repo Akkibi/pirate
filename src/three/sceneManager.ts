@@ -96,6 +96,7 @@ export class SceneManager {
     document.removeEventListener('click', this.handleCanvasClick);
     gsap.ticker.remove(this.animate);
     this.renderer.dispose();
+    this.mapManager.destroy();
     if (this.stats.dom.parentElement) {
       this.stats.dom.parentElement.removeChild(this.stats.dom);
     }
