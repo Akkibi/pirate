@@ -3,9 +3,16 @@ import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mapGenerator } from './mapGenerator';
-import { type PhaseType, gameState } from '../utils/gameStore';
+import {
+  type BoardTileSnapshot,
+  type BoardTileState,
+  type PhaseType,
+  gameState,
+  setBoardTiles,
+} from '../utils/gameStore';
 import { watch } from 'vue';
 import { DecorativeClouds } from './decorativeClouds';
+import { gameEvents } from '../events/gameEvents';
 
 const TILE_AMOUNT_X = 5;
 const TILE_AMOUNT_Y = 7;
@@ -25,6 +32,7 @@ export class MapManager {
   private tiles: Tile[];
   private stopWatchers: Array<() => void> = [];
   private clouds: DecorativeClouds;
+  private revealRunId = 0;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -108,64 +116,91 @@ export class MapManager {
       this.mapGroup.add(model);
     });
 
-    const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
-    console.log(newMap);
+    const boardTiles =
+      gameState.boardTiles.length > 0 ? gameState.boardTiles : this.createBoardTiles();
+
+    if (gameState.boardTiles.length === 0) {
+      setBoardTiles(boardTiles);
+    }
+
+    boardTiles.forEach((boardTile) => {
+      const tile = new Tile(new THREE.Vector2(boardTile.x, boardTile.y), boardTile.state);
+      this.tiles.push(tile);
+      this.mapGroup.add(tile.tileGroup);
+    });
 
     const startPosition = new THREE.Vector2(
       Math.round(Math.random() * 4),
       Math.round(Math.random() * 6)
     );
-
-    newMap.map((mapArrayY, x) => {
-      mapArrayY.map((mapValue, y) => {
-        const flippedCoin = Math.random() < 0.15 ? 1 : 0;
-
-        const bad =
-          y % 2 === 0
-            ? x % 2 === flippedCoin
-              ? 'monster'
-              : 'typhon'
-            : x % 2 === 1
-              ? 'monster'
-              : 'typhon';
-        const good =
-          y % 2 === 0
-            ? x % 2 === flippedCoin
-              ? 'island'
-              : 'water'
-            : x % 2 === 1
-              ? 'island'
-              : 'water';
-
-        // const tileType = Math.random() < 0.5 ? bad : good;
-        console.log('tile :', mapValue);
-
-        const randomizedMapValue = Math.random() < 0.25 ? mapValue : !mapValue;
-
-        let tileType: TileStateType = randomizedMapValue ? bad : good;
-
-        if (startPosition.x === x && startPosition.y === y) {
-          tileType = 'water';
-        }
-        const tile = new Tile(new THREE.Vector2(x, y), tileType);
-        this.tiles.push(tile);
-        this.mapGroup.add(tile.tileGroup);
-      });
-    });
-
     gameState.userPosition = startPosition;
   }
 
+  private createBoardTiles(): BoardTileSnapshot[] {
+    const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
+    const boardTiles: BoardTileSnapshot[] = [];
+
+    newMap.forEach((mapArrayY, x) => {
+      mapArrayY.forEach((mapValue, y) => {
+        const flippedCoin = Math.random() < 0.15 ? 1 : 0;
+        const badTile = this.getBoardTileFamily(x, y, flippedCoin, 'bad');
+        const goodTile = this.getBoardTileFamily(x, y, flippedCoin, 'good');
+        const randomizedMapValue = Math.random() < 0.25 ? mapValue : !mapValue;
+
+        boardTiles.push({
+          x,
+          y,
+          state: randomizedMapValue ? badTile : goodTile,
+        });
+      });
+    });
+
+    return boardTiles;
+  }
+
+  private getBoardTileFamily(
+    x: number,
+    y: number,
+    flippedCoin: number,
+    family: 'bad' | 'good'
+  ): BoardTileState {
+    if (family === 'bad') {
+      return y % 2 === 0
+        ? x % 2 === flippedCoin
+          ? 'monster'
+          : 'typhon'
+        : x % 2 === 1
+          ? 'monster'
+          : 'typhon';
+    }
+
+    return y % 2 === 0
+      ? x % 2 === flippedCoin
+        ? 'island'
+        : 'water'
+      : x % 2 === 1
+        ? 'island'
+        : 'water';
+  }
+
   public displayEntities() {
-    this.tiles.forEach((tile) => {
-      tile.show();
+    const revealRunId = ++this.revealRunId;
+    const revealAnimations = this.tiles.map((tile) => tile.show());
+
+    void Promise.all(revealAnimations).then(() => {
+      if (revealRunId !== this.revealRunId || !gameState.entitiesVisible) {
+        return;
+      }
+
+      gameEvents.emit('parrot:map_revealed', {});
     });
   }
 
   public hideEntities() {
+    this.revealRunId += 1;
     console.log(gameState.userPositionHistory);
-    this.tiles.map((tile) => {
-      tile.hide();
+    this.tiles.forEach((tile) => {
+      void tile.hide();
     });
   }
 

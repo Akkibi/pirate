@@ -136,56 +136,66 @@ export class Tile {
     objectPool.updateScale('water', this.waterIdx, new THREE.Vector3(0.5, 0.5, 0.5));
   }
 
-  public smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
-    const emptyObject = {};
-    const scale = 5;
-    this.fogDistanceBuffer = FOG_MIN_DISTANCE;
-    if (hideFog) {
-      const ease = gsap.parseEase('expo.in');
-      const tween = gsap.to(emptyObject, {
-        duration: 1,
-        onUpdate: () => {
-          const eased = ease(tween.progress());
-          const progress = eased * scale; // 0 to 1, eased
-          // console.log('progress', progress);
-          this.fogDistance = this.fogDistanceBuffer + progress;
-          this.updateFog();
-        },
-        ease: 'bounce.inOut',
-        onComplete: oncomplete,
-      });
-    } else {
+  smoothMoveFog(hideFog: boolean, oncomplete?: () => void): Promise<void> {
+    return new Promise((resolve) => {
+      const emptyObject = {};
+      const scale = 4;
+      this.fogDistanceBuffer = FOG_MIN_DISTANCE;
+
+      if (hideFog) {
+        const ease = gsap.parseEase('expo.in');
+        const tween = gsap.to(emptyObject, {
+          duration: 1,
+          onUpdate: () => {
+            const eased = ease(tween.progress());
+            const progress = eased * scale;
+            this.fogDistance = this.fogDistanceBuffer + progress;
+            this.updateFog();
+          },
+          ease: 'bounce.inOut',
+          onComplete: () => {
+            oncomplete?.();
+            resolve();
+          },
+        });
+
+        return;
+      }
+
       const ease = gsap.parseEase('expo.out');
       const tween = gsap.to(emptyObject, {
         duration: 2,
         onUpdate: () => {
           const eased = ease(tween.progress());
-          const progress = scale - eased * scale; // 0 to 1, eased
-          // console.log('progress', progress);
+          const progress = scale - eased * scale;
           this.fogDistance = this.fogDistanceBuffer + progress;
           this.updateFog();
         },
         ease: 'bounce.inOut',
-        onComplete: oncomplete,
+        onComplete: () => {
+          oncomplete?.();
+          resolve();
+        },
       });
-    }
-  }
-
-  public hide() {
-    if (!this.isHistory) {
-      this.updateObject(true);
-    }
-    this.smoothMoveFog(true);
-    console.log('hide fog');
-  }
-
-  public show() {
-    this.smoothMoveFog(false, () => {
-      if (!this.isHistory) {
-        this.updateObject(false);
-      }
     });
-    console.log('show fog');
+  }
+
+  public hide(): Promise<void> {
+    if (this.isHistory) {
+      return Promise.resolve();
+    }
+    this.updateObject(true);
+    return this.smoothMoveFog(true);
+  }
+
+  public show(): Promise<void> {
+    if (this.isHistory) {
+      return Promise.resolve();
+    }
+
+    return this.smoothMoveFog(false, () => {
+      this.updateObject(false);
+    });
   }
 
   public setFogPosition(): void {
