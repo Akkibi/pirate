@@ -26,9 +26,9 @@ export class Camera {
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.phase = gameState.currentPhase;
 
-    const helper = new THREE.PolarGridHelper(4, 2, 4, 0);
-    helper.position.y = 0.1;
-    this.cameraGroup.add(helper);
+    // const helper = new THREE.PolarGridHelper(4, 2, 4, 4);
+    // helper.position.y = 0.1;
+    // this.cameraGroup.add(helper);
 
     this.cameraPositionGroup.add(this.camera);
     this.cameraGroup.add(this.cameraPositionGroup);

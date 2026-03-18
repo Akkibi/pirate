@@ -46,27 +46,33 @@ export class Tile {
         this.setFogPosition();
         // console.log('history tile', this.position.x, gameState.userPosition.x);
         if (
+          !this.isHistory &&
           gameState.userPosition.x === this.position.x &&
-          gameState.userPosition.y === this.position.y &&
-          !this.isHistory
+          gameState.userPosition.y === this.position.y
         ) {
           this.isHistory = true;
           console.log('history tile', this.position);
+
           setTimeout(() => {
             this.updateObject(false);
-          }, 400);
+            this.setTileVisited();
+          }, 300);
         }
       },
       { deep: true }
     );
   }
 
-  destroy() {
+  private setTileVisited() {
+    // add a path on the tile
+  }
+
+  public destroy() {
     this.tileGroup.remove(...this.tileGroup.children);
     this.tileGroup.removeFromParent();
   }
 
-  updateObject(isHidden: boolean) {
+  private updateObject(isHidden: boolean) {
     this.tileGroup.remove(...this.tileGroup.children);
 
     // release previous instance
@@ -130,9 +136,9 @@ export class Tile {
     objectPool.updateScale('water', this.waterIdx, new THREE.Vector3(0.5, 0.5, 0.5));
   }
 
-  smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
+  public smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
     const emptyObject = {};
-    const scale = 4;
+    const scale = 5;
     this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     if (hideFog) {
       const ease = gsap.parseEase('expo.in');
@@ -166,16 +172,18 @@ export class Tile {
   }
 
   public hide() {
-    if (this.isHistory) return;
-    this.updateObject(true);
+    if (!this.isHistory) {
+      this.updateObject(true);
+    }
     this.smoothMoveFog(true);
     console.log('hide fog');
   }
 
   public show() {
-    if (this.isHistory) return;
     this.smoothMoveFog(false, () => {
-      this.updateObject(false);
+      if (!this.isHistory) {
+        this.updateObject(false);
+      }
     });
     console.log('show fog');
   }
@@ -185,7 +193,7 @@ export class Tile {
   }
 
   private updateFog() {
-    if (this.isHistory) return;
+    // if (this.isHistory) return;
     const playerPosition = gameState.userPosition;
     // const isHistory = gameState.userPositionHistory.includes(this.position);
 
@@ -195,7 +203,7 @@ export class Tile {
     //     Math.pow(playerPosition.y - this.position.y, 2)
     // );
 
-    // dismond distance
+    // diamond distance
     const distance =
       Math.abs(playerPosition.x - this.position.x) + Math.abs(playerPosition.y - this.position.y);
 

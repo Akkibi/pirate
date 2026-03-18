@@ -1,10 +1,11 @@
 import * as THREE from 'three/webgpu';
-import { Tile } from './tile';
+import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mapGenerator } from './mapGenerator';
 import { type PhaseType, gameState } from '../utils/gameStore';
 import { watch } from 'vue';
+import { DecorativeClouds } from './decorativeClouds';
 
 const TILE_AMOUNT_X = 5;
 const TILE_AMOUNT_Y = 7;
@@ -15,6 +16,7 @@ const tileTypes = [
   { name: 'monster', url: './models/monster.glb' },
   { name: 'typhon', url: './models/typhon.glb' },
   { name: 'fog', url: './models/fog.glb' },
+  { name: 'flag', url: './models/flag.glb' },
 ];
 
 export class MapManager {
@@ -22,12 +24,16 @@ export class MapManager {
   private mapGroup: THREE.Group;
   private tiles: Tile[];
   private stopWatchers: Array<() => void> = [];
+  private clouds: DecorativeClouds;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.mapGroup = new THREE.Group();
     this.tiles = [];
     this.scene.add(this.mapGroup);
+
+    this.clouds = new DecorativeClouds();
+    this.scene.add(this.clouds.cloudGroup);
 
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
@@ -38,14 +44,15 @@ export class MapManager {
   }
 
   private initWatchers(): void {
-    watch(
-      () => gameState.userPosition,
-      (newPosition) => {
-        gameState.userPositionHistory.push(newPosition.clone());
-      },
-      { deep: true }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.userPosition,
+        (newPosition) => {
+          gameState.userPositionHistory.push(newPosition.clone());
+        },
+        { deep: true }
+      )
     );
-
     this.stopWatchers.push(
       watch(
         () => gameState.currentPhase,
@@ -89,7 +96,7 @@ export class MapManager {
     this.tiles = [];
 
     // Remove mapGroup from scene
-    this.scene.remove(this.mapGroup);
+    this.scene.remove(this.mapGroup, this.clouds.cloudGroup);
   }
 
   generateMap(): void {
@@ -103,6 +110,12 @@ export class MapManager {
 
     const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
     console.log(newMap);
+
+    const startPosition = new THREE.Vector2(
+      Math.round(Math.random() * 4),
+      Math.round(Math.random() * 6)
+    );
+
     newMap.map((mapArrayY, x) => {
       mapArrayY.map((mapValue, y) => {
         const flippedCoin = Math.random() < 0.15 ? 1 : 0;
@@ -129,13 +142,18 @@ export class MapManager {
 
         const randomizedMapValue = Math.random() < 0.25 ? mapValue : !mapValue;
 
-        const tileType = randomizedMapValue ? bad : good;
+        let tileType: TileStateType = randomizedMapValue ? bad : good;
 
+        if (startPosition.x === x && startPosition.y === y) {
+          tileType = 'water';
+        }
         const tile = new Tile(new THREE.Vector2(x, y), tileType);
         this.tiles.push(tile);
         this.mapGroup.add(tile.tileGroup);
       });
     });
+
+    gameState.userPosition = startPosition;
   }
 
   public displayEntities() {

@@ -25,7 +25,6 @@ export class Player {
     this.playerGroup.add(this.boatGroup, this.birdGroup);
     this.position = new THREE.Vector2();
     scene.add(this.playerGroup);
-
     const loader = new GLTFLoader();
 
     loader.load('models/boat.glb', (gltf) => {
@@ -43,6 +42,10 @@ export class Player {
 
     this.loadArrowPlanes();
     this.initWatchers();
+
+    this.playerGroup.position.x = gameState.userPosition.x;
+    this.playerGroup.position.y = gameState.userPosition.y;
+    // set to random int position between 0 and 5 and 0 and 7
   }
 
   private loadArrowPlanes(): void {
