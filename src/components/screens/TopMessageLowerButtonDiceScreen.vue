@@ -33,9 +33,7 @@
       v-if="hasPrimaryButton"
       :class="[
         'col-span-4 col-start-3 row-start-7 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
@@ -46,10 +44,8 @@
     <div
       v-if="hasSecondaryButton"
       :class="[
-        secondaryButtonClasses,
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        'col-span-4 col-start-3 row-start-8 transition-opacity duration-300',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton
@@ -64,10 +60,8 @@
     <div
       v-if="showUndo"
       :class="[
-        'col-span-1 col-start-1 row-start-8 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
@@ -78,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
-import Parchment from "../parchment.vue";
-import ScreenGrid from "../ui/ScreenGrid.vue";
-import GameButton from "../ui/GameButton.vue";
-import type { ButtonHandler } from "../../types/ui";
-import { gameState } from "../../utils/gameStore";
+import { computed, onBeforeUnmount, onMounted, ref, useSlots } from 'vue';
+import Parchment from '../parchment.vue';
+import ScreenGrid from '../ui/ScreenGrid.vue';
+import GameButton from '../ui/GameButton.vue';
+import type { ButtonHandler } from '../../types/ui';
+import { gameState } from '../../utils/gameStore';
 
 const DICE_FACES = [
   { value: 0, x: 0, y: 0 },
@@ -111,48 +105,42 @@ const props = withDefaults(
     onRollComplete?: ((value: number) => void | Promise<void>) | undefined;
   }>(),
   {
-    message: "",
+    message: '',
     showParchment: true,
-    primaryButtonLabel: "",
+    primaryButtonLabel: '',
     onPrimaryButtonClick: undefined,
-    secondaryButtonLabel: "",
+    secondaryButtonLabel: '',
     onSecondaryButtonClick: undefined,
     showUndo: false,
     throwDice: true,
     resultValue: undefined,
-    undoLabel: "Undo",
+    undoLabel: 'Undo',
     onUndoClick: undefined,
     rollDuration: 1200,
     onRollComplete: undefined,
-  },
+  }
 );
 
 const slots = useSlots();
 
 const shouldShowParchment = computed(
-  () =>
-    props.showParchment && (Boolean(props.message) || Boolean(slots.message)),
+  () => props.showParchment && (Boolean(props.message) || Boolean(slots.message))
 );
 const hasPrimaryButton = computed(
-  () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary),
+  () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary)
 );
 const hasSecondaryButton = computed(
-  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary),
+  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary)
 );
 const diceVisible = ref(false);
 const buttonsVisible = ref(false);
 const hasRolled = ref(false);
 const rotationX = ref(-22);
 const rotationY = ref(32);
-const translateY = ref("1.5rem");
-const translateZ = ref("-5rem");
+const translateY = ref('1.5rem');
+const translateZ = ref('-5rem');
 
 let rollTimer: number | null = null;
-
-const secondaryButtonClasses = computed(() => [
-  "row-start-8 transition-opacity duration-300",
-  props.showUndo ? "col-span-4 col-start-3" : "col-span-6 col-start-2",
-]);
 
 const diceStyle = computed(() => ({
   transform: `translate3d(0, ${translateY.value}, ${translateZ.value}) rotateX(${rotationX.value}deg) rotateY(${rotationY.value}deg)`,
@@ -167,7 +155,7 @@ function clearRollTimer() {
 }
 
 function clampDiceValue(value: number | null | undefined): number {
-  if (typeof value !== "number" || Number.isNaN(value)) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
     return 0;
   }
 
@@ -180,8 +168,8 @@ function getFaceForValue(value: number) {
 
 function presentDice() {
   diceVisible.value = true;
-  translateY.value = "-1rem";
-  translateZ.value = "1.5rem";
+  translateY.value = '-1rem';
+  translateZ.value = '1.5rem';
 }
 
 function completeDiceState(result: number) {
@@ -194,8 +182,7 @@ function showStoredDice(targetValue: number) {
   const currentValue = clampDiceValue(gameState.diceResult);
   const currentFace = getFaceForValue(currentValue);
   const targetFace = getFaceForValue(targetValue);
-  const shouldAnimateTurn =
-    gameState.diceResult !== null && targetValue !== currentValue;
+  const shouldAnimateTurn = gameState.diceResult !== null && targetValue !== currentValue;
 
   presentDice();
   rotationX.value = currentFace.x;
@@ -234,8 +221,7 @@ function startRoll() {
     return;
   }
 
-  const rolledFace =
-    DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)] ?? DICE_FACES[0];
+  const rolledFace = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)] ?? DICE_FACES[0];
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -301,27 +287,22 @@ onBeforeUnmount(() => {
 }
 
 .dice-face--back {
-  transform: rotateY(180deg)
-    translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(180deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
 }
 
 .dice-face--right {
-  transform: rotateY(90deg)
-    translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
 }
 
 .dice-face--left {
-  transform: rotateY(-90deg)
-    translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(-90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
 }
 
 .dice-face--top {
-  transform: rotateX(90deg)
-    translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateX(90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
 }
 
 .dice-face--bottom {
-  transform: rotateX(-90deg)
-    translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateX(-90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
 }
 </style>

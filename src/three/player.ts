@@ -72,6 +72,7 @@ export class Player {
 
         this.arrowMeshes.set(arrow.name, mesh);
         this.arrowGroup.add(mesh);
+        this.updateArrowVisibility(gameState.displayArrows);
       });
     });
   }
@@ -90,6 +91,14 @@ export class Player {
       }
     );
     watch(
+      () => gameState.userPositionHistory.length,
+      () => {
+        if (gameState.displayArrows) {
+          this.updateArrowVisibility(true);
+        }
+      }
+    );
+    watch(
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
@@ -100,10 +109,61 @@ export class Player {
     this.setPosition(gameState.userPosition);
   }
 
+  private resetArrowHighlight(): void {
+    for (const mesh of this.arrowMeshes.values()) {
+      const material = mesh.material;
+
+      if (!(material instanceof THREE.MeshBasicMaterial)) {
+        continue;
+      }
+
+      material.color.set('#ffffff');
+    }
+  }
+
+  private getBlockedArrowDirection(): string | null {
+    if (gameState.turnCount < 2 || gameState.userPositionHistory.length < 2) {
+      return null;
+    }
+
+    const previousPosition =
+      gameState.userPositionHistory[gameState.userPositionHistory.length - 2];
+
+    if (!previousPosition) {
+      return null;
+    }
+
+    const deltaX = previousPosition.x - gameState.userPosition.x;
+    const deltaY = previousPosition.y - gameState.userPosition.y;
+
+    if (deltaX === 1 && deltaY === 0) {
+      return 'up';
+    }
+
+    if (deltaX === -1 && deltaY === 0) {
+      return 'down';
+    }
+
+    if (deltaX === 0 && deltaY === 1) {
+      return 'right';
+    }
+
+    if (deltaX === 0 && deltaY === -1) {
+      return 'left';
+    }
+
+    return null;
+  }
+
   private updateArrowVisibility(isDisplayed: boolean): void {
-    this.arrowGroup.children.forEach((child) => {
-      child.visible = isDisplayed;
-    });
+    this.resetArrowHighlight();
+    gameState.arrowClicked = null;
+
+    const blockedArrowDirection = this.getBlockedArrowDirection();
+
+    for (const [name, mesh] of this.arrowMeshes) {
+      mesh.visible = isDisplayed && name !== blockedArrowDirection;
+    }
   }
 
   private setPhase(phase: PhaseType): void {

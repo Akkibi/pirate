@@ -5,7 +5,7 @@
         v-for="step in countdownSteps"
         v-show="currentStep === step"
         :key="step"
-        class="text-[clamp(4rem,22vw,8rem)] leading-none"
+        class="text-[clamp(4rem,22vw,8rem)] leading-none text-amber-800"
       >
         {{ currentStep }}
       </div>
@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from "vue";
-import ScreenGrid from "../ui/ScreenGrid.vue";
-import type { ButtonHandler } from "../../types/ui";
+import { onBeforeUnmount, ref, watch } from 'vue';
+import ScreenGrid from '../ui/ScreenGrid.vue';
+import type { ButtonHandler } from '../../types/ui';
 
 const props = withDefaults(
   defineProps<{
@@ -30,11 +30,11 @@ const props = withDefaults(
     replayKey: null,
     stepDuration: 1000,
     onComplete: undefined,
-  },
+  }
 );
 
 const emit = defineEmits<{
-  (event: "finished"): void;
+  (event: 'finished'): void;
 }>();
 
 const countdownSteps = [5, 4, 3, 2, 1];
@@ -54,7 +54,7 @@ function tickCountdown() {
 
   countdownTimer = window.setTimeout(() => {
     if (currentStep.value === 1) {
-      emit("finished");
+      emit('finished');
       void props.onComplete?.();
       return;
     }
@@ -85,7 +85,7 @@ watch(
 
     clearCountdownTimer();
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 watch(
@@ -94,7 +94,7 @@ watch(
     if (props.visible) {
       startCountdown();
     }
-  },
+  }
 );
 
 onBeforeUnmount(() => {

@@ -11,12 +11,8 @@
       </Parchment>
     </div>
 
-    <div
-      class="col-span-8 row-span-4 row-start-3 flex items-center justify-center"
-    >
-      <div
-        class="pointer-events-none flex h-full w-full items-center justify-center"
-      >
+    <div class="col-span-8 row-span-4 row-start-3 flex items-center justify-center">
+      <div class="pointer-events-none flex h-full w-full items-center justify-center">
         <slot name="cards" :revealed="cardsVisible" />
       </div>
     </div>
@@ -25,9 +21,7 @@
       v-if="hasPrimaryButton"
       :class="[
         'col-span-4 col-start-3 row-start-7 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
@@ -39,9 +33,7 @@
       v-if="hasSecondaryButton"
       :class="[
         secondaryButtonClasses,
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton
@@ -56,10 +48,8 @@
     <div
       v-if="shouldShowUndo"
       :class="[
-        'col-span-1 col-start-1 row-start-8 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
@@ -70,11 +60,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
-import Parchment from "../parchment.vue";
-import GameButton from "../ui/GameButton.vue";
-import ScreenGrid from "../ui/ScreenGrid.vue";
-import type { ButtonHandler } from "../../types/ui";
+import { computed, onBeforeUnmount, onMounted, ref, useSlots } from 'vue';
+import Parchment from '../parchment.vue';
+import GameButton from '../ui/GameButton.vue';
+import ScreenGrid from '../ui/ScreenGrid.vue';
+import type { ButtonHandler } from '../../types/ui';
 
 const props = withDefaults(
   defineProps<{
@@ -88,15 +78,15 @@ const props = withDefaults(
     onUndoClick?: ButtonHandler;
   }>(),
   {
-    message: "",
-    primaryButtonLabel: "",
+    message: '',
+    primaryButtonLabel: '',
     onPrimaryButtonClick: undefined,
-    secondaryButtonLabel: "",
+    secondaryButtonLabel: '',
     onSecondaryButtonClick: undefined,
     showUndo: false,
-    undoLabel: "Undo",
+    undoLabel: 'Undo',
     onUndoClick: undefined,
-  },
+  }
 );
 
 const slots = useSlots();
@@ -104,10 +94,10 @@ const slots = useSlots();
 const showParcement = computed(() => Boolean(slots.message));
 
 const hasPrimaryButton = computed(
-  () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary),
+  () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary)
 );
 const hasSecondaryButton = computed(
-  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary),
+  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary)
 );
 const hasCards = computed(() => Boolean(slots.cards));
 const shouldShowUndo = computed(() => props.showUndo || hasCards.value);
@@ -117,8 +107,8 @@ const buttonsVisible = ref(false);
 let buttonsTimer: number | null = null;
 
 const secondaryButtonClasses = computed(() => [
-  "pointer-events-auto row-start-8 transition-opacity duration-300",
-  shouldShowUndo.value ? "col-span-4 col-start-3" : "col-span-6 col-start-2",
+  'pointer-events-auto row-start-8 transition-opacity duration-300',
+  shouldShowUndo.value ? 'col-span-4 col-start-3' : 'col-span-6 col-start-2',
 ]);
 
 function clearButtonsTimer() {
@@ -168,10 +158,5 @@ onBeforeUnmount(() => {
   clearButtonsTimer();
 });
 
-console.log(
-  "props",
-  hasSecondaryButton.value,
-  props.secondaryButtonLabel,
-  slots.secondary,
-);
+console.log('props', hasSecondaryButton.value, props.secondaryButtonLabel, slots.secondary);
 </script>

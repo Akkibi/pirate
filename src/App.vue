@@ -10,7 +10,6 @@ import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowe
 import { initGame } from './main';
 import { hasSavedGameProgress } from './utils/gameProgress';
 import { currentScreen, resolveScreen } from './utils/uiFlowStore';
-import GameButton from './components/ui/GameButton.vue';
 
 const started = ref(false);
 const UIShown = ref(true);

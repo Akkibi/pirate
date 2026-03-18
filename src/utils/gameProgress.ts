@@ -1,5 +1,6 @@
 import {
   applyGameStateSnapshot,
+  type BoardTileState,
   createGameStateSnapshot,
   type GameStateSnapshot,
 } from './gameStore';
@@ -10,6 +11,7 @@ export type GameCheckpoint =
   | 'intro.gameStart'
   | 'intro.boatPlacement'
   | 'parrot.dawnIntro'
+  | 'parrot.foodChoice'
   | 'parrot.observeSurroundings'
   | 'parrot.lookAroundTimer'
   | 'parrot.helpCrew'
@@ -18,11 +20,19 @@ export type GameCheckpoint =
   | 'crew.cardChoice'
   | 'crew.afternoonIntro'
   | 'crew.directionConfirm'
+  | 'crew.revealCalmSea'
+  | 'crew.revealEncounter'
+  | 'crew.revealDefenseCards'
+  | 'crew.revealIsland'
   | 'crew.nightFalls';
 
 export interface GameProgressData {
   throwDice?: boolean;
   resultValue?: number;
+  remainingMoves?: number;
+  remainingParrotActions?: number;
+  direction?: string;
+  tileState?: BoardTileState;
 }
 
 export interface SavedGameProgress {
@@ -93,12 +103,18 @@ export function peekSavedGameProgress(): SavedGameProgress | null {
 
 export function saveGameProgress(checkpoint: GameCheckpoint, data?: GameProgressData): void {
   const history = loadGameProgressHistory();
-
-  history.push({
+  const nextEntry: SavedGameProgress = {
     checkpoint,
     state: createGameStateSnapshot(),
     data,
-  });
+  };
+  const latestEntry = history[history.length - 1];
+
+  if (latestEntry?.checkpoint === checkpoint) {
+    history[history.length - 1] = nextEntry;
+  } else {
+    history.push(nextEntry);
+  }
 
   persistGameProgressHistory(history);
 }

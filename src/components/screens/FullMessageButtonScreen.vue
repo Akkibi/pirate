@@ -14,16 +14,10 @@
     <div
       :class="[
         'col-span-full col-start-1 row-start-6 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
-      <GameButton
-        class="min-h-[4rem]"
-        :label="primaryButtonLabel"
-        :on-click="onPrimaryButtonClick"
-      >
+      <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
         <slot name="primary">{{ primaryButtonLabel }}</slot>
       </GameButton>
     </div>
@@ -31,14 +25,11 @@
     <div
       v-if="hasSecondaryButton"
       :class="[
-        'col-span-6 col-start-2 row-start-7 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        'col-span-full col-start-1 row-start-7 transition-opacity duration-300',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton
-        class="min-h-[4rem]"
         variant="secondary"
         :label="secondaryButtonLabel"
         :on-click="onSecondaryButtonClick"
@@ -50,10 +41,8 @@
     <div
       v-if="showUndo"
       :class="[
-        'col-span-3 col-start-1 row-start-8 transition-opacity duration-300',
-        buttonsVisible
-          ? 'pointer-events-auto opacity-100'
-          : 'pointer-events-none opacity-0',
+        'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
       ]"
     >
       <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
@@ -64,11 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useSlots } from "vue";
-import Parchment from "../parchment.vue";
-import ScreenGrid from "../ui/ScreenGrid.vue";
-import GameButton from "../ui/GameButton.vue";
-import type { ButtonHandler } from "../../types/ui";
+import { computed, onMounted, ref, useSlots } from 'vue';
+import Parchment from '../parchment.vue';
+import ScreenGrid from '../ui/ScreenGrid.vue';
+import GameButton from '../ui/GameButton.vue';
+import type { ButtonHandler } from '../../types/ui';
 
 const props = withDefaults(
   defineProps<{
@@ -83,23 +72,23 @@ const props = withDefaults(
     onUndoClick?: ButtonHandler;
   }>(),
   {
-    message: "",
+    message: '',
     showParchment: true,
-    primaryButtonLabel: "",
+    primaryButtonLabel: '',
     onPrimaryButtonClick: undefined,
-    secondaryButtonLabel: "",
+    secondaryButtonLabel: '',
     onSecondaryButtonClick: undefined,
     showUndo: false,
-    undoLabel: "Undo",
+    undoLabel: 'Undo',
     onUndoClick: undefined,
-  },
+  }
 );
 
 const slots = useSlots();
 const buttonsVisible = ref(false);
 
 const hasSecondaryButton = computed(
-  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary),
+  () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary)
 );
 
 function handleParchmentShown() {

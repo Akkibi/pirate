@@ -103,7 +103,7 @@ export const gameText = {
         cards: [
           {
             title: 'Cacahuète',
-            caption: 'Effet à préciser.',
+            caption: 'Tu peux effectuer deux actions dans ton tour.',
           },
           {
             title: 'Ver',
@@ -240,7 +240,7 @@ export const gameText = {
     },
     island: {
       title: 'C’est une île !! Capitaine... ?',
-      body: 'Texte de règle à préciser.',
+      body: 'Tu peux piocher une carte.',
       primaryButton: 'Suivant',
     },
   },

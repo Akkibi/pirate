@@ -12,7 +12,7 @@
     </div>
 
     <button
-      class="absolute top-4 right-4 bg-amber-700 border-3 border-amber-900 bg-opacity-50 p-2 text-sm text-amber-100 w-fit flex flex-row items-center justify-center gap-2 cursor-pointer hover:bg-opacity-75 transition"
+      class="absolute top-4 right-4 z-20 bg-amber-700 border-3 border-amber-900 bg-opacity-50 p-2 text-sm text-amber-100 w-fit flex flex-row items-center justify-center gap-2 cursor-pointer hover:bg-opacity-75 transition"
       @click="requestFullscreen"
     >
       <!-- fullscreen -->
