@@ -148,24 +148,6 @@ export class MapManager {
       }
     }
 
-    // generate between 8 and 9 :
-    // - island
-    // - typhons
-    // - monsters
-    // replacing the water tiles with these entities
-    // if the tile is not water search for an other water tile to replace
-
-    // generation of entities position algorythm will work like so:
-    // 1. generate a random number between 0 and TILE_AMOUNT_X * TILE_AMOUNT_Y / 2 (half of the tiles)
-    // 2. map it to a tile position skiping every two tiles (that represents half of the board like the back tiles in chess for example)
-    // 3. look around the tile up down left right if there is two tiles the same as the target tile, look for an other spot.
-    // 4. else, place the target tile there.
-    // 5. repeat for the 4 first tiles of that group, then switch to a tile position skiping every two tiles + 1 (that represents half of the board like the white tiles in chess for example)
-    // 6. repeat the process for the remaining tiles.
-
-    // start with island tiles and then typhons and monsters
-    // after 10 loops of trying to place any tile, if a spot still has not been found, switch to the next group to place or stop the algorythm
-
     this.positionGroup('island', boardTiles);
     this.positionGroup('typhon', boardTiles);
     this.positionGroup('monster', boardTiles);
