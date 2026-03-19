@@ -10,6 +10,7 @@ import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowe
 import { initGame } from './main';
 import { hasSavedGameProgress } from './utils/gameProgress';
 import { currentScreen, resolveScreen } from './utils/uiFlowStore';
+import FullscreenButton from './components/fullscreenButton.vue';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -124,12 +125,15 @@ function toggleUI() {
   <Landing v-if="!started" :show-resume="canResume" @resume="resumeGame" @start="startGame" />
   <div v-else class="relative h-full w-full">
     <Canvas />
-    <button
-      class="absolute top-5 right-5 bg-amber-700 min-w-30 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
-      @click="toggleUI"
-    >
-      {{ UIShown ? 'Hide UI' : 'Show UI' }}
-    </button>
+    <div class="absolute top-4 right-4 flex flex-row gap-2 z-20">
+      <button
+        class="bg-amber-700 min-w-30 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+        @click="toggleUI"
+      >
+        {{ UIShown ? 'Hide UI' : 'Show UI' }}
+      </button>
+      <FullscreenButton />
+    </div>
     <component
       :is="activeScreenComponent"
       v-if="activeScreenComponent && activeScreenProps && currentScreen && UIShown"
