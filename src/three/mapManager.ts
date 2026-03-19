@@ -2,7 +2,6 @@ import * as THREE from 'three/webgpu';
 import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { mapGenerator } from './mapGenerator';
 import {
   type BoardTileSnapshot,
   type BoardTileState,
@@ -107,7 +106,7 @@ export class MapManager {
     this.scene.remove(this.mapGroup, this.clouds.cloudGroup);
   }
 
-  generateMap(): void {
+  public generateMap(): void {
     // load gltf from model/board.gltf and put in scene
     const loader = new GLTFLoader();
     loader.load('models/board.glb', (gltf) => {
@@ -137,50 +136,72 @@ export class MapManager {
   }
 
   private createBoardTiles(): BoardTileSnapshot[] {
-    const newMap = mapGenerator(TILE_AMOUNT_Y, TILE_AMOUNT_X, true);
     const boardTiles: BoardTileSnapshot[] = [];
 
-    newMap.forEach((mapArrayY, x) => {
-      mapArrayY.forEach((mapValue, y) => {
-        const flippedCoin = Math.random() < 0.15 ? 1 : 0;
-        const badTile = this.getBoardTileFamily(x, y, flippedCoin, 'bad');
-        const goodTile = this.getBoardTileFamily(x, y, flippedCoin, 'good');
-        const randomizedMapValue = Math.random() < 0.25 ? mapValue : !mapValue;
-
+    for (let x = 0; x < TILE_AMOUNT_X; x++) {
+      for (let y = 0; y < TILE_AMOUNT_Y; y++) {
         boardTiles.push({
           x,
           y,
-          state: randomizedMapValue ? badTile : goodTile,
+          state: 'water',
         });
-      });
+      }
+    }
+
+    this.positionGroup('island', boardTiles);
+    this.positionGroup('typhon', boardTiles);
+    this.positionGroup('monster', boardTiles);
+
+    // place water at the spot of boat
+
+    boardTiles.forEach((tile) => {
+      if (gameState.userPosition.x === tile.x && gameState.userPosition.y === tile.y) {
+        tile.state = 'water';
+      }
     });
 
     return boardTiles;
   }
 
-  private getBoardTileFamily(
-    x: number,
-    y: number,
-    flippedCoin: number,
-    family: 'bad' | 'good'
-  ): BoardTileState {
-    if (family === 'bad') {
-      return y % 2 === 0
-        ? x % 2 === flippedCoin
-          ? 'monster'
-          : 'typhon'
-        : x % 2 === 1
-          ? 'monster'
-          : 'typhon';
+  private positionGroup(group: BoardTileState, boardTiles: BoardTileSnapshot[]): void {
+    const totalCount = group === 'island' ? 9 : Math.round(Math.random()) + 8; // 8 or 9
+    const blackCount = 4;
+    const whiteCount = totalCount - blackCount; // 4 or 5
+
+    const getPool = (parity: number) => boardTiles.filter((t) => (t.x + t.y) % 2 === parity);
+
+    const tryPlace = (pool: BoardTileSnapshot[]): boolean => {
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const candidate =
+          pool[Math.floor(Math.random() * pool.length)] ?? ({} as BoardTileSnapshot);
+
+        if (candidate.state !== 'water') continue;
+
+        const sameTypeNeighbors = boardTiles.filter(
+          (t) =>
+            t.state === group &&
+            ((Math.abs(t.x - candidate.x) === 1 && t.y === candidate.y) ||
+              (Math.abs(t.y - candidate.y) === 1 && t.x === candidate.x))
+        ).length;
+
+        if (sameTypeNeighbors < 2) {
+          candidate.state = group;
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const blackPool = getPool(0);
+    const whitePool = getPool(1);
+
+    for (let i = 0; i < blackCount; i++) {
+      if (!tryPlace(blackPool)) break;
     }
 
-    return y % 2 === 0
-      ? x % 2 === flippedCoin
-        ? 'island'
-        : 'water'
-      : x % 2 === 1
-        ? 'island'
-        : 'water';
+    for (let i = 0; i < whiteCount; i++) {
+      if (!tryPlace(whitePool)) break;
+    }
   }
 
   public displayEntities() {
