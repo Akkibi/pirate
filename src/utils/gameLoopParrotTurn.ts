@@ -120,7 +120,7 @@ export async function runParrotTurn({
           type: 'top-message-lower-button',
           props: {
             primaryButtonLabel: gameText.turn1.parrot.observeSurroundings.primaryButton,
-            secondaryButtonLabel: isFirstTurn ? undefined : 'Poser une tile',
+            secondaryButtonLabel: isFirstTurn ? undefined : 'Poser une tuile',
             showUndo: true,
             primaryButtonOnClick: () => {
               gameState.entitiesVisible = true;
