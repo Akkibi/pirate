@@ -11,6 +11,7 @@ import { initGame } from './main';
 import { hasSavedGameProgress } from './utils/gameProgress';
 import { currentScreen, resolveScreen } from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
+import DebugControls from './components/debugControls.vue';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -157,5 +158,8 @@ function toggleUI() {
         </div>
       </template>
     </component>
+    <template v-if="!UIShown">
+      <DebugControls />
+    </template>
   </div>
 </template>
