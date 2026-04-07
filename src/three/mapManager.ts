@@ -107,14 +107,20 @@ export class MapManager {
   }
 
   public generateMap(): void {
-    // load gltf from model/board.gltf and put in scene
+    // genetate board and board environement
     const loader = new GLTFLoader();
     loader.load('models/board.glb', (gltf) => {
       const model = gltf.scene;
       model.position.add(new THREE.Vector3(0.5, 0, 0.5));
       this.mapGroup.add(model);
     });
+    loader.load('models/environement.glb', (gltf) => {
+      const model = gltf.scene;
+      model.position.add(new THREE.Vector3(0.5, 0, 0.5));
+      this.mapGroup.add(model);
+    });
 
+    // generate board tiles
     const boardTiles =
       gameState.boardTiles.length > 0 ? gameState.boardTiles : this.createBoardTiles();
 

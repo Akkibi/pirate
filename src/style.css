@@ -2,31 +2,44 @@
 @import 'stylesheet.css';
 
 @layer base {
-	html,
-	body {
-		@apply m-0 p-0 overflow-hidden bg-slate-900 text-white;
-		font-family: "IM Fell English", Georgia, serif;
-	}
+  html,
+  body {
+    @apply m-0 p-0 overflow-hidden bg-slate-900 text-white;
+    font-family: 'IM Fell English', Georgia, serif;
+  }
 
-	html,
-	body,
-	#app {
-		height: 100dvh;
-		min-height: 100dvh;
-	}
+  html,
+  body,
+  #app {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
 
-	#app {
-		@apply w-screen overflow-hidden;
-	}
+  #app {
+    @apply w-screen overflow-hidden;
+  }
 }
 
 canvas {
-	display: block;
-	width: 100%;
-	height: 100%;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 button {
   border-radius: 5px;
   corner-shape: scoop;
+}
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
