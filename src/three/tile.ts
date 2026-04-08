@@ -1,9 +1,9 @@
 import * as THREE from 'three/webgpu';
 import { objectPool } from './instancedModelManger';
 import { gsap } from 'gsap';
-import { gameState } from '../utils/gameStore';
+import { gameState, type BoardTileState } from '../utils/gameStore';
 import { watch } from 'vue';
-export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
+export type TileStateType = BoardTileState;
 
 const FOG_MIN_DISTANCE = 0.612;
 
@@ -92,12 +92,18 @@ export class Tile {
       return;
     }
 
-    if (this.state !== 'water') {
+    if (this.isRenderableTileState(this.state)) {
       this.placeTile();
     }
     if (this.state !== 'typhon') {
       this.placeWater();
     }
+  }
+
+  private isRenderableTileState(
+    state: TileStateType
+  ): state is Exclude<TileStateType, 'water' | 'corsair'> {
+    return state !== 'water' && state !== 'corsair';
   }
 
   private placeFog() {

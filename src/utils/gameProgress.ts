@@ -24,7 +24,9 @@ export type GameCheckpoint =
   | 'crew.revealEncounter'
   | 'crew.revealDefenseCards'
   | 'crew.revealIsland'
-  | 'crew.nightFalls';
+  | 'crew.revealCorsair'
+  | 'crew.nightFalls'
+  | 'gameOver';
 
 export interface GameProgressData {
   throwDice?: boolean;

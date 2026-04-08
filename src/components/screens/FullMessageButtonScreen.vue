@@ -1,61 +1,59 @@
 <template>
-  <ScreenGrid overlay>
-    <div v-if="showParchment" class="col-span-8 row-span-4 row-start-2">
-      <Parchment
-        size="fill"
-        surface-class="h-full"
-        content-class="flex h-full items-center justify-center text-center"
-        @shown="handleParchmentShown"
-      >
-        <slot name="message">{{ message }}</slot>
-      </Parchment>
-    </div>
-
-    <div
-      :class="[
-        'col-span-full col-start-1 row-start-6 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
+  <div v-if="showParchment" class="col-span-8 row-span-4 row-start-2">
+    <Parchment
+      size="fill"
+      surface-class="h-full"
+      content-class="flex h-full items-center justify-center text-center"
+      @shown="handleParchmentShown"
     >
-      <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
-        <slot name="primary">{{ primaryButtonLabel }}</slot>
-      </GameButton>
-    </div>
+      <slot name="message">{{ message }}</slot>
+    </Parchment>
+  </div>
 
-    <div
-      v-if="hasSecondaryButton"
-      :class="[
-        'col-span-full col-start-1 row-start-7 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
-    >
-      <GameButton
-        variant="secondary"
-        :label="secondaryButtonLabel"
-        :on-click="onSecondaryButtonClick"
-      >
-        <slot name="secondary">{{ secondaryButtonLabel }}</slot>
-      </GameButton>
-    </div>
+  <div
+    :class="[
+      'col-span-full col-start-1 row-start-6 transition-opacity duration-300',
+      hasSecondaryButton ? 'row-span-1' : 'row-span-2',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
+      <slot name="primary">{{ primaryButtonLabel }}</slot>
+    </GameButton>
+  </div>
 
-    <div
-      v-if="showUndo"
-      :class="[
-        'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
+  <div
+    v-if="hasSecondaryButton"
+    :class="[
+      'col-span-full col-start-1 row-start-7 transition-opacity duration-300',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton
+      variant="secondary"
+      :label="secondaryButtonLabel"
+      :on-click="onSecondaryButtonClick"
     >
-      <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
-        <slot name="undo">{{ undoLabel }}</slot>
-      </GameButton>
-    </div>
-  </ScreenGrid>
+      <slot name="secondary">{{ secondaryButtonLabel }}</slot>
+    </GameButton>
+  </div>
+
+  <div
+    v-if="showUndo"
+    :class="[
+      'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
+      <slot name="undo">{{ undoLabel }}</slot>
+    </GameButton>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useSlots } from 'vue';
 import Parchment from '../parchment.vue';
-import ScreenGrid from '../ui/ScreenGrid.vue';
 import GameButton from '../ui/GameButton.vue';
 import type { ButtonHandler } from '../../types/ui';
 

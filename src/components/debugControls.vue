@@ -1,5 +1,7 @@
 <template>
-  <div class="absolute bottom-4 left-4 flex flex-row gap-2">
+  <div
+    class="pointer-events-auto col-span-5 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end"
+  >
     <button
       class="bg-amber-700 min-w-20 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
       @click="toggleEntityVisibility"
@@ -27,47 +29,47 @@
       {{ gameState.displayArrows ? 'On' : 'Off' }}
     </button>
   </div>
-  <div class="absolute bottom-4 right-4 flex gap-2 justify-center items-center">
-    <div
-      class="absolute inset-0 w-full h-full bg-amber-950 rounded-[40%] scale-75 border-3 border-amber-900"
-    ></div>
-    <button
-      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
-      @click="movePlayer('left')"
-    >
-      Left
-    </button>
-    <div class="flex flex-col gap-2">
+  <div
+    class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end self-end"
+  >
+    <div class="relative flex items-center justify-center gap-2">
+      <div
+        class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
+      ></div>
       <button
-        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
-        @click="movePlayer('up')"
+        class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+        @click="movePlayer('left')"
       >
-        Up
+        Left
       </button>
+      <div class="flex flex-col gap-2">
+        <button
+          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          @click="movePlayer('up')"
+        >
+          Up
+        </button>
+        <button
+          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          @click="movePlayer('down')"
+        >
+          Down
+        </button>
+      </div>
       <button
-        class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
-        @click="movePlayer('down')"
+        class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+        @click="movePlayer('right')"
       >
-        Down
+        Right
       </button>
     </div>
-    <button
-      class="bg-amber-700 p-1 px-2 text-amber-100 font-black min-w-16 border-3 border-amber-900 relative"
-      @click="movePlayer('right')"
-    >
-      Right
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { gameState } from '../utils/gameStore';
-import { gameEvents } from '../events/gameEvents';
-
-gameEvents.on('crew:move_confirmation', (e) => movePlayer(e.direction));
 
 const movePlayer = (direction: string) => {
-  console.log('move', direction);
   switch (direction) {
     case 'left':
       gameState.userPosition.y -= 1;

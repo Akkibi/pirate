@@ -104,9 +104,6 @@ export async function runParrotTurn({
       );
 
       if (foodChoice.action === 'card' && foodChoice.cardId === 'Cacahuète') {
-        remainingParrotActions += 1;
-        currentStep = 'parrot.dawnIntro';
-      } else {
         currentStep = 'parrot.observeSurroundings';
       }
 

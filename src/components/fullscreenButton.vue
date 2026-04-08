@@ -1,12 +1,12 @@
 <template>
   <button
-    class="bg-amber-700 border-3 border-amber-900 bg-opacity-50 p-2 text-sm text-amber-100 w-fit flex flex-row items-center justify-center gap-2 cursor-pointer hover:bg-opacity-75 transition"
+    class="bg-amber-700 border-2 border-amber-900 bg-opacity-50 p-1 text-sm text-amber-100 h-full aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
     @click="requestFullscreen"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

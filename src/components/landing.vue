@@ -1,50 +1,39 @@
 <template>
-  <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
-    <div class="absolute inset-0">
-      <img
-        class="h-full w-full object-cover opacity-70"
-        src="/images/background.png"
-        alt="background"
-      />
-      <div
-        class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
-      ></div>
+  <div class="col-span-8 row-span-2 row-start-2 flex items-end justify-center px-3">
+    <div id="title" class="px-2 text-center text-[clamp(3.1rem,14vw,6rem)] text-[#f7e8c6]">
+      Pirates
     </div>
+  </div>
 
-    <div class="absolute top-4 right-4 z-20">
-      <FullscreenButton />
-    </div>
+  <div class="pointer-events-auto col-span-6 col-start-2 row-start-6 min-h-0">
+    <GameButton label="Start Game" :on-click="startGame" />
+  </div>
 
-    <ScreenGrid :pointer-events="'auto'" class="relative z-10">
-      <div class="col-span-8 row-span-2 row-start-1 flex items-end justify-center px-3">
-        <div id="title" class="px-2 text-center text-[clamp(3.1rem,14vw,6rem)] text-[#f7e8c6]">
-          Pirates
-        </div>
-      </div>
+  <div v-if="showResume" class="pointer-events-auto col-span-6 col-start-2 row-start-7 min-h-0">
+    <GameButton label="Resume" :on-click="resumeGame" />
+  </div>
 
-      <div class="col-span-6 col-start-2 row-start-6 min-h-0">
-        <GameButton label="Start Game" :on-click="startGame" />
-      </div>
+  <div
+    :class="[
+      'pointer-events-auto col-span-3 col-start-2 min-h-0',
+      showResume ? 'row-start-8' : 'row-start-7',
+    ]"
+  >
+    <GameButton label="Settings" :on-click="startGame" />
+  </div>
 
-      <div v-if="showResume" class="col-span-6 col-start-2 row-start-7 min-h-0">
-        <GameButton label="Resume" :on-click="resumeGame" />
-      </div>
-
-      <div :class="['col-span-3 col-start-2 min-h-0', showResume ? 'row-start-8' : 'row-start-7']">
-        <GameButton label="Settings" :on-click="startGame" />
-      </div>
-
-      <div :class="['col-span-3 col-start-5 min-h-0', showResume ? 'row-start-8' : 'row-start-7']">
-        <GameButton label="Tutorial" :on-click="startGame" />
-      </div>
-    </ScreenGrid>
+  <div
+    :class="[
+      'pointer-events-auto col-span-3 col-start-5 min-h-0',
+      showResume ? 'row-start-8' : 'row-start-7',
+    ]"
+  >
+    <GameButton label="Tutorial" :on-click="startGame" />
   </div>
 </template>
 
 <script setup lang="ts">
-import ScreenGrid from './ui/ScreenGrid.vue';
 import GameButton from './ui/GameButton.vue';
-import FullscreenButton from './fullscreenButton.vue';
 
 withDefaults(
   defineProps<{

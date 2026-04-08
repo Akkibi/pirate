@@ -243,5 +243,14 @@ export const gameText = {
       body: 'Tu peux piocher une carte.',
       primaryButton: 'Suivant',
     },
+    corsair: {
+      title: 'OH NON ! Les corsaires !',
+      body: 'Vous êtes capturés par le gouvernement. Game over.',
+      primaryButton: 'Suivant',
+    },
+  },
+  gameOver: {
+    title: 'Game Over',
+    primaryButton: 'Retour au menu principal',
   },
 } as const;
