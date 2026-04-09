@@ -5,6 +5,8 @@ import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 export type TileStateType = 'monster' | 'typhon' | 'water' | 'island';
 
+const FOG_MIN_DISTANCE = 0.612;
+
 export class Tile {
   public position: THREE.Vector2;
   public tileGroup: THREE.Group;
@@ -14,7 +16,6 @@ export class Tile {
   private waterIdx: number;
   private fogDistance: number;
   private fogDistanceBuffer: number;
-  private fogAmount: number;
   private isHistory: boolean;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
@@ -24,33 +25,54 @@ export class Tile {
     this.fogIdx = -1;
     this.isHistory = false;
     this.tileGroup = new THREE.Group();
-    this.fogDistance = 0.4;
+    this.fogDistance = FOG_MIN_DISTANCE;
     this.state = state;
-    this.fogAmount = 0.4;
-    this.fogDistanceBuffer = 0.4;
+    this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     this.tileGroup.position.set(position.x, 0, position.y);
     console.log('new tile', this.state, position);
     this.updateObject(false);
 
     // add fog
     this.placeFog();
+    if (gameState.entitiesVisible) {
+      this.show();
+    } else {
+      this.hide();
+    }
 
     watch(
       () => gameState.userPosition,
-      (newPosition) => {
-        gameState.userPositionHistory.push(newPosition.clone());
+      () => {
         this.setFogPosition();
+        // console.log('history tile', this.position.x, gameState.userPosition.x);
+        if (
+          !this.isHistory &&
+          gameState.userPosition.x === this.position.x &&
+          gameState.userPosition.y === this.position.y
+        ) {
+          this.isHistory = true;
+          console.log('history tile', this.position);
+
+          setTimeout(() => {
+            this.updateObject(false);
+            this.setTileVisited();
+          }, 300);
+        }
       },
       { deep: true }
     );
   }
 
-  destroy() {
+  private setTileVisited() {
+    // add a path on the tile
+  }
+
+  public destroy() {
     this.tileGroup.remove(...this.tileGroup.children);
     this.tileGroup.removeFromParent();
   }
 
-  updateObject(isHidden: boolean) {
+  private updateObject(isHidden: boolean) {
     this.tileGroup.remove(...this.tileGroup.children);
 
     // release previous instance
@@ -76,10 +98,6 @@ export class Tile {
     if (this.state !== 'typhon') {
       this.placeWater();
     }
-  }
-
-  public setFogAmount(amount: number) {
-    this.fogAmount = amount;
   }
 
   private placeFog() {
@@ -118,55 +136,66 @@ export class Tile {
     objectPool.updateScale('water', this.waterIdx, new THREE.Vector3(0.5, 0.5, 0.5));
   }
 
-  smoothMoveFog(hideFog: boolean, oncomplete?: () => void) {
-    const emptyObject = {};
-    const scale = 4;
-    this.fogDistanceBuffer = this.fogDistance;
-    if (hideFog) {
-      const ease = gsap.parseEase('expo.in');
-      // console.log('hide clouds');
-      const tween = gsap.to(emptyObject, {
-        duration: 1,
-        onUpdate: () => {
-          const eased = ease(tween.progress());
-          const progress = eased * scale; // 0 to 1, eased
-          // console.log('progress', progress);
-          this.fogDistance = this.fogDistanceBuffer + progress;
-          this.updateFog();
-        },
-        ease: 'bounce.inOut',
-        onComplete: oncomplete,
-      });
-    } else {
+  smoothMoveFog(hideFog: boolean, oncomplete?: () => void): Promise<void> {
+    return new Promise((resolve) => {
+      const emptyObject = {};
+      const scale = 4;
+      this.fogDistanceBuffer = FOG_MIN_DISTANCE;
+
+      if (hideFog) {
+        const ease = gsap.parseEase('expo.in');
+        const tween = gsap.to(emptyObject, {
+          duration: 1,
+          onUpdate: () => {
+            const eased = ease(tween.progress());
+            const progress = eased * scale;
+            this.fogDistance = this.fogDistanceBuffer + progress;
+            this.updateFog();
+          },
+          ease: 'bounce.inOut',
+          onComplete: () => {
+            oncomplete?.();
+            resolve();
+          },
+        });
+
+        return;
+      }
+
       const ease = gsap.parseEase('expo.out');
-      console.log('reverse hide clouds');
       const tween = gsap.to(emptyObject, {
         duration: 2,
         onUpdate: () => {
           const eased = ease(tween.progress());
-          const progress = scale - eased * scale; // 0 to 1, eased
-          // console.log('progress', progress);
+          const progress = scale - eased * scale;
           this.fogDistance = this.fogDistanceBuffer + progress;
           this.updateFog();
         },
         ease: 'bounce.inOut',
-        onComplete: oncomplete,
+        onComplete: () => {
+          oncomplete?.();
+          resolve();
+        },
       });
+    });
+  }
+
+  public hide(): Promise<void> {
+    if (this.isHistory) {
+      return Promise.resolve();
     }
-  }
-
-  public hide() {
     this.updateObject(true);
-    this.smoothMoveFog(true);
-    console.log('hide fog');
+    return this.smoothMoveFog(true);
   }
 
-  public show() {
-    if (this.isHistory) return;
-    this.smoothMoveFog(false, () => {
+  public show(): Promise<void> {
+    if (this.isHistory) {
+      return Promise.resolve();
+    }
+
+    return this.smoothMoveFog(false, () => {
       this.updateObject(false);
     });
-    console.log('show fog');
   }
 
   public setFogPosition(): void {
@@ -174,14 +203,22 @@ export class Tile {
   }
 
   private updateFog() {
+    // if (this.isHistory) return;
     const playerPosition = gameState.userPosition;
     // const isHistory = gameState.userPositionHistory.includes(this.position);
 
-    const distance = Math.sqrt(
-      Math.pow(playerPosition.x - this.position.x, 2) +
-        Math.pow(playerPosition.y - this.position.y, 2)
-    );
-    const calculatedAmount = -Math.max(0, 5 - distance / this.fogAmount);
+    // circle distance
+    // const distance = Math.sqrt(
+    //   Math.pow(playerPosition.x - this.position.x, 2) +
+    //     Math.pow(playerPosition.y - this.position.y, 2)
+    // );
+
+    // diamond distance
+    const distance =
+      Math.abs(playerPosition.x - this.position.x) + Math.abs(playerPosition.y - this.position.y);
+
+    const calculatedAmount = -Math.max(0, 5 - distance / this.fogDistance);
+    // console.log(this.fogDistance, calculatedAmount);
 
     objectPool.updatePosition(
       'fog',

@@ -1,42 +1,78 @@
 <template>
-  <div class="flex w-full h-1/3 justify-center items-center">
-    <div id="title" class="text-9xl p-8">Pirates</div>
-  </div>
-  <div class="flex w-full h-1/3 justify-center items-center">
-    <Parchment
-      text="Start Game"
-      clickable
-      size="md"
-      :on-click="startGame"
-    />
-  </div>
-  <div class="flex w-full h-1/3 justify-center items-center">
-    <Parchment
-      text="Rules Coming Soon"
-      size="sm"
-    />
-  </div>
-  <div class="w-screen h-screen absolute top-0 -z-10 blur-md">
-    <img
-      class="object-cover w-full h-full"
-      src="/images/background.png"
-      alt="background"
-    />
+  <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
+    <div class="absolute inset-0">
+      <img
+        class="h-full w-full object-cover opacity-70"
+        src="/images/background.png"
+        alt="background"
+      />
+      <div
+        class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
+      ></div>
+    </div>
+
+    <div class="absolute top-4 right-4 z-20">
+      <FullscreenButton />
+    </div>
+
+    <ScreenGrid :pointer-events="'auto'" class="relative z-10">
+      <div class="col-span-8 row-span-2 row-start-1 flex items-end justify-center px-3">
+        <div id="title" class="px-2 text-center text-[clamp(3.1rem,14vw,6rem)] text-[#f7e8c6]">
+          Pirates
+        </div>
+      </div>
+
+      <div class="col-span-6 col-start-2 row-start-6 min-h-0">
+        <GameButton label="Start Game" :on-click="startGame" />
+      </div>
+
+      <div v-if="showResume" class="col-span-6 col-start-2 row-start-7 min-h-0">
+        <GameButton label="Resume" :on-click="resumeGame" />
+      </div>
+
+      <div :class="['col-span-3 col-start-2 min-h-0', showResume ? 'row-start-8' : 'row-start-7']">
+        <GameButton label="Settings" :on-click="startGame" />
+      </div>
+
+      <div :class="['col-span-3 col-start-5 min-h-0', showResume ? 'row-start-8' : 'row-start-7']">
+        <GameButton label="Tutorial" :on-click="startGame" />
+      </div>
+    </ScreenGrid>
   </div>
 </template>
 
 <script setup lang="ts">
-import Parchment from "./parchment.vue";
+import ScreenGrid from './ui/ScreenGrid.vue';
+import GameButton from './ui/GameButton.vue';
+import FullscreenButton from './fullscreenButton.vue';
 
-const emit = defineEmits<{ (event: "start"): void }>();
+withDefaults(
+  defineProps<{
+    showResume?: boolean;
+  }>(),
+  {
+    showResume: false,
+  }
+);
+
+const emit = defineEmits<{
+  (event: 'start'): void;
+  (event: 'resume'): void;
+}>();
 
 function startGame() {
-  emit("start");
+  emit('start');
+}
+
+function resumeGame() {
+  emit('resume');
 }
 </script>
 
-<style>
+<style scoped>
 #title {
-  font-family: "Black Crest";
+  font-family: 'Black Crest', 'IM Fell English', Georgia, serif;
+  line-height: 0.85;
+  text-shadow: 0 12px 30px rgba(17, 10, 7, 0.55);
 }
 </style>

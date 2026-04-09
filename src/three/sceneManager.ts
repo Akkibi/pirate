@@ -19,6 +19,7 @@ export class SceneManager {
   private seaSky: SeaSkyBackground;
   public player: Player;
   private stats: Stats;
+  private handleCanvasClick: (event: MouseEvent) => void;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -47,8 +48,9 @@ export class SceneManager {
     this.stats = new Stats();
     document.body.appendChild(this.stats.dom);
 
-    // Setup resize handler
+    // Setup event handlers
     this.onWindowResize = this.handleWindowResize.bind(this);
+    this.handleCanvasClick = this.onCanvasClick.bind(this);
   }
 
   async init(): Promise<void> {
@@ -66,8 +68,19 @@ export class SceneManager {
     this.renderer.setSize(newWidth, newHeight);
   }
 
+  private onCanvasClick(event: MouseEvent): void {
+    // console.log('click', event);
+    const rect = this.canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const mousePosition = new THREE.Vector2(x, y);
+    this.player.handleArrowClick(mousePosition, this.camera.getNative());
+  }
+
   public startAnimation(): void {
     window.addEventListener('resize', this.onWindowResize);
+    document.addEventListener('click', this.handleCanvasClick);
     gsap.ticker.add(this.animate);
   }
 
@@ -80,8 +93,10 @@ export class SceneManager {
 
   dispose(): void {
     window.removeEventListener('resize', this.onWindowResize);
+    document.removeEventListener('click', this.handleCanvasClick);
     gsap.ticker.remove(this.animate);
     this.renderer.dispose();
+    this.mapManager.destroy();
     if (this.stats.dom.parentElement) {
       this.stats.dom.parentElement.removeChild(this.stats.dom);
     }
