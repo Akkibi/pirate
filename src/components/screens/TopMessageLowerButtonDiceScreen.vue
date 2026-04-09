@@ -1,80 +1,77 @@
 <template>
-  <ScreenGrid overlay>
-    <div v-if="shouldShowParchment" class="col-span-8 row-span-2 row-start-1">
-      <Parchment
-        size="fill"
-        surface-class="h-full"
-        content-class="flex h-full items-center justify-center text-center"
-        @shown="handleParchmentShown"
-      >
-        <slot name="message">{{ message }}</slot>
-      </Parchment>
-    </div>
-
-    <div
-      :class="[
-        'col-span-8 row-span-4 row-start-3 flex items-center justify-center transition-opacity duration-300',
-        diceVisible ? 'opacity-100' : 'opacity-0',
-      ]"
+  <div v-if="shouldShowParchment" class="col-start-3 col-span-4 row-span-2 row-start-1">
+    <Parchment
+      size="fill"
+      surface-class="h-full"
+      content-class="flex h-full items-center justify-center text-center"
+      @shown="handleParchmentShown"
     >
-      <div class="dice-stage" aria-hidden="true">
-        <div class="dice-cube" :style="diceStyle">
-          <div class="dice-face dice-face--front">0</div>
-          <div class="dice-face dice-face--right">1</div>
-          <div class="dice-face dice-face--top">1</div>
-          <div class="dice-face dice-face--bottom">2</div>
-          <div class="dice-face dice-face--left">2</div>
-          <div class="dice-face dice-face--back">3</div>
-        </div>
+      <slot name="message">{{ message }}</slot>
+    </Parchment>
+  </div>
+
+  <div
+    :class="[
+      'dice-slot col-span-8 row-span-4 row-start-3 flex min-h-0 min-w-0 items-center justify-center transition-opacity duration-300',
+      diceVisible ? 'opacity-100' : 'opacity-0',
+    ]"
+  >
+    <div class="dice-stage" aria-hidden="true">
+      <div class="dice-cube" :style="diceStyle">
+        <div class="dice-face dice-face--front">0</div>
+        <div class="dice-face dice-face--right">1</div>
+        <div class="dice-face dice-face--top">1</div>
+        <div class="dice-face dice-face--bottom">2</div>
+        <div class="dice-face dice-face--left">2</div>
+        <div class="dice-face dice-face--back">3</div>
       </div>
     </div>
+  </div>
 
-    <div
-      v-if="hasPrimaryButton"
-      :class="[
-        'col-span-4 col-start-3 row-start-7 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
-    >
-      <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
-        <slot name="primary">{{ primaryButtonLabel }}</slot>
-      </GameButton>
-    </div>
+  <div
+    v-if="hasPrimaryButton"
+    :class="[
+      'col-span-4 col-start-3 row-start-7 transition-opacity duration-300',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
+      <slot name="primary">{{ primaryButtonLabel }}</slot>
+    </GameButton>
+  </div>
 
-    <div
-      v-if="hasSecondaryButton"
-      :class="[
-        'col-span-4 col-start-3 row-start-8 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
+  <div
+    v-if="hasSecondaryButton"
+    :class="[
+      'col-span-4 col-start-3 row-start-8 transition-opacity duration-300',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton
+      variant="secondary"
+      :label="secondaryButtonLabel"
+      :on-click="onSecondaryButtonClick"
     >
-      <GameButton
-        variant="secondary"
-        :label="secondaryButtonLabel"
-        :on-click="onSecondaryButtonClick"
-      >
-        <slot name="secondary">{{ secondaryButtonLabel }}</slot>
-      </GameButton>
-    </div>
+      <slot name="secondary">{{ secondaryButtonLabel }}</slot>
+    </GameButton>
+  </div>
 
-    <div
-      v-if="showUndo"
-      :class="[
-        'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
-        buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-      ]"
-    >
-      <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
-        <slot name="undo">{{ undoLabel }}</slot>
-      </GameButton>
-    </div>
-  </ScreenGrid>
+  <div
+    v-if="showUndo"
+    :class="[
+      'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
+      <slot name="undo">{{ undoLabel }}</slot>
+    </GameButton>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useSlots } from 'vue';
 import Parchment from '../parchment.vue';
-import ScreenGrid from '../ui/ScreenGrid.vue';
 import GameButton from '../ui/GameButton.vue';
 import type { ButtonHandler } from '../../types/ui';
 import { gameState } from '../../utils/gameStore';
@@ -83,6 +80,10 @@ const DICE_FACES = [
   { value: 0, x: 0, y: 0 },
   { value: 1, x: 0, y: -90 },
   { value: 1, x: -90, y: 0 },
+  { value: 1, x: -90, y: 0 },
+  { value: 1, x: -90, y: 0 },
+  { value: 1, x: -90, y: 0 },
+  { value: 2, x: 90, y: 0 },
   { value: 2, x: 90, y: 0 },
   { value: 2, x: 0, y: 90 },
   { value: 3, x: 0, y: 180 },
@@ -137,7 +138,7 @@ const buttonsVisible = ref(false);
 const hasRolled = ref(false);
 const rotationX = ref(-22);
 const rotationY = ref(32);
-const translateY = ref('1.5rem');
+const translateY = ref('0rem');
 const translateZ = ref('-5rem');
 
 let rollTimer: number | null = null;
@@ -253,16 +254,24 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.dice-slot {
+  container-type: size;
+}
+
 .dice-stage {
+  --dice-size: min(60cqh, 60cqw, clamp(5.5rem, 28vw, 8rem));
+  --dice-half-size: calc(var(--dice-size) / 2);
+  flex: none;
   perspective: 900px;
-  width: clamp(5.5rem, 28vw, 8rem);
-  height: clamp(5.5rem, 28vw, 8rem);
+  width: var(--dice-size);
+  height: var(--dice-size);
 }
 
 .dice-cube {
   position: relative;
   width: 100%;
   height: 100%;
+  /* background-color: red; */
   transform-style: preserve-3d;
   transition-property: transform, opacity;
   transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
@@ -283,26 +292,26 @@ onBeforeUnmount(() => {
 }
 
 .dice-face--front {
-  transform: translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: translate3d(0, 0, var(--dice-half-size));
 }
 
 .dice-face--back {
-  transform: rotateY(180deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(180deg) translate3d(0, 0, var(--dice-half-size));
 }
 
 .dice-face--right {
-  transform: rotateY(90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(90deg) translate3d(0, 0, var(--dice-half-size));
 }
 
 .dice-face--left {
-  transform: rotateY(-90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateY(-90deg) translate3d(0, 0, var(--dice-half-size));
 }
 
 .dice-face--top {
-  transform: rotateX(90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateX(90deg) translate3d(0, 0, var(--dice-half-size));
 }
 
 .dice-face--bottom {
-  transform: rotateX(-90deg) translate3d(0, 0, calc(clamp(5.5rem, 28vw, 8rem) / 2));
+  transform: rotateX(-90deg) translate3d(0, 0, var(--dice-half-size));
 }
 </style>

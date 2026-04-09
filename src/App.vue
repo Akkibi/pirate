@@ -12,6 +12,7 @@ import { hasSavedGameProgress } from './utils/gameProgress';
 import { currentScreen, resolveScreen } from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
 import DebugControls from './components/debugControls.vue';
+import ScreenGrid from './components/ui/ScreenGrid.vue';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -123,43 +124,63 @@ function toggleUI() {
 </script>
 
 <template>
-  <Landing v-if="!started" :show-resume="canResume" @resume="resumeGame" @start="startGame" />
-  <div v-else class="relative h-full w-full">
-    <Canvas />
-    <div class="absolute top-4 right-4 flex flex-row gap-2 z-20">
-      <button
-        class="bg-amber-700 min-w-30 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
-        @click="toggleUI"
-      >
-        {{ UIShown ? 'Hide UI' : 'Show UI' }}
-      </button>
-      <FullscreenButton />
-    </div>
-    <component
-      :is="activeScreenComponent"
-      v-if="activeScreenComponent && activeScreenProps && currentScreen && UIShown"
-      :key="currentScreen.instanceId"
-      v-bind="activeScreenProps"
-    >
-      <template #message v-if="currentScreen.content">
-        <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
-          <p v-if="currentScreen.content.title" class="text-2xl font-semibold sm:text-4xl">
-            {{ currentScreen.content.title }}
-          </p>
-          <p v-if="currentScreen.content.body" class="text-sm sm:text-base">
-            {{ currentScreen.content.body }}
-          </p>
-          <p v-if="currentScreen.content.caption" class="text-xs sm:text-sm">
-            {{ currentScreen.content.caption }}
-          </p>
-          <p v-if="currentScreen.content.footer" class="text-xs sm:text-sm">
-            {{ currentScreen.content.footer }}
-          </p>
-        </div>
-      </template>
-    </component>
-    <template v-if="!UIShown">
-      <DebugControls />
+  <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
+    <template v-if="!started">
+      <div class="absolute inset-0">
+        <img
+          class="h-full w-full object-cover opacity-70"
+          src="/images/background.png"
+          alt="background"
+        />
+        <div
+          class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
+        ></div>
+      </div>
     </template>
+
+    <Canvas v-else />
+
+    <ScreenGrid overlay class="z-20">
+      <div
+        class="pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-30 flex flex-row h-full items-start justify-end gap-2 self-start"
+      >
+        <button
+          v-if="started"
+          class="border-2 border-amber-900 bg-amber-700 px-2 py-1 font-black text-amber-100"
+          @click="toggleUI"
+        >
+          {{ UIShown ? 'Hide UI' : 'Show UI' }}
+        </button>
+        <FullscreenButton />
+      </div>
+
+      <Landing v-if="!started" :show-resume="canResume" @resume="resumeGame" @start="startGame" />
+
+      <component
+        :is="activeScreenComponent"
+        v-else-if="activeScreenComponent && activeScreenProps && currentScreen && UIShown"
+        :key="currentScreen.instanceId"
+        v-bind="activeScreenProps"
+      >
+        <template #message v-if="currentScreen.content">
+          <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+            <p v-if="currentScreen.content.title" class="text-lg font-semibold sm:text-3xl">
+              {{ currentScreen.content.title }}
+            </p>
+            <p v-if="currentScreen.content.body" class="text-sm sm:text-base">
+              {{ currentScreen.content.body }}
+            </p>
+            <p v-if="currentScreen.content.caption" class="text-xs sm:text-sm">
+              {{ currentScreen.content.caption }}
+            </p>
+            <p v-if="currentScreen.content.footer" class="text-xs sm:text-sm">
+              {{ currentScreen.content.footer }}
+            </p>
+          </div>
+        </template>
+      </component>
+
+      <DebugControls v-if="started && !UIShown" />
+    </ScreenGrid>
   </div>
 </template>

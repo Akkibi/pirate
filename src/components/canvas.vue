@@ -1,9 +1,6 @@
 <template>
   <div ref="containerRef" class="w-full h-full inset-0 absolute overflow-hidden">
     <canvas ref="canvasRef" class="block w-full h-full absolute inset-0"></canvas>
-    <div
-      class="absolute top-4 left-4 bg-amber-950 border-3 border-amber-900 bg-opacity-50 p-2 text-sm text-white w-fit flex flex-row items-center justify-center gap-2"
-    ></div>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 import { gameText } from '../content/gameText';
-import { gameEvents, type GameEvents } from '../events/gameEvents';
+import { type GameEvents } from '../events/gameEvents';
 import { gameState, getBoardTileStateAtPosition, type BoardTileState } from './gameStore';
 import { type GameCheckpoint, type GameProgressData } from './gameProgress';
 import { resolveScreen, showScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
@@ -14,6 +14,7 @@ export type CrewCheckpoint =
   | 'crew.revealEncounter'
   | 'crew.revealDefenseCards'
   | 'crew.revealIsland'
+  | 'crew.revealCorsair'
   | 'crew.nightFalls';
 
 type CrewMovementCheckpoint =
@@ -22,6 +23,7 @@ type CrewMovementCheckpoint =
   | 'crew.revealCalmSea'
   | 'crew.revealEncounter'
   | 'crew.revealDefenseCards'
+  | 'crew.revealCorsair'
   | 'crew.revealIsland';
 
 type ShowCheckpointScreen = (
@@ -73,7 +75,7 @@ function getTileRevealCheckpoint(
   tileState: BoardTileState
 ): Extract<
   CrewMovementCheckpoint,
-  'crew.revealCalmSea' | 'crew.revealEncounter' | 'crew.revealIsland'
+  'crew.revealCalmSea' | 'crew.revealEncounter' | 'crew.revealIsland' | 'crew.revealCorsair'
 > {
   if (tileState === 'water') {
     return 'crew.revealCalmSea';
@@ -81,6 +83,10 @@ function getTileRevealCheckpoint(
 
   if (tileState === 'island') {
     return 'crew.revealIsland';
+  }
+
+  if (tileState === 'corsair') {
+    return 'crew.revealCorsair';
   }
 
   return 'crew.revealEncounter';
@@ -94,6 +100,8 @@ function getTileRevealLabel(tileState: BoardTileState): string {
       return 'typhon';
     case 'island':
       return 'île';
+    case 'corsair':
+      return 'corsaires';
     default:
       return 'mer calme';
   }
@@ -210,11 +218,15 @@ async function handleCrewTileReveal(
   showCheckpointScreen: ShowCheckpointScreen,
   startAt: Extract<
     CrewMovementCheckpoint,
-    'crew.revealCalmSea' | 'crew.revealEncounter' | 'crew.revealDefenseCards' | 'crew.revealIsland'
+    | 'crew.revealCalmSea'
+    | 'crew.revealEncounter'
+    | 'crew.revealDefenseCards'
+    | 'crew.revealIsland'
+    | 'crew.revealCorsair'
   >,
   remainingMoves: number,
   tileState: BoardTileState
-): Promise<{ remainingMoves: number; endTurn: boolean }> {
+): Promise<{ remainingMoves: number; endTurn: boolean; gameOver?: boolean }> {
   if (startAt === 'crew.revealCalmSea') {
     await showCheckpointScreen(
       'crew.revealCalmSea',
@@ -256,6 +268,29 @@ async function handleCrewTileReveal(
     return {
       remainingMoves,
       endTurn: remainingMoves <= 0,
+    };
+  }
+
+  if (startAt === 'crew.revealCorsair') {
+    await showCheckpointScreen(
+      'crew.revealCorsair',
+      {
+        type: 'full-message-button',
+        content: gameText.reveal.corsair,
+        props: {
+          primaryButtonLabel: gameText.reveal.corsair.primaryButton,
+        },
+      },
+      {
+        remainingMoves,
+        tileState,
+      }
+    );
+
+    return {
+      remainingMoves,
+      endTurn: true,
+      gameOver: true,
     };
   }
 
@@ -319,13 +354,30 @@ async function handleCrewTileReveal(
   };
 }
 
+function moveCrew(direction: string): void {
+  switch (direction) {
+    case 'left':
+      gameState.userPosition.y -= 1;
+      break;
+    case 'right':
+      gameState.userPosition.y += 1;
+      break;
+    case 'up':
+      gameState.userPosition.x += 1;
+      break;
+    case 'down':
+      gameState.userPosition.x -= 1;
+      break;
+  }
+}
+
 async function runCrewMovementPhase(
   showCheckpointScreen: ShowCheckpointScreen,
   waitForEvent: WaitForEvent,
   saveCheckpointHistory: RunCrewTurnOptions['saveCheckpointHistory'],
   startAt: CrewMovementCheckpoint,
   progressData?: GameProgressData
-): Promise<{ remainingMoves: number; endTurn: boolean }> {
+): Promise<{ remainingMoves: number; endTurn: boolean; gameOver?: boolean }> {
   let remainingMoves = progressData?.remainingMoves ?? gameState.diceResult ?? 0;
   let direction = progressData?.direction;
   let tileState = progressData?.tileState;
@@ -371,9 +423,7 @@ async function runCrewMovementPhase(
           showUndo: true,
           primaryButtonLabel: getCrewText().directionConfirm.primaryButton,
           primaryButtonOnClick: () => {
-            gameEvents.emit('crew:move_confirmation', {
-              direction,
-            });
+            moveCrew(direction);
             resolveScreen({ action: 'primary' });
           },
         },
@@ -404,7 +454,7 @@ export async function runCrewTurn({
   saveCheckpointHistory,
   startAt = 'crew.morningIntro',
   progressData,
-}: RunCrewTurnOptions): Promise<void> {
+}: RunCrewTurnOptions): Promise<boolean> {
   const crewText = getCrewText();
 
   if (startAt === 'crew.morningIntro') {
@@ -443,6 +493,11 @@ export async function runCrewTurn({
         movementData
       );
 
+      if (movementResult.gameOver) {
+        gameState.diceResult = null;
+        return true;
+      }
+
       shouldEndTurn = movementResult.endTurn;
       movementCheckpoint = 'crew.afternoonIntro';
       movementData = {
@@ -463,4 +518,6 @@ export async function runCrewTurn({
       },
     });
   }
+
+  return false;
 }

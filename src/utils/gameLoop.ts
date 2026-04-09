@@ -2,8 +2,9 @@
 import { watch } from 'vue';
 import { gameText } from '../content/gameText';
 import { gameEvents, type GameEvents } from '../events/gameEvents';
-import { gameState } from './gameStore';
+import { gameState, resetGameState } from './gameStore';
 import {
+  clearSavedGameProgress,
   peekSavedGameProgress,
   popSavedGameProgress,
   restoreGameProgress,
@@ -52,7 +53,12 @@ export class GameLoop {
       await this.parrotTurn();
 
       gameState.currentPhase = 'crew';
-      await this.crewTurn();
+      const shouldStopGame = await this.crewTurn();
+
+      if (shouldStopGame) {
+        await this.handleGameOver();
+        return;
+      }
 
       return this.startTurn();
     } catch (error) {
@@ -74,7 +80,12 @@ export class GameLoop {
     this.skipNextHistoryPushFor = savedProgress.checkpoint;
 
     try {
-      await this.runFromHistoryEntryToTurnEnd(savedProgress);
+      const shouldStopGame = await this.runFromHistoryEntryToTurnEnd(savedProgress);
+
+      if (shouldStopGame) {
+        return;
+      }
+
       return this.startTurn();
     } catch (error) {
       if (error instanceof UndoNavigationError) {
@@ -109,7 +120,7 @@ export class GameLoop {
     this.skipNextHistoryPushFor = null;
   }
 
-  private async runFromHistoryEntryToTurnEnd(entry: SavedGameProgress): Promise<void> {
+  private async runFromHistoryEntryToTurnEnd(entry: SavedGameProgress): Promise<boolean> {
     switch (entry.checkpoint) {
       case 'intro.gameStart':
       case 'intro.boatPlacement':
@@ -117,8 +128,11 @@ export class GameLoop {
         gameState.currentPhase = 'parrot';
         await this.parrotTurn();
         gameState.currentPhase = 'crew';
-        await this.crewTurn();
-        return;
+        if (await this.crewTurn()) {
+          await this.handleGameOver();
+          return true;
+        }
+        return false;
 
       case 'parrot.dawnIntro':
       case 'parrot.foodChoice':
@@ -128,8 +142,11 @@ export class GameLoop {
         gameState.currentPhase = 'parrot';
         await this.parrotTurn(entry.checkpoint, entry.data);
         gameState.currentPhase = 'crew';
-        await this.crewTurn();
-        return;
+        if (await this.crewTurn()) {
+          await this.handleGameOver();
+          return true;
+        }
+        return false;
 
       case 'crew.morningIntro':
       case 'crew.diceRoll':
@@ -140,10 +157,18 @@ export class GameLoop {
       case 'crew.revealEncounter':
       case 'crew.revealDefenseCards':
       case 'crew.revealIsland':
+      case 'crew.revealCorsair':
       case 'crew.nightFalls':
         gameState.currentPhase = 'crew';
-        await this.crewTurn(entry.checkpoint, entry.data);
-        return;
+        if (await this.crewTurn(entry.checkpoint, entry.data)) {
+          await this.handleGameOver();
+          return true;
+        }
+        return false;
+
+      case 'gameOver':
+        await this.handleGameOver();
+        return true;
     }
   }
 
@@ -244,13 +269,30 @@ export class GameLoop {
   private async crewTurn(
     startAt: CrewCheckpoint = 'crew.morningIntro',
     progressData?: GameProgressData
-  ): Promise<void> {
-    await runCrewTurn({
+  ): Promise<boolean> {
+    return runCrewTurn({
       showCheckpointScreen: this.showCheckpointScreen.bind(this),
       waitForEvent: this.waitForEvent.bind(this),
       saveCheckpointHistory: this.saveCheckpointHistory.bind(this),
       startAt,
       progressData,
     });
+  }
+
+  private async handleGameOver(): Promise<void> {
+    await this.showCheckpointScreen('gameOver', {
+      type: 'full-message-button',
+      content: gameText.gameOver,
+      props: {
+        primaryButtonLabel: gameText.gameOver.primaryButton,
+      },
+    });
+
+    clearSavedGameProgress();
+    resetGameState();
+
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   }
 }

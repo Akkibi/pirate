@@ -108,7 +108,7 @@ const surfaceClasses = computed(() => [
 const contentClasses = computed(() => [
   'relative h-full min-h-0 w-full opacity-0',
   hasDefaultSlot.value
-    ? `p-3 sm:p-6 ${props.contentClass}`
+    ? `p-3 ${props.contentClass}`
     : `flex items-center justify-center px-6 py-4 text-center ${textSizeClasses[props.size]} ${props.contentClass}`,
 ]);
 

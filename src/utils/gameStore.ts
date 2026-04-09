@@ -2,7 +2,7 @@ import { reactive } from 'vue';
 import * as THREE from 'three/webgpu';
 
 export type PhaseType = 'crew' | 'parrot';
-export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island';
+export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island' | 'corsair';
 
 export interface BoardTileSnapshot {
   x: number;
