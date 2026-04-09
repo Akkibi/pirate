@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { attribute } from 'three/tsl';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -126,11 +127,28 @@ export class InstancedModelManager {
         config
       );
 
+      // Per-instance opacity attribute
+      const opacityData = new Float32Array(maxInstances).fill(1.0);
+      mergedGeometry.setAttribute(
+        'instanceOpacity',
+        new THREE.InstancedBufferAttribute(opacityData, 1)
+      );
+
       const instancedMesh = new THREE.InstancedMesh(mergedGeometry, finalMaterial, maxInstances);
       instancedMesh.count = 0; // start with nothing visible
       instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       instancedMesh.frustumCulled = false;
       instancedMesh.name = `instanced_${config.name}`;
+
+      // Wire the opacity attribute into the material via a TSL node
+      const mat = Array.isArray(instancedMesh.material)
+        ? instancedMesh.material[0]
+        : instancedMesh.material;
+      if (mat) {
+        mat.transparent = true;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mat as any).opacityNode = attribute('instanceOpacity');
+      }
 
       // Initialize all transforms to zero-scale (hidden)
       for (let i = 0; i < maxInstances; i++) {
@@ -182,6 +200,9 @@ export class InstancedModelManager {
     DUMMY.updateMatrix();
     pool.mesh.setMatrixAt(index, DUMMY.matrix);
     pool.mesh.instanceMatrix.needsUpdate = true;
+
+    // Reset opacity to fully opaque
+    this._setOpacityAttr(pool, index, 1.0);
 
     return index;
   }
@@ -256,6 +277,10 @@ export class InstancedModelManager {
     pool.mesh.instanceMatrix.needsUpdate = true;
   }
 
+  updateOpacity(name: string, index: number, opacity: number): void {
+    this._setOpacityAttr(this.getPool(name), index, opacity);
+  }
+
   getActiveCount(name: string): number {
     return this.getPool(name).activeIndices.size;
   }
@@ -276,6 +301,14 @@ export class InstancedModelManager {
   }
 
   // --- Private helpers ---
+
+  private _setOpacityAttr(pool: InstancePool, index: number, opacity: number): void {
+    const attr = pool.mesh.geometry.getAttribute(
+      'instanceOpacity'
+    ) as THREE.InstancedBufferAttribute;
+    attr.setX(index, opacity);
+    attr.needsUpdate = true;
+  }
 
   private getPool(name: string): InstancePool {
     const pool = this.pools.get(name);

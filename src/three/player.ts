@@ -45,7 +45,7 @@ export class Player {
     this.initWatchers();
 
     this.playerGroup.position.x = gameState.userPosition.x;
-    this.playerGroup.position.y = gameState.userPosition.y;
+    this.playerGroup.position.z = gameState.userPosition.y;
     // set to random int position between 0 and 5 and 0 and 7
   }
 
@@ -67,8 +67,11 @@ export class Player {
           color: '#ffffff',
           transparent: true,
           side: THREE.DoubleSide,
+          depthTest: false,
+          depthWrite: false,
         });
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.renderOrder = 999;
         mesh.position.copy(arrow.position.clone().add(new THREE.Vector3(0, 0.4, 0)));
         mesh.lookAt(cameraPositions.crew);
         mesh.visible = gameState.displayArrows;

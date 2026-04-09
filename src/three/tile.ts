@@ -226,10 +226,14 @@ export class Tile {
     const calculatedAmount = -Math.max(0, 5 - distance / this.fogDistance);
     // console.log(this.fogDistance, calculatedAmount);
 
+    const opacity = Math.min(1, Math.max(0, 1.5 + calculatedAmount * 1.5));
+
     objectPool.updatePosition(
       'fog',
       this.fogIdx,
       new THREE.Vector3(this.position.x, calculatedAmount, this.position.y)
     );
+
+    objectPool.updateOpacity('fog', this.fogIdx, opacity);
   }
 }
