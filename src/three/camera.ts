@@ -6,7 +6,7 @@ import gsap from 'gsap';
 
 export const cameraPositions = {
   default: new THREE.Vector3(-10, 3.5, 0),
-  parrot: new THREE.Vector3(-5, 10, 0),
+  parrot: new THREE.Vector3(-5, 9, 0),
   crew: new THREE.Vector3(-10, 5, 0),
 };
 
@@ -101,6 +101,15 @@ export class Camera {
       onUpdate: () => {
         this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 0.1, 0)));
       },
+    });
+
+    gsap.to(this.cameraGroup.rotation, {
+      duration: 4,
+      ease: 'expo.out',
+      x: 0,
+      y: this.phase === 'parrot' ? -Math.PI : 0,
+      z: 0,
+      overwrite: true,
     });
   }
 

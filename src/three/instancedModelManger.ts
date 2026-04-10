@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { attribute } from 'three/tsl';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { modelLoader } from './modelLoader';
 
 interface ModelConfig {
   name: string;
@@ -21,7 +21,6 @@ const MAX_INSTANCES = 165;
 export class InstancedModelManager {
   private static instance: InstancedModelManager;
   public pools: Map<string, InstancePool> = new Map();
-  private loader = new GLTFLoader();
   private scene: THREE.Scene | null = null;
 
   private constructor() {}
@@ -40,8 +39,18 @@ export class InstancedModelManager {
   ): Promise<void> {
     this.scene = scene;
 
+    // if there are existing instances free them and remove them
+    for (const [, pool] of this.pools) {
+      scene.remove(pool.mesh);
+      pool.mesh.geometry.dispose();
+      const mat = pool.mesh.material;
+      if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+      else mat.dispose();
+    }
+    this.pools.clear();
+
     const loadPromises = configs.map(async (config) => {
-      const gltf = await this.loader.loadAsync(config.url);
+      const gltf = modelLoader.get(config.url);
 
       // Collect all meshes from the GLTF scene
       const geometries: THREE.BufferGeometry[] = [];

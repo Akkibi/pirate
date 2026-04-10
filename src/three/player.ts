@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import type { PhaseType } from '../utils/gameStore';
 import { gameState } from '../utils/gameStore';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { modelLoader } from './modelLoader';
 import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
@@ -26,20 +26,16 @@ export class Player {
     this.playerGroup.add(this.boatGroup, this.birdGroup);
     this.position = new THREE.Vector2();
     scene.add(this.playerGroup);
-    const loader = new GLTFLoader();
 
-    loader.load('models/boat.glb', (gltf) => {
-      const boat = gltf.scene;
-      boat.scale.multiplyScalar(0.5);
-      boat.position.y = -0.1;
-      this.boatGroup.add(boat);
-    });
+    const boat = modelLoader.get('./models/boat.glb').scene.clone();
+    boat.scale.multiplyScalar(0.5);
+    boat.position.y = -0.1;
+    this.boatGroup.add(boat);
 
-    loader.load('models/bird.glb', (gltf) => {
-      this.birdGroup.add(gltf.scene);
-      this.birdGroup.scale.multiplyScalar(0.5);
-      this.playerGroup.add(this.birdGroup);
-    });
+    const bird = modelLoader.get('./models/bird.glb').scene.clone();
+    this.birdGroup.add(bird);
+    this.birdGroup.scale.multiplyScalar(0.5);
+    this.playerGroup.add(this.birdGroup);
 
     this.loadArrowPlanes();
     this.initWatchers();

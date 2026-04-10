@@ -245,8 +245,8 @@ export class GameLoop {
       content: {
         ...gameText.setup.boatPlacement,
         title: `${gameText.setup.boatPlacement.title}
-          ${'ABCDEFG'[boatStartPosition.x]},
-          ${boatStartPosition.y + 1}`,
+          ${'ABCDEFG'[6 - boatStartPosition.y]},
+          ${boatStartPosition.x + 1}`,
       },
       props: {
         primaryButtonLabel: gameText.setup.boatPlacement.primaryButton,

@@ -1,5 +1,5 @@
 <template>
-  <button type="button" :class="buttonClasses" @click="handleClick">
+  <button type="button" :class="buttonClasses" :disabled="disabled" @click="handleClick">
     <span v-if="variant === 'undo'" class="flex h-5 w-5 items-center justify-center">
       <slot name="icon">
         <svg
@@ -43,11 +43,13 @@ const props = withDefaults(
     label?: string;
     variant?: ButtonVariant;
     onClick?: ButtonHandler;
+    disabled?: boolean;
   }>(),
   {
     label: '',
     variant: 'primary',
     onClick: undefined,
+    disabled: false,
   }
 );
 
@@ -60,8 +62,9 @@ const resolvedLabel = computed(() => {
 });
 
 const buttonClasses = computed(() => [
-  'flex h-full min-h-0 w-full cursor-pointer bg-red-800 items-center justify-center px-3 py-2 text-sm sm:px-4 sm:py-3 sm:text-base',
+  'flex h-full min-h-0 w-full items-center justify-center px-3 py-2 text-sm sm:px-4 sm:py-3 sm:text-base transition-opacity',
   props.variant === 'undo' ? 'gap-2 text-left' : '',
+  props.disabled ? 'cursor-not-allowed bg-red-900 opacity-40' : 'cursor-pointer bg-red-800',
 ]);
 
 function handleClick() {

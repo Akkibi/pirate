@@ -25,6 +25,7 @@ interface StoreInterface {
   displayArrows: boolean;
   arrowClicked: string | null;
   boardTiles: BoardTileSnapshot[];
+  loadingProgress: number;
 }
 
 export interface GameStateSnapshot {
@@ -63,6 +64,7 @@ export const gameState = reactive({
   displayArrows: false,
   arrowClicked: null,
   boardTiles: [],
+  loadingProgress: 0,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
 import FullMessageButtonScreen from './components/screens/FullMessageButtonScreen.vue';
@@ -9,6 +9,7 @@ import TopMessageLowerButtonCardsScreen from './components/screens/TopMessageLow
 import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowerButtonDiceScreen.vue';
 import { initGame } from './main';
 import { hasSavedGameProgress } from './utils/gameProgress';
+import { modelLoader } from './three/modelLoader';
 import { currentScreen, resolveScreen } from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
 import DebugControls from './components/debugControls.vue';
@@ -17,6 +18,10 @@ import ScreenGrid from './components/ui/ScreenGrid.vue';
 const started = ref(false);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
+
+onMounted(() => {
+  void modelLoader.preloadAll();
+});
 
 const screenComponentMap = {
   'full-message-button': FullMessageButtonScreen,

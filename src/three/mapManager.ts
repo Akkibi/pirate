@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { Tile } from './tile';
 import { objectPool } from './instancedModelManger';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { modelLoader } from './modelLoader';
 import {
   type BoardTileSnapshot,
   type BoardTileState,
@@ -107,18 +107,14 @@ export class MapManager {
   }
 
   public generateMap(): void {
-    // genetate board and board environement
-    const loader = new GLTFLoader();
-    loader.load('models/board.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.add(new THREE.Vector3(0.5, 0, 0.5));
-      this.mapGroup.add(model);
-    });
-    loader.load('models/environement.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.add(new THREE.Vector3(0.5, 0, 0.5));
-      this.mapGroup.add(model);
-    });
+    // generate board and board environment
+    const board = modelLoader.get('./models/board.glb').scene.clone();
+    board.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    this.mapGroup.add(board);
+
+    const environment = modelLoader.get('./models/environement.glb').scene.clone();
+    environment.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    this.mapGroup.add(environment);
 
     // generate board tiles
     const boardTiles =
