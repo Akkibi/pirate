@@ -1,5 +1,5 @@
 <template>
-  <div class="col-span-8 row-span-2 flex items-center justify-center">
+  <div class="col-span-8 row-span-2 flex items-start justify-baseline px-10">
     <div
       v-for="step in countdownSteps"
       v-show="currentStep === step"
