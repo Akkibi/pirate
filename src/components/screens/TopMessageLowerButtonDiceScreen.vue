@@ -17,7 +17,7 @@
     ]"
   >
     <div class="dice-stage" aria-hidden="true">
-      <div class="dice-cube" :style="diceStyle">
+      <div class="dice-cube text-amber-100" :style="diceStyle">
         <div class="dice-face dice-face--front">0</div>
         <div class="dice-face dice-face--right">1</div>
         <div class="dice-face dice-face--top">1</div>
@@ -283,11 +283,11 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid currentColor;
-  background: #fff;
-  color: #111;
+  /*border: 1px solid currentColor;*/
+  background: no-repeat url('images/dice-bg.png') center / contain;
   font-size: clamp(2rem, 10vw, 3rem);
   font-weight: 700;
+  border-radius: 2px;
   backface-visibility: hidden;
 }
 
