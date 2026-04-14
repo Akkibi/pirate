@@ -57,13 +57,13 @@ export class Corsair {
 
   private displayCorsair(isDisplayed: boolean): void {
     // display the corsair based on isDisplayed
-    this.isDisplayed = true;
+    this.isDisplayed = isDisplayed;
     this.updateDisplay(isDisplayed, this.isDisplayedInMap);
   }
 
   public displayCorsairInMap(isDisplayedInMap: boolean): void {
     // display the corsair based on isDisplayed
-    this.isDisplayedInMap = true;
+    this.isDisplayedInMap = isDisplayedInMap;
     this.updateDisplay(this.isDisplayed, isDisplayedInMap);
   }
 
