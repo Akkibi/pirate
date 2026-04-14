@@ -30,44 +30,98 @@
     </button>
   </div>
   <div
-    class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end self-end"
+    class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end gap-2 self-end"
   >
-    <div class="relative flex items-center justify-center gap-2">
-      <div
-        class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
-      ></div>
-      <button
-        class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
-        @click="movePlayer('left')"
-      >
-        Left
-      </button>
-      <div class="flex flex-col gap-2">
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-xs font-black text-amber-900">Corsair</span>
+      <div class="relative flex items-center justify-center gap-2">
+        <div
+          class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
+        ></div>
         <button
           class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
-          @click="movePlayer('up')"
+          @click="moveCorsair('left')"
         >
-          Up
+          Left
         </button>
+        <div class="flex flex-col gap-2">
+          <button
+            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            @click="moveCorsair('up')"
+          >
+            Up
+          </button>
+          <button
+            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            @click="moveCorsair('down')"
+          >
+            Down
+          </button>
+        </div>
         <button
           class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
-          @click="movePlayer('down')"
+          @click="moveCorsair('right')"
         >
-          Down
+          Right
         </button>
       </div>
-      <button
-        class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
-        @click="movePlayer('right')"
-      >
-        Right
-      </button>
+    </div>
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-xs font-black text-amber-900">Player</span>
+      <div class="relative flex items-center justify-center gap-2">
+        <div
+          class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
+        ></div>
+        <button
+          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          @click="movePlayer('left')"
+        >
+          Left
+        </button>
+        <div class="flex flex-col gap-2">
+          <button
+            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            @click="movePlayer('up')"
+          >
+            Up
+          </button>
+          <button
+            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            @click="movePlayer('down')"
+          >
+            Down
+          </button>
+        </div>
+        <button
+          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          @click="movePlayer('right')"
+        >
+          Right
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { gameState } from '../utils/gameStore';
+
+const moveCorsair = (direction: string) => {
+  switch (direction) {
+    case 'left':
+      gameState.corsairPosition.y -= 1;
+      break;
+    case 'right':
+      gameState.corsairPosition.y += 1;
+      break;
+    case 'up':
+      gameState.corsairPosition.x += 1;
+      break;
+    case 'down':
+      gameState.corsairPosition.x -= 1;
+      break;
+  }
+};
 
 const movePlayer = (direction: string) => {
   switch (direction) {
