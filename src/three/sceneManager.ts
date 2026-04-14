@@ -93,6 +93,7 @@ export class SceneManager {
     this.seaSky.update(time * 1000);
     this.player.update(time * 1000);
     this.corsair.update(time * 1000);
+    this.camera.update(time * 1000);
   };
 
   dispose(): void {

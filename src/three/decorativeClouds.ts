@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { gameState, type PhaseType } from '../utils/gameStore';
 import { watch } from 'vue';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { modelLoader } from './modelLoader';
 import gsap from 'gsap';
 
 export class DecorativeClouds {
@@ -10,16 +10,10 @@ export class DecorativeClouds {
 
   constructor() {
     this.cloudGroup = new THREE.Group();
-    // load a 3d model and
-    const loader = new GLTFLoader();
 
-    loader.load('models/clouds.glb', (gltf) => {
-      const cloud = gltf.scene;
-      // cloud.scale.multiplyScalar(0.5);
-      // cloud.position.y = -4;
-      cloud.position.add(new THREE.Vector3(0.5, 0, 0.5));
-      this.cloudGroup.add(cloud);
-    });
+    const cloud = modelLoader.get('./models/clouds.glb').scene.clone();
+    cloud.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    this.cloudGroup.add(cloud);
     this.initWatchers();
   }
 

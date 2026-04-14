@@ -13,6 +13,7 @@ const ALL_MODELS = [
   './models/environement.glb',
   './models/boat.glb',
   './models/bird.glb',
+  './models/clouds.glb',
 ];
 
 class ModelLoader {
@@ -30,19 +31,50 @@ class ModelLoader {
   }
 
   async preloadAll(): Promise<void> {
-    const total = ALL_MODELS.length;
-    let loaded = 0;
-
     gameState.loadingProgress = 0;
 
-    await Promise.all(
+    const fileSizes = await Promise.all(
       ALL_MODELS.map(async (path) => {
-        const gltf = await this.loader.loadAsync(path);
-        this.cache.set(path, gltf);
-        loaded++;
-        gameState.loadingProgress = Math.round((loaded / total) * 100);
-        console.log(this.cache);
+        try {
+          const res = await fetch(path, { method: 'HEAD' });
+          return Number(res.headers.get('content-length') ?? 0);
+        } catch {
+          return 0;
+        }
       })
+    );
+
+    const totalBytes = fileSizes.reduce((a, b) => a + b, 0);
+    const bytesLoaded = new Array(ALL_MODELS.length).fill(0);
+
+    const updateProgress = () => {
+      if (totalBytes === 0) return;
+      const loaded = bytesLoaded.reduce((a, b) => a + b, 0);
+      gameState.loadingProgress = Math.round((loaded / totalBytes) * 100);
+    };
+
+    await Promise.all(
+      ALL_MODELS.map(
+        (path, i) =>
+          new Promise<void>((resolve, reject) => {
+            this.loader.load(
+              path,
+              (gltf) => {
+                this.cache.set(path, gltf);
+                bytesLoaded[i] = fileSizes[i];
+                updateProgress();
+                resolve();
+              },
+              (event) => {
+                if (event.lengthComputable) {
+                  bytesLoaded[i] = event.loaded;
+                  updateProgress();
+                }
+              },
+              reject
+            );
+          })
+      )
     );
   }
 
