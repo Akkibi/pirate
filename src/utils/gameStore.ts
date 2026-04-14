@@ -19,6 +19,8 @@ interface StoreInterface {
   crewHP: number;
   diceResult: number | null;
   userPosition: THREE.Vector2;
+  corsairPosition: THREE.Vector2;
+  displayCorsair: boolean;
   userPositionHistory: Array<THREE.Vector2>;
   entitiesVisible: boolean;
   focusedView: boolean;
@@ -59,6 +61,8 @@ export const gameState = reactive({
   diceResult: null,
   focusedView: false,
   userPosition: new THREE.Vector2(0, 0),
+  displayCorsair: false,
+  corsairPosition: new THREE.Vector2(0, 0),
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: false,
   displayArrows: false,

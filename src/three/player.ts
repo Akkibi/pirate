@@ -176,6 +176,12 @@ export class Player {
   public setPosition(position: THREE.Vector2): void {
     this.position.copy(position);
 
+    // limit position
+    const maxX = 5;
+    const maxZ = 7;
+    this.position.x = Math.max(0, Math.min(maxX, this.position.x));
+    this.position.y = Math.max(0, Math.min(maxZ, this.position.y));
+
     gsap.to(this.playerGroup.position, {
       x: this.position.x,
       y: this.playerGroup.position.y,
@@ -209,6 +215,15 @@ export class Player {
 
   getPosition() {
     return this.position;
+  }
+
+  public destroy(): void {
+    this.arrowGroup.removeFromParent();
+    this.boatGroup.removeFromParent();
+    this.birdGroup.removeFromParent();
+    this.playerGroup.removeFromParent();
+    this.playerGroup.clear();
+    this.arrowMeshes.clear();
   }
 
   public handleArrowClick(mousePosition: THREE.Vector2, camera: THREE.Camera): void {

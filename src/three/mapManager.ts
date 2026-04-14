@@ -12,6 +12,7 @@ import {
 import { watch } from 'vue';
 import { DecorativeClouds } from './decorativeClouds';
 import { gameEvents } from '../events/gameEvents';
+import type { SceneManager } from './sceneManager';
 
 const TILE_AMOUNT_X = 5;
 const TILE_AMOUNT_Y = 7;
@@ -32,9 +33,11 @@ export class MapManager {
   private stopWatchers: Array<() => void> = [];
   private clouds: DecorativeClouds;
   private revealRunId = 0;
+  private sceneManager: SceneManager;
 
-  constructor(scene: THREE.Scene) {
+  constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.scene = scene;
+    this.sceneManager = sceneManager;
     this.mapGroup = new THREE.Group();
     this.tiles = [];
     this.scene.add(this.mapGroup);
@@ -116,6 +119,12 @@ export class MapManager {
     environment.position.add(new THREE.Vector3(0.5, 0, 0.5));
     this.mapGroup.add(environment);
 
+    const startPosition = new THREE.Vector2(
+      Math.round(Math.random() * 4),
+      Math.round(Math.random() * 6)
+    );
+    gameState.userPosition = startPosition;
+
     // generate board tiles
     const boardTiles =
       gameState.boardTiles.length > 0 ? gameState.boardTiles : this.createBoardTiles();
@@ -129,12 +138,6 @@ export class MapManager {
       this.tiles.push(tile);
       this.mapGroup.add(tile.tileGroup);
     });
-
-    const startPosition = new THREE.Vector2(
-      Math.round(Math.random() * 4),
-      Math.round(Math.random() * 6)
-    );
-    gameState.userPosition = startPosition;
   }
 
   private createBoardTiles(): BoardTileSnapshot[] {
@@ -215,6 +218,8 @@ export class MapManager {
         return;
       }
 
+      this.sceneManager.corsair.displayCorsairInMap(true);
+
       gameEvents.emit('parrot:map_revealed', {});
     });
   }
@@ -222,6 +227,8 @@ export class MapManager {
   public hideEntities() {
     this.revealRunId += 1;
     console.log(gameState.userPositionHistory);
+
+    this.sceneManager.corsair.displayCorsairInMap(false);
     this.tiles.forEach((tile) => {
       void tile.hide();
     });

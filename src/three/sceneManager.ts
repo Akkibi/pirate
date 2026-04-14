@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import { Player } from './player';
 import { gameState } from '../utils/gameStore';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
+import { Corsair } from './corsair';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -20,6 +21,7 @@ export class SceneManager {
   public player: Player;
   private stats: Stats;
   private handleCanvasClick: (event: MouseEvent) => void;
+  public corsair: Corsair;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -41,8 +43,9 @@ export class SceneManager {
     this.seaSky = createSeaSkyBackground(this.camera.getNative());
     this.scene.add(this.seaSky.mesh);
 
-    this.mapManager = new MapManager(this.scene);
     this.player = new Player(this.scene);
+    this.corsair = new Corsair(this.scene);
+    this.mapManager = new MapManager(this, this.scene);
 
     // Setup stats panel
     this.stats = new Stats();
@@ -89,6 +92,7 @@ export class SceneManager {
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(time * 1000);
     this.player.update(time * 1000);
+    this.corsair.update(time * 1000);
   };
 
   dispose(): void {
@@ -97,6 +101,8 @@ export class SceneManager {
     gsap.ticker.remove(this.animate);
     this.renderer.dispose();
     this.mapManager.destroy();
+    this.player.destroy();
+    this.corsair.destroy();
     if (this.stats.dom.parentElement) {
       this.stats.dom.parentElement.removeChild(this.stats.dom);
     }

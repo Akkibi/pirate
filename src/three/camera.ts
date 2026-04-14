@@ -20,6 +20,7 @@ export class Camera {
 
   constructor(scene: THREE.Scene, width: number, height: number) {
     this.cameraGroup = new THREE.Group();
+    this.cameraGroup.position.add(new THREE.Vector3(50, 0, 2.5));
     this.cameraPositionGroup = new THREE.Group();
     this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
 
@@ -34,7 +35,7 @@ export class Camera {
     this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
 
-    this.cameraPositionGroup.position.copy(cameraPositions.crew);
+    this.cameraPositionGroup.position.copy(cameraPositions.default);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));
 
     this.initWatchers();
@@ -60,6 +61,7 @@ export class Camera {
         this.setFocused(newFocused);
       }
     );
+
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
     this.setFocused(gameState.focusedView);
