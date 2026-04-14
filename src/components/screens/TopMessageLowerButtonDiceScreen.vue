@@ -25,6 +25,9 @@
         <div class="dice-face dice-face--left">2</div>
         <div class="dice-face dice-face--back">3</div>
       </div>
+      <div
+        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 w-70 h-14 bg-black/20 -z-10 rounded-[50%]"
+      ></div>
     </div>
   </div>
 
@@ -227,7 +230,7 @@ function startRoll() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       presentDice();
-      rotationX.value = 720 + rolledFace.x;
+      rotationX.value = 720 + rolledFace.x - 10;
       rotationY.value = 720 + rolledFace.y;
     });
   });
@@ -284,8 +287,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   /*border: 1px solid currentColor;*/
-  background: no-repeat url('images/dice-bg.png') center / contain;
-  font-size: clamp(2rem, 10vw, 3rem);
+  background: no-repeat url('images/dice-bg.webp') center / contain;
+  font-size: calc(var(--dice-size) / 2);
   font-weight: 700;
   border-radius: 2px;
   backface-visibility: hidden;
