@@ -46,11 +46,16 @@ class ModelLoader {
 
     const totalBytes = fileSizes.reduce((a, b) => a + b, 0);
     const bytesLoaded = new Array(ALL_MODELS.length).fill(0);
+    let modelsLoaded = 0;
 
     const updateProgress = () => {
-      if (totalBytes === 0) return;
-      const loaded = bytesLoaded.reduce((a, b) => a + b, 0);
-      gameState.loadingProgress = Math.round((loaded / totalBytes) * 100);
+      if (totalBytes > 0) {
+        const loaded = bytesLoaded.reduce((a, b) => a + b, 0);
+        gameState.loadingProgress = Math.round((loaded / totalBytes) * 100);
+      } else {
+        // Fallback for CDNs (e.g. Vercel) that don't return content-length headers
+        gameState.loadingProgress = Math.round((modelsLoaded / ALL_MODELS.length) * 100);
+      }
     };
 
     await Promise.all(
@@ -62,6 +67,7 @@ class ModelLoader {
               (gltf) => {
                 this.cache.set(path, gltf);
                 bytesLoaded[i] = fileSizes[i];
+                modelsLoaded++;
                 updateProgress();
                 resolve();
               },
