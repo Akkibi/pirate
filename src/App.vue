@@ -137,20 +137,20 @@ function toggleUI() {
           class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
         ></div>
         <div
-          class="absolute -top-2 -left-2 w-30 h-30 bg-[url('images/screen-border.webp')] bg-cover bg-center"
+          class="absolute -top-2 -left-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
         ></div>
         <div
-          class="absolute -top-2 rotate-90 -right-2 w-30 h-30 bg-[url('images/screen-border.webp')] bg-cover bg-center"
+          class="absolute -top-2 rotate-90 -right-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
         ></div>
 
         <div
-          class="absolute -bottom-2 -rotate-90 -left-2 w-30 h-30 bg-[url('images/screen-border.webp')] bg-cover bg-center"
+          class="absolute -bottom-2 -rotate-90 -left-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
         ></div>
         <div
-          class="absolute -bottom-2 rotate-180 -right-2 w-30 h-30 bg-[url('images/screen-border.webp')] bg-cover bg-center"
+          class="absolute -bottom-2 rotate-180 -right-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
         ></div>
         <div
-          class="absolute inset-0 bg-[url('images/boundstexture.webp')] bg-center bg-cover mix-blend-multiply"
+          class="absolute inset-0 bg-[url('/images/boundstexture.webp')] bg-center bg-cover mix-blend-multiply"
         ></div>
       </div>
     </template>
