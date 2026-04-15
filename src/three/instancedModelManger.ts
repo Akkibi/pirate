@@ -40,12 +40,19 @@ export class InstancedModelManager {
     this.scene = scene;
 
     // if there are existing instances free them and remove them
-    for (const [, pool] of this.pools) {
+    if (this.pools.size > 0) {
+      console.log('[objectPool] re-init: clearing', this.pools.size, 'existing pool(s)');
+    }
+    for (const [name, pool] of this.pools) {
+      console.log(
+        `[objectPool] disposing pool "${name}", active indices:`,
+        pool.activeIndices.size
+      );
       scene.remove(pool.mesh);
+      // Only dispose the merged geometry (owned by this pool).
+      // Do NOT dispose materials — they are shared references from the modelLoader
+      // cache and must remain valid for the next init cycle.
       pool.mesh.geometry.dispose();
-      const mat = pool.mesh.material;
-      if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-      else mat.dispose();
     }
     this.pools.clear();
 
@@ -299,12 +306,12 @@ export class InstancedModelManager {
   }
 
   dispose(): void {
+    console.log('[objectPool] dispose: removing', this.pools.size, 'pool(s) from scene');
     for (const [, pool] of this.pools) {
       this.scene?.remove(pool.mesh);
+      // Only dispose the merged geometry (owned by this pool).
+      // Do NOT dispose materials — they are shared references from the modelLoader cache.
       pool.mesh.geometry.dispose();
-      const mat = pool.mesh.material;
-      if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-      else mat.dispose();
     }
     this.pools.clear();
   }

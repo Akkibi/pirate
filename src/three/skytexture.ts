@@ -36,10 +36,10 @@ export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyB
   const skyTop = vec3(0.3, 0.6, 1.0);
   const skyHorizon = vec3(0.2, 0.4, 1.0);
 
-  // Water colors (art direction palette, converted sRGB → linear, darkened)
-  const waterDeep = vec3(0.0, 0.189, 0.131);
-  const waterMid = vec3(0.0, 0.238, 0.148);
-  const waterLight = vec3(0.022, 0.26, 0.186);
+  // Water colors (art direction palette, converted sRGB → linear, darkened + saturated)
+  const waterDeep = vec3(0.0, 0.1, 0.05);
+  const waterMid = vec3(0.0, 0.14, 0.07);
+  const waterLight = vec3(0.01, 0.18, 0.1);
 
   // Sky gradient
   const skyT = y.sub(horizon).div(float(1.0).sub(horizon)).clamp(0, 1);
@@ -122,10 +122,10 @@ export function createSeaSkyBackground(camera: THREE.PerspectiveCamera): SeaSkyB
   const waterWithGlints = waterWithFoam.add(vec3(0.9, 1.0, 0.85).mul(glint).mul(0.55));
 
   // Fresnel reflection toward sky near waterline
-  const waterColor = mix(waterWithGlints, skyHorizon.mul(0.35), fresnel.mul(0.3));
+  const waterColor = mix(waterWithGlints, skyHorizon.mul(0.15), fresnel.mul(0.12));
 
   // Blend at horizon
-  const isAboveHorizon = smoothstep(horizon.sub(0.005), horizon.add(0.005), y);
+  const isAboveHorizon = smoothstep(horizon.sub(0.001), horizon.add(0.001), y);
   const baseColor = mix(waterColor, skyColor, isAboveHorizon);
 
   // Horizon glow

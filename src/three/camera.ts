@@ -6,7 +6,7 @@ import gsap from 'gsap';
 
 export const cameraPositions = {
   default: new THREE.Vector3(-10, 3.5, 0),
-  parrot: new THREE.Vector3(-5, 9, 0),
+  parrot: new THREE.Vector3(-5, 8.5, 0),
   crew: new THREE.Vector3(-10, 5, 0),
 };
 
@@ -108,16 +108,19 @@ export class Camera {
     gsap.to(this.cameraGroup.rotation, {
       duration: 4,
       ease: 'expo.out',
-      x: 0,
       y: this.phase === 'parrot' ? -Math.PI : 0,
-      z: 0,
       overwrite: true,
     });
   }
 
+  public update(time: number): void {
+    this.cameraGroup.rotation.x = Math.sin(time * 0.0005) * 0.02;
+    this.cameraGroup.rotation.z = Math.sin(time * 0.00021) * 0.02;
+  }
+
   updatePosition(): void {
     const newPos = this.isFocused
-      ? new THREE.Vector3(1.75, this.cameraGroup.position.y, 3)
+      ? new THREE.Vector3(2, this.cameraGroup.position.y, 3)
       : new THREE.Vector3(
           this.targetPosition.x,
           this.cameraGroup.position.y,
@@ -135,6 +138,8 @@ export class Camera {
 
   setPosition(position: THREE.Vector2): void {
     this.targetPosition.copy(position);
+    this.targetPosition.x = (position.x + 2) / 2;
+    this.targetPosition.y = (position.y + 3) / 2;
     this.updatePosition();
   }
 }

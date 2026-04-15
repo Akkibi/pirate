@@ -17,6 +17,9 @@ export class Tile {
   private fogDistance: number;
   private fogDistanceBuffer: number;
   private isHistory: boolean;
+  private stopWatcher: (() => void) | null = null;
+  private pendingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private activeTween: gsap.core.Tween | null = null;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
     this.position = position;
@@ -40,11 +43,10 @@ export class Tile {
       this.hide();
     }
 
-    watch(
+    this.stopWatcher = watch(
       () => gameState.userPosition,
       () => {
         this.setFogPosition();
-        // console.log('history tile', this.position.x, gameState.userPosition.x);
         if (
           !this.isHistory &&
           gameState.userPosition.x === this.position.x &&
@@ -53,7 +55,8 @@ export class Tile {
           this.isHistory = true;
           console.log('history tile', this.position);
 
-          setTimeout(() => {
+          this.pendingTimeout = setTimeout(() => {
+            this.pendingTimeout = null;
             this.updateObject(false);
             this.setTileVisited();
           }, 300);
@@ -68,8 +71,38 @@ export class Tile {
   }
 
   public destroy() {
+    // Stop the watcher FIRST so no further reactions fire during cleanup
+    this.stopWatcher?.();
+    this.stopWatcher = null;
+
+    // Cancel pending delayed updateObject call
+    if (this.pendingTimeout !== null) {
+      clearTimeout(this.pendingTimeout);
+      this.pendingTimeout = null;
+    }
+
+    // Kill any running GSAP tween
+    this.activeTween?.kill();
+    this.activeTween = null;
+
     this.tileGroup.remove(...this.tileGroup.children);
     this.tileGroup.removeFromParent();
+    this.tileGroup.clear();
+
+    if (this.idx !== -1) {
+      objectPool.releaseInstance(this.state, this.idx);
+      this.idx = -1;
+    }
+    if (this.waterIdx !== -1) {
+      objectPool.releaseInstance('water', this.waterIdx);
+      this.waterIdx = -1;
+    }
+    if (this.fogIdx !== -1) {
+      objectPool.releaseInstance('fog', this.fogIdx);
+      this.fogIdx = -1;
+    }
+
+    console.log('[Tile] destroyed', this.position.x, this.position.y);
   }
 
   private updateObject(isHidden: boolean) {
@@ -143,6 +176,10 @@ export class Tile {
   }
 
   smoothMoveFog(hideFog: boolean, oncomplete?: () => void): Promise<void> {
+    // Kill any previous tween before starting a new one
+    this.activeTween?.kill();
+    this.activeTween = null;
+
     return new Promise((resolve) => {
       const emptyObject = {};
       const scale = 4;
@@ -160,11 +197,12 @@ export class Tile {
           },
           ease: 'bounce.inOut',
           onComplete: () => {
+            this.activeTween = null;
             oncomplete?.();
             resolve();
           },
         });
-
+        this.activeTween = tween;
         return;
       }
 
@@ -179,10 +217,12 @@ export class Tile {
         },
         ease: 'bounce.inOut',
         onComplete: () => {
+          this.activeTween = null;
           oncomplete?.();
           resolve();
         },
       });
+      this.activeTween = tween;
     });
   }
 
