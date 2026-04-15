@@ -45,6 +45,15 @@ export class MapManager {
     this.clouds = new DecorativeClouds();
     this.scene.add(this.clouds.cloudGroup);
 
+    // generate board and board environment
+    const board = modelLoader.get('./models/board.glb').scene.clone();
+    board.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    this.mapGroup.add(board);
+
+    const environment = modelLoader.get('./models/environement.glb').scene.clone();
+    environment.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    this.mapGroup.add(environment);
+
     objectPool.init(scene, tileTypes).then(() => {
       console.log('all loaded');
       this.generateMap();
@@ -106,19 +115,14 @@ export class MapManager {
     this.tiles = [];
 
     // Remove mapGroup from scene
+    this.mapGroup.children.forEach((child) => {
+      this.scene.remove(child);
+      child.clear();
+    });
     this.scene.remove(this.mapGroup, this.clouds.cloudGroup);
   }
 
   public generateMap(): void {
-    // generate board and board environment
-    const board = modelLoader.get('./models/board.glb').scene.clone();
-    board.position.add(new THREE.Vector3(0.5, 0, 0.5));
-    this.mapGroup.add(board);
-
-    const environment = modelLoader.get('./models/environement.glb').scene.clone();
-    environment.position.add(new THREE.Vector3(0.5, 0, 0.5));
-    this.mapGroup.add(environment);
-
     const startPosition = new THREE.Vector2(
       Math.round(Math.random() * 4),
       Math.round(Math.random() * 6)

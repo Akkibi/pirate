@@ -7,6 +7,7 @@ import { Player } from './player';
 import { gameState } from '../utils/gameStore';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { Corsair } from './corsair';
+import { objectPool } from './instancedModelManger';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -100,10 +101,13 @@ export class SceneManager {
     window.removeEventListener('resize', this.onWindowResize);
     document.removeEventListener('click', this.handleCanvasClick);
     gsap.ticker.remove(this.animate);
-    this.renderer.dispose();
     this.mapManager.destroy();
     this.player.destroy();
     this.corsair.destroy();
+    // Dispose the pool (geometries only) while the renderer is still alive,
+    // so WebGPU node cleanup doesn't crash on a dead context.
+    objectPool.dispose();
+    this.renderer.dispose();
     if (this.stats.dom.parentElement) {
       this.stats.dom.parentElement.removeChild(this.stats.dom);
     }
