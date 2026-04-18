@@ -266,22 +266,6 @@ export class Tile {
     });
   }
 
-  private smoothMovePositionShift(isShifting: boolean) {
-    if (isShifting) {
-      objectPool.updatePosition(
-        this.state,
-        this.idx,
-        new THREE.Vector3(this.position.x - 0.2, 0, this.position.y + 0.2)
-      );
-    } else {
-      objectPool.updatePosition(
-        this.state,
-        this.idx,
-        new THREE.Vector3(this.position.x, 0, this.position.y)
-      );
-    }
-  }
-
   public hide(): Promise<void> {
     if (this.isHistory) {
       return Promise.resolve();
