@@ -6,6 +6,7 @@ import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
 import { gameEvents } from '../events/gameEvents';
+import type { SceneManager } from './sceneManager';
 
 export class Player {
   private position: THREE.Vector2;
@@ -14,8 +15,10 @@ export class Player {
   private birdGroup: THREE.Group;
   private arrowGroup: THREE.Group;
   private arrowMeshes: Map<string, THREE.Mesh> = new Map();
+  private sceneManager: SceneManager;
 
-  constructor(scene: THREE.Scene) {
+  constructor(sceneManager: SceneManager, scene: THREE.Scene) {
+    this.sceneManager = sceneManager;
     this.playerGroup = new THREE.Group();
     this.boatGroup = new THREE.Group();
     this.birdGroup = new THREE.Group();
@@ -87,6 +90,12 @@ export class Player {
       }
     );
     watch(
+      () => gameState.entitiesVisible,
+      () => {
+        this.updatePositionShift();
+      }
+    );
+    watch(
       () => gameState.displayArrows,
       (isDisplayed) => {
         this.updateArrowVisibility(isDisplayed);
@@ -104,11 +113,38 @@ export class Player {
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
+        this.updatePositionShift();
       },
       { deep: true }
     );
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
+  }
+
+  private updatePositionShift(): void {
+    const tileType = this.sceneManager.mapManager.getTileState(this.position);
+    if (!tileType) return;
+    const isTileShared = tileType.state == 'monster' || tileType.state == 'island';
+
+    if ((gameState.entitiesVisible || tileType.entitiesHidden) && isTileShared) {
+      // this.boatGroup.position.set(0.25, 0, -0.25);
+      gsap.to(this.boatGroup.position, {
+        duration: 1,
+        ease: 'sin.inOut',
+        x: 0.2,
+        y: 0,
+        z: -0.2,
+      });
+    } else {
+      // this.boatGroup.position.set(0, 0, 0);
+      gsap.to(this.boatGroup.position, {
+        duration: 1,
+        ease: 'sin.inOut',
+        x: 0,
+        y: 0,
+        z: 0,
+      });
+    }
   }
 
   private resetArrowHighlight(): void {
@@ -141,15 +177,12 @@ export class Player {
     if (deltaX === 1 && deltaY === 0) {
       return 'up';
     }
-
     if (deltaX === -1 && deltaY === 0) {
       return 'down';
     }
-
     if (deltaX === 0 && deltaY === 1) {
       return 'right';
     }
-
     if (deltaX === 0 && deltaY === -1) {
       return 'left';
     }
@@ -164,6 +197,23 @@ export class Player {
     const blockedArrowDirection = this.getBlockedArrowDirection();
 
     for (const [name, mesh] of this.arrowMeshes) {
+      // do not display arrows when the boat is on borders
+      if (name === 'left' && this.position.y === 0) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'right' && this.position.y === 6) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'down' && this.position.x === 0) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'up' && this.position.x === 4) {
+        mesh.visible = false;
+        continue;
+      }
       mesh.visible = isDisplayed && name !== blockedArrowDirection;
     }
   }

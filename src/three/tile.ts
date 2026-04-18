@@ -3,6 +3,7 @@ import { objectPool } from './instancedModelManger';
 import { gsap } from 'gsap';
 import { gameState, type BoardTileState } from '../utils/gameStore';
 import { watch } from 'vue';
+import { instanceTween } from '../utils/instanceTween';
 export type TileStateType = BoardTileState;
 
 const FOG_MIN_DISTANCE = 0.612;
@@ -20,6 +21,8 @@ export class Tile {
   private stopWatcher: (() => void) | null = null;
   private pendingTimeout: ReturnType<typeof setTimeout> | null = null;
   private activeTween: gsap.core.Tween | null = null;
+  private isTileShared: boolean = false;
+  public isHidden: boolean;
 
   constructor(position: THREE.Vector2, state: TileStateType) {
     this.position = position;
@@ -34,6 +37,7 @@ export class Tile {
     this.tileGroup.position.set(position.x, 0, position.y);
     console.log('new tile', this.state, position);
     this.updateObject(false);
+    this.isHidden = false;
 
     // add fog
     this.placeFog();
@@ -59,7 +63,10 @@ export class Tile {
             this.pendingTimeout = null;
             this.updateObject(false);
             this.setTileVisited();
+            this.updatePositionShift();
           }, 300);
+        } else {
+          this.updatePositionShift();
         }
       },
       { deep: true }
@@ -68,6 +75,39 @@ export class Tile {
 
   private setTileVisited() {
     // add a path on the tile
+  }
+
+  private updatePositionShift() {
+    // if position match
+    if (this.idx === -1 || this.state === 'water' || this.state === 'typhon') return;
+
+    if (
+      !this.isTileShared &&
+      (this.isHistory || gameState.userPosition.equals(this.position)) &&
+      gameState.userPosition.x === this.position.x &&
+      gameState.userPosition.y === this.position.y
+    ) {
+      // this.boatGroup.position.set(0.25, 0, -0.25);
+      // move the tile object opposite to the boat
+      // update current object idx to (-0.25, 0, 0.25)
+
+      instanceTween.to(this.state, this.idx, {
+        x: this.position.x - 0.2,
+        z: this.position.y + 0.2,
+        duration: 2,
+        ease: 'expo.out',
+      });
+      this.isTileShared = true;
+      return;
+    } else if (this.isTileShared) {
+      instanceTween.to(this.state, this.idx, {
+        x: this.position.x,
+        z: this.position.y,
+        duration: 2,
+        ease: 'expo.out',
+      });
+      this.isTileShared = false;
+    }
   }
 
   public destroy() {
@@ -195,7 +235,7 @@ export class Tile {
             this.fogDistance = this.fogDistanceBuffer + progress;
             this.updateFog();
           },
-          ease: 'bounce.inOut',
+          // ease: 'bounce.inOut',
           onComplete: () => {
             this.activeTween = null;
             oncomplete?.();
@@ -226,10 +266,27 @@ export class Tile {
     });
   }
 
+  private smoothMovePositionShift(isShifting: boolean) {
+    if (isShifting) {
+      objectPool.updatePosition(
+        this.state,
+        this.idx,
+        new THREE.Vector3(this.position.x - 0.2, 0, this.position.y + 0.2)
+      );
+    } else {
+      objectPool.updatePosition(
+        this.state,
+        this.idx,
+        new THREE.Vector3(this.position.x, 0, this.position.y)
+      );
+    }
+  }
+
   public hide(): Promise<void> {
     if (this.isHistory) {
       return Promise.resolve();
     }
+    this.isHidden = true;
     this.updateObject(true);
     return this.smoothMoveFog(true);
   }
@@ -238,7 +295,7 @@ export class Tile {
     if (this.isHistory) {
       return Promise.resolve();
     }
-
+    this.isHidden = false;
     return this.smoothMoveFog(false, () => {
       this.updateObject(false);
     });

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Tile } from './tile';
+import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { modelLoader } from './modelLoader';
 import {
@@ -252,5 +252,12 @@ export class MapManager {
       tile.setFogPosition();
     });
     console.log('position list:', gameState.userPositionHistory);
+  }
+
+  public getTileState(
+    position: THREE.Vector2
+  ): { state: TileStateType; entitiesHidden: boolean } | null {
+    const tile = this.tiles.find((tile) => tile.position.equals(position));
+    return tile ? { state: tile.state, entitiesHidden: tile.isHidden } : null;
   }
 }
