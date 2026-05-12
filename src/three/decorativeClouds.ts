@@ -35,7 +35,7 @@ export class DecorativeClouds {
   private updatePos(newPhase: PhaseType) {
     if (newPhase == 'crew') {
       gsap.to(this.cloudGroup.position, { y: -2, duration: 1, ease: 'expo.out' });
-      gsap.to(this.cloudGroup.scale, { x: 0, y: 0, z: 0, duration: 1, ease: 'expo.out' });
+      gsap.to(this.cloudGroup.scale, { x: 0.5, y: 0.5, z: 0.5, duration: 1, ease: 'expo.out' });
     } else {
       gsap.to(this.cloudGroup.position, { y: 0, duration: 1, ease: 'expo.out' });
       gsap.to(this.cloudGroup.scale, { x: 1, y: 1, z: 1, duration: 1, ease: 'expo.out' });

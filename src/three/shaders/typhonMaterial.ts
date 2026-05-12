@@ -20,8 +20,8 @@ import {
 } from 'three/tsl';
 
 // Water base — same constants as waterMaterial.ts
-const WATER_SCALE = 0.8;
-const WATER_SPEED = 0.04;
+const WATER_SCALE = 2;
+const WATER_SPEED = 0.4;
 const BASE_OPACITY = 0.45;
 
 // sRGB hex → linear: WebGPU pipeline is linear; the renderer applies linearToSRGB at output
@@ -52,7 +52,6 @@ export function createTyphonMaterial(
   const worldXZ = positionWorld.xz.mul(WATER_SCALE).add(time.mul(WATER_SPEED));
   const worley = mx_worley_noise_float(worldXZ, 0.85);
   const waterColor = mix(DEEP_COLOR, SURFACE_COLOR, worley);
-
   // ── Typhon spiral ─────────────────────────────────────────────────────────
   // positionGeometry is the raw geometry attribute — before the per-instance
   // matrix is applied. This keeps the spiral centered on every tile regardless
@@ -62,9 +61,6 @@ export function createTyphonMaterial(
 
   // Blender: dot(Object, Object) = squared distance from tile center
   const dotProd = geoPos.dot(geoPos);
-
-  // Radial falloff: 1 at centre, tapers outward
-  const falloff = float(1.0).sub(dotProd.mul(0.5));
 
   // 3D noise for organic arm distortion (Blender Noise on Generated+offset, −0.5)
   const noiseVec = mx_noise_vec3(geoPos.add(vec3(1.67, 0.0, 0.0))).mul(0.5);

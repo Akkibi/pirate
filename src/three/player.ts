@@ -32,7 +32,6 @@ export class Player {
 
     const boat = modelLoader.get('./models/boat.glb').scene.clone();
     boat.scale.multiplyScalar(0.5);
-    boat.position.y = -0.1;
     this.boatGroup.add(boat);
 
     const bird = modelLoader.get('./models/bird.glb').scene.clone();
@@ -132,7 +131,6 @@ export class Player {
         duration: 1,
         ease: 'sin.inOut',
         x: 0.2,
-        y: 0,
         z: -0.2,
       });
     } else {
@@ -141,7 +139,6 @@ export class Player {
         duration: 1,
         ease: 'sin.inOut',
         x: 0,
-        y: 0,
         z: 0,
       });
     }
@@ -256,7 +253,8 @@ export class Player {
 
   public update(time: number) {
     this.boatGroup.rotation.y += 0.001;
-    this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
+    this.boatGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
+    this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
     this.birdGroup.rotation.y += 0.003;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
