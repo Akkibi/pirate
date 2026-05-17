@@ -179,9 +179,13 @@ function toggleUI() {
         :key="currentScreen.instanceId"
         v-bind="activeScreenProps"
       >
+        <!-- This template is replacing the <slot/> component in the Parchment in every ScreenComponent -->
         <template #message v-if="currentScreen.content">
           <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
-            <p v-if="currentScreen.content.title" class="text-lg font-semibold sm:text-3xl">
+            <p
+              v-if="currentScreen.content.title"
+              class="screen-message-title font-title text-4xl sm:text-6xl"
+            >
               {{ currentScreen.content.title }}
             </p>
             <p v-if="currentScreen.content.body" class="text-sm sm:text-base">
@@ -201,3 +205,9 @@ function toggleUI() {
     </ScreenGrid>
   </div>
 </template>
+
+<style scoped>
+.screen-message-title {
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+}
+</style>

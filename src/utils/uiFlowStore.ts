@@ -77,10 +77,6 @@ let nextScreenInstanceId = 1;
 let pendingResolve: ((value: UIScreenResult) => void) | null = null;
 
 export function showScreen(screen: UIScreen): Promise<UIScreenResult> {
-  //   if (currentScreen.value) {
-  //     throw new Error("A screen is already active.");
-  //   }
-
   currentScreen.value = {
     ...screen,
     instanceId: nextScreenInstanceId++,

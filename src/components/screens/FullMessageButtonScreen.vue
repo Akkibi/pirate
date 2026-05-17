@@ -6,6 +6,7 @@
       content-class="flex h-full items-center justify-center text-center"
       @shown="handleParchmentShown"
     >
+      <!-- Replaced by the <template/> in App vue -->
       <slot name="message">{{ message }}</slot>
     </Parchment>
   </div>

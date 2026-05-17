@@ -8,11 +8,37 @@
       :class="parchmentClasses"
       @click="handleClick"
     >
+      <div
+        ref="leftParchment"
+        class="absolute h-full w-[2em] lg:w-[4em] z-10"
+        :style="{
+          backgroundImage: 'url(/images/parchment/left_end.png)',
+          backgroundSize: '100% 100%',
+        }"
+      />
       <div :class="surfaceClasses">
-        <div ref="contentRef" :class="contentClasses">
-          <slot>{{ text }}</slot>
+        <div
+          ref="contentRef"
+          :class="contentClasses"
+          :style="{
+            backgroundImage: 'url(/images/parchment/background.png)',
+            backgroundSize: '100% 100%',
+          }"
+        >
+          <div ref="textRef" class="opacity-0">
+            <slot>{{ text }}</slot>
+          </div>
         </div>
       </div>
+      <div
+        ref="leftParchment"
+        class="absolute h-full w-[2em] lg:w-[4em] z-10 top-0 right-0"
+        :style="{
+          backgroundImage: 'url(/images/parchment/right_end.png)',
+          backgroundSize: '100% 100%',
+        }"
+      />
+      \
     </component>
   </div>
 </template>
@@ -65,6 +91,7 @@ const emit = defineEmits<{
 const slots = useSlots();
 const parchmentRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
+const textRef = ref<HTMLElement | null>(null);
 const isRendered = ref(props.visible);
 const rootTag = computed(() => (props.clickable ? 'button' : 'div'));
 const hasDefaultSlot = computed(() => Boolean(slots.default));
@@ -93,23 +120,23 @@ const textSizeClasses: Record<ParchmentSize, string> = {
 };
 
 const parchmentClasses = computed(() => [
-  'w-full h-full pointer-events-auto opacity-0 bg-yellow-800 scale-x-0',
+  'w-full h-full pointer-events-auto scale-x-0 text-yellow-800',
   props.clickable ? 'border-0 bg-transparent p-0' : '',
   props.clickable && !props.disabled ? 'cursor-pointer' : '',
   props.disabled ? 'cursor-not-allowed opacity-60' : '',
 ]);
 
 const surfaceClasses = computed(() => [
-  'relative flex h-full min-h-0 items-stretch justify-stretch',
+  'relative flex h-full min-h-0 items-stretch justify-stretch  py-4 px-2',
   sizeClasses[props.size],
   props.surfaceClass,
 ]);
 
 const contentClasses = computed(() => [
-  'relative h-full min-h-0 w-full opacity-0',
+  'relative min-h-0 w-full h-full',
   hasDefaultSlot.value
     ? `p-3 ${props.contentClass}`
-    : `flex items-center justify-center px-6 py-4 text-center ${textSizeClasses[props.size]} ${props.contentClass}`,
+    : `flex items-center justify-center px-6 py-4 text-center ${textSizeClasses[props.size]} ${props.contentClass} text-black`,
 ]);
 
 function clearAutoHideTimer() {
@@ -136,12 +163,12 @@ function applyHiddenState() {
   if (!parchmentRef.value || !contentRef.value) return;
 
   gsap.set(parchmentRef.value, {
-    opacity: 0,
+    // opacity: 0,
     scaleX: 0,
     transformOrigin: 'center center',
   });
   gsap.set(contentRef.value, {
-    opacity: 0,
+    // opacity: 0,
   });
 }
 
@@ -170,13 +197,12 @@ async function animateIn() {
 
   animationTimeline
     .to(parchmentRef.value, {
-      opacity: 1,
       scaleX: 1,
-      duration: 0.5,
-      ease: 'power2.out',
+      duration: 1,
+      ease: 'power2.inOut',
     })
     .to(
-      contentRef.value,
+      textRef.value,
       {
         opacity: 1,
         duration: 0.5,
