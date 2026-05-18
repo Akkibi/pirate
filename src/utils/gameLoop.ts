@@ -341,7 +341,6 @@ export class GameLoop {
             imageAlt: view.imageAlt,
           };
         }),
-        primaryButtonLabel: 'A toi fidele perroquet.',
       },
     });
 

@@ -154,7 +154,10 @@ export async function runParrotTurn({
       );
 
       if (actionChoice.action === 'card' && actionChoice.cardId === 'observe') {
-        currentStep = 'parrot.observeSurroundings';
+        gameState.entitiesVisible = true;
+        shouldWaitForMapReveal = true;
+        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+        currentStep = 'parrot.lookAroundTimer';
       } else if (actionChoice.action === 'card' && actionChoice.cardId === 'corsair') {
         remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
         currentStep = 'parrot.corsairLocation';
@@ -167,34 +170,10 @@ export async function runParrotTurn({
     }
 
     if (currentStep === 'parrot.observeSurroundings') {
-      const choice = await showCheckpointScreen(
-        'parrot.observeSurroundings',
-        {
-          type: 'top-message-lower-button',
-          content: {
-            title: 'Observer les alentours',
-            body: 'Retiens le plateau. Tu ne peux pas communiquer les informations vues.',
-          },
-          props: {
-            chrome: PARROT_CHROME,
-            primaryButtonLabel: 'Suivant',
-            showUndo: true,
-            primaryButtonOnClick: () => {
-              gameState.entitiesVisible = true;
-              resolveScreen({ action: 'primary' });
-            },
-          },
-        },
-        {
-          remainingParrotActions,
-        }
-      );
-
-      if (choice.action === 'primary') {
-        shouldWaitForMapReveal = true;
-        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
-        currentStep = 'parrot.lookAroundTimer';
-      }
+      gameState.entitiesVisible = true;
+      shouldWaitForMapReveal = true;
+      remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+      currentStep = 'parrot.lookAroundTimer';
 
       continue;
     }

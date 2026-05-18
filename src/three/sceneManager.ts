@@ -84,7 +84,6 @@ export class SceneManager {
 
   private animate = (time: number) => {
     const timeSeconds = time * 1000;
-    this.stats.update();
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(timeSeconds);
     this.player.update(timeSeconds);

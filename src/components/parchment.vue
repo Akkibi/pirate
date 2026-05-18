@@ -6,14 +6,20 @@
       :type="clickable ? 'button' : undefined"
       :disabled="clickable ? disabled : undefined"
       :class="parchmentClasses"
+      :style="{
+        '--parchment-clip-x': '50%',
+        '--parchment-end-width': 'clamp(3rem, 5.4vmin, 4rem)',
+      }"
       @click="handleClick"
     >
       <div
-        ref="leftParchment"
-        class="absolute h-full w-[2em] lg:w-[4em] z-10"
+        ref="leftEndRef"
+        class="absolute top-0 z-10 h-full"
         :style="{
           backgroundImage: 'url(/images/parchment/left_end.png)',
           backgroundSize: '100% 100%',
+          width: 'var(--parchment-end-width)',
+          left: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
         }"
       />
       <div :class="surfaceClasses">
@@ -23,6 +29,8 @@
           :style="{
             backgroundImage: 'url(/images/parchment/background.png)',
             backgroundSize: '100% 100%',
+            clipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
+            WebkitClipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
           }"
         >
           <div
@@ -34,14 +42,15 @@
         </div>
       </div>
       <div
-        ref="leftParchment"
-        class="absolute h-full w-[2em] lg:w-[4em] z-10 top-0 right-0"
+        ref="rightEndRef"
+        class="absolute top-0 z-10 h-full"
         :style="{
           backgroundImage: 'url(/images/parchment/right_end.png)',
           backgroundSize: '100% 100%',
+          width: 'var(--parchment-end-width)',
+          right: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
         }"
       />
-      \
     </component>
   </div>
 </template>
@@ -95,6 +104,8 @@ const slots = useSlots();
 const parchmentRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
 const textRef = ref<HTMLElement | null>(null);
+const leftEndRef = ref<HTMLElement | null>(null);
+const rightEndRef = ref<HTMLElement | null>(null);
 const isRendered = ref(props.visible);
 const rootTag = computed(() => (props.clickable ? 'button' : 'div'));
 const hasDefaultSlot = computed(() => Boolean(slots.default));
@@ -123,7 +134,7 @@ const textSizeClasses: Record<ParchmentSize, string> = {
 };
 
 const parchmentClasses = computed(() => [
-  'w-full h-full pointer-events-auto scale-x-0 text-yellow-800',
+  'relative h-full w-full overflow-hidden pointer-events-auto text-yellow-800',
   props.clickable ? 'border-0 bg-transparent p-0' : '',
   props.clickable && !props.disabled ? 'cursor-pointer' : '',
   props.disabled ? 'cursor-not-allowed opacity-60' : '',
@@ -160,18 +171,44 @@ function killActiveAnimations() {
   if (contentRef.value) {
     gsap.killTweensOf(contentRef.value);
   }
+
+  if (textRef.value) {
+    gsap.killTweensOf(textRef.value);
+  }
+
+  if (leftEndRef.value) {
+    gsap.killTweensOf(leftEndRef.value);
+  }
+
+  if (rightEndRef.value) {
+    gsap.killTweensOf(rightEndRef.value);
+  }
 }
 
 function applyHiddenState() {
-  if (!parchmentRef.value || !contentRef.value) return;
+  if (!parchmentRef.value || !contentRef.value || !leftEndRef.value || !rightEndRef.value) return;
 
   gsap.set(parchmentRef.value, {
-    // opacity: 0,
-    scaleX: 0,
+    opacity: 1,
+    scaleX: 1,
     transformOrigin: 'center center',
   });
+  gsap.set(parchmentRef.value, {
+    '--parchment-clip-x': '50%',
+  });
   gsap.set(contentRef.value, {
-    // opacity: 0,
+    opacity: 1,
+  });
+  gsap.set(textRef.value, {
+    opacity: 0,
+  });
+  gsap.set(leftEndRef.value, {
+    xPercent: 0,
+    opacity: 1,
+  });
+  gsap.set(rightEndRef.value, {
+    xPercent: 0,
+    opacity: 1,
   });
 }
 
@@ -182,7 +219,7 @@ async function animateIn() {
   isRendered.value = true;
   await nextTick();
 
-  if (!parchmentRef.value || !contentRef.value) return;
+  if (!parchmentRef.value || !contentRef.value || !leftEndRef.value || !rightEndRef.value) return;
 
   applyHiddenState();
 
@@ -199,19 +236,23 @@ async function animateIn() {
   });
 
   animationTimeline
-    .to(parchmentRef.value, {
-      scaleX: 1,
-      duration: 1,
-      ease: 'power2.inOut',
-    })
+    .to(
+      parchmentRef.value,
+      {
+        '--parchment-clip-x': '0%',
+        duration: 1,
+        ease: 'power2.inOut',
+      },
+      0
+    )
     .to(
       textRef.value,
       {
         opacity: 1,
-        duration: 0.5,
+        duration: 0.35,
         ease: 'power2.out',
       },
-      '>'
+      '>-0.1'
     );
 }
 
@@ -219,7 +260,7 @@ async function animateOut(reason: HideReason = 'manual') {
   clearAutoHideTimer();
   killActiveAnimations();
 
-  if (!parchmentRef.value || !contentRef.value) {
+  if (!parchmentRef.value || !contentRef.value || !leftEndRef.value || !rightEndRef.value) {
     isRendered.value = false;
     emit('hidden', reason);
     return;
@@ -233,14 +274,23 @@ async function animateOut(reason: HideReason = 'manual') {
   });
 
   animationTimeline
-    .to(contentRef.value, {
+    .to(textRef.value, {
       opacity: 0,
-      duration: 0.2,
+      duration: 0.16,
       ease: 'power2.in',
     })
+    .to(
+      parchmentRef.value,
+      {
+        '--parchment-clip-x': '50%',
+        duration: 0.55,
+        ease: 'power2.in',
+      },
+      '>-0.05'
+    )
     .to(parchmentRef.value, {
       opacity: 0,
-      duration: 1,
+      duration: 0.12,
       ease: 'power2.in',
     });
 }

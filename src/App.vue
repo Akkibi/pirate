@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
 import FullMessageButtonScreen from './components/screens/FullMessageButtonScreen.vue';
@@ -12,7 +12,11 @@ import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowe
 import { initGame } from './main';
 import { hasSavedGameProgress } from './utils/gameProgress';
 import { modelLoader } from './three/modelLoader';
-import { currentScreen, resolveScreen } from './utils/uiFlowStore';
+import {
+  currentScreen,
+  resolveScreen,
+  type ScreenChrome as ScreenChromeState,
+} from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
 import DebugControls from './components/debugControls.vue';
 import ScreenGrid from './components/ui/ScreenGrid.vue';
@@ -49,7 +53,22 @@ const activeScreenComponent = computed(() => {
 });
 
 const activeScreenChrome = computed(() => currentScreen.value?.props.chrome ?? null);
+const lastActiveScreenChrome = ref<ScreenChromeState | null>(null);
+const displayedScreenChrome = computed(
+  () =>
+    activeScreenChrome.value ?? (currentScreen.value === null ? lastActiveScreenChrome.value : null)
+);
 const usesSideChromeLayout = computed(() => Boolean(currentScreen.value));
+
+watch(
+  activeScreenChrome,
+  (chrome) => {
+    if (chrome) {
+      lastActiveScreenChrome.value = chrome;
+    }
+  },
+  { immediate: true }
+);
 
 function withoutChrome<T extends Record<string, unknown>>(props: T): Omit<T, 'chrome'> {
   const screenProps = { ...props };
@@ -230,14 +249,14 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
     <ScreenGrid overlay class="z-20">
       <div
-        v-if="started && UIShown && activeScreenChrome"
+        v-if="started && UIShown && displayedScreenChrome"
         class="resource-stable screen-chrome-layer col-span-full col-start-1 row-span-full row-start-1 z-30"
       >
         <ScreenChrome
-          :phase="activeScreenChrome.phase"
-          :show-rhum="activeScreenChrome.showRhum"
-          :show-peanuts="activeScreenChrome.showPeanuts"
-          :can-use-cards="activeScreenChrome.canUseCards"
+          :phase="displayedScreenChrome.phase"
+          :show-rhum="displayedScreenChrome.showRhum"
+          :show-peanuts="displayedScreenChrome.showPeanuts"
+          :can-use-cards="displayedScreenChrome.canUseCards"
           @use-card="handleChromeCardUse"
         />
       </div>
