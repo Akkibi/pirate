@@ -6,6 +6,16 @@ import { modelLoader } from './modelLoader';
 interface ModelConfig {
   name: string;
   url: string;
+  /**
+   * Optional factory called after geometry merging.
+   * Receives the first GLTF material (or null) and the per-instance opacity
+   * attribute node so the builder can compose them however it likes.
+   * When omitted the GLTF material is used as-is with default opacity wiring.
+   */
+  materialBuilder?: (
+    originalMaterial: THREE.Material | null,
+    instanceOpacityNode: ReturnType<typeof attribute>
+  ) => THREE.Material;
 }
 
 interface InstancePool {
@@ -150,21 +160,25 @@ export class InstancedModelManager {
         new THREE.InstancedBufferAttribute(opacityData, 1)
       );
 
-      const instancedMesh = new THREE.InstancedMesh(mergedGeometry, finalMaterial, maxInstances);
+      const opacityAttr = attribute('instanceOpacity');
+
+      // Resolve the final material: use the builder when provided, otherwise
+      // fall back to the GLTF material with default opacity wiring.
+      let resolvedMaterial: THREE.Material;
+      if (config.materialBuilder) {
+        resolvedMaterial = config.materialBuilder(finalMaterial ?? null, opacityAttr);
+      } else {
+        resolvedMaterial = finalMaterial ?? new THREE.MeshStandardMaterial();
+        resolvedMaterial.transparent = true;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (resolvedMaterial as any).opacityNode = opacityAttr;
+      }
+
+      const instancedMesh = new THREE.InstancedMesh(mergedGeometry, resolvedMaterial, maxInstances);
       instancedMesh.count = 0; // start with nothing visible
       instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       instancedMesh.frustumCulled = false;
       instancedMesh.name = `instanced_${config.name}`;
-
-      // Wire the opacity attribute into the material via a TSL node
-      const mat = Array.isArray(instancedMesh.material)
-        ? instancedMesh.material[0]
-        : instancedMesh.material;
-      if (mat) {
-        mat.transparent = true;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mat as any).opacityNode = attribute('instanceOpacity');
-      }
 
       // Initialize all transforms to zero-scale (hidden)
       for (let i = 0; i < maxInstances; i++) {

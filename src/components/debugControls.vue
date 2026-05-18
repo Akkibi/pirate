@@ -28,6 +28,13 @@
       <span class="text-xs opacity-55">Arrows are :</span>
       {{ gameState.displayArrows ? 'On' : 'Off' }}
     </button>
+    <button
+      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      @click="toggleCorsair"
+    >
+      <span class="text-xs opacity-55">Corsair :</span>
+      {{ gameState.displayCorsair ? 'On' : 'Off' }}
+    </button>
   </div>
   <div
     class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end gap-2 self-end"
@@ -154,5 +161,9 @@ const toggleArrows = () => {
 
 const toggleFocus = () => {
   gameState.focusedView = !gameState.focusedView;
+};
+
+const toggleCorsair = () => {
+  gameState.displayCorsair = !gameState.displayCorsair;
 };
 </script>

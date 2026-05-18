@@ -42,7 +42,7 @@ export class SceneManager {
     this.seaSky = createSeaSkyBackground(this.camera.getNative());
     this.scene.add(this.seaSky.mesh);
 
-    this.player = new Player(this.scene);
+    this.player = new Player(this, this.scene);
     this.corsair = new Corsair(this.scene);
     this.mapManager = new MapManager(this, this.scene);
 
@@ -83,11 +83,13 @@ export class SceneManager {
   }
 
   private animate = (time: number) => {
+    const timeSeconds = time * 1000;
+    this.stats.update();
     this.renderer.render(this.scene, this.camera.getNative());
-    this.seaSky.update(time * 1000);
-    this.player.update(time * 1000);
-    this.corsair.update(time * 1000);
-    this.camera.update(time * 1000);
+    this.seaSky.update(timeSeconds);
+    this.player.update(timeSeconds);
+    this.corsair.update(timeSeconds);
+    this.camera.update(timeSeconds);
   };
 
   dispose(): void {

@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { positionWorld, mix, clamp, vec3, vec4, diffuseColor } from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
 import { gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
@@ -7,6 +8,10 @@ import gsap from 'gsap';
 import { cameraPositions } from './camera';
 import { gameEvents } from '../events/gameEvents';
 
+const _teal = new THREE.Color(0x008c74);
+const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
+import type { SceneManager } from './sceneManager';
+
 export class Player {
   private position: THREE.Vector2;
   private playerGroup: THREE.Group;
@@ -14,8 +19,10 @@ export class Player {
   private birdGroup: THREE.Group;
   private arrowGroup: THREE.Group;
   private arrowMeshes: Map<string, THREE.Mesh> = new Map();
+  private sceneManager: SceneManager;
 
-  constructor(scene: THREE.Scene) {
+  constructor(sceneManager: SceneManager, scene: THREE.Scene) {
+    this.sceneManager = sceneManager;
     this.playerGroup = new THREE.Group();
     this.boatGroup = new THREE.Group();
     this.birdGroup = new THREE.Group();
@@ -29,7 +36,19 @@ export class Player {
 
     const boat = modelLoader.get('./models/boat.glb').scene.clone();
     boat.scale.multiplyScalar(0.5);
-    boat.position.y = -0.1;
+    boat.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const orig = child.material as THREE.MeshBasicMaterial;
+        const mat = new THREE.MeshBasicNodeMaterial();
+        mat.color.copy(orig.color);
+        mat.vertexColors = orig.vertexColors;
+        if (orig.map) mat.map = orig.map;
+        const factor = clamp(positionWorld.y.negate().div(0.25), 0, 1);
+        mat.outputNode = vec4(mix(diffuseColor.rgb, TEAL_COLOR, factor), diffuseColor.a);
+        mat.side = THREE.DoubleSide;
+        child.material = mat;
+      }
+    });
     this.boatGroup.add(boat);
 
     const bird = modelLoader.get('./models/bird.glb').scene.clone();
@@ -87,6 +106,12 @@ export class Player {
       }
     );
     watch(
+      () => gameState.entitiesVisible,
+      () => {
+        this.updatePositionShift();
+      }
+    );
+    watch(
       () => gameState.displayArrows,
       (isDisplayed) => {
         this.updateArrowVisibility(isDisplayed);
@@ -104,11 +129,36 @@ export class Player {
       () => gameState.userPosition,
       (newPosition) => {
         this.setPosition(newPosition);
+        this.updatePositionShift();
       },
       { deep: true }
     );
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
+  }
+
+  private updatePositionShift(): void {
+    const tileType = this.sceneManager.mapManager.getTileState(this.position);
+    if (!tileType) return;
+    const isTileShared = tileType.state == 'monster' || tileType.state == 'island';
+
+    if ((gameState.entitiesVisible || tileType.entitiesHidden) && isTileShared) {
+      // this.boatGroup.position.set(0.25, 0, -0.25);
+      gsap.to(this.boatGroup.position, {
+        duration: 1,
+        ease: 'sin.inOut',
+        x: 0.2,
+        z: -0.2,
+      });
+    } else {
+      // this.boatGroup.position.set(0, 0, 0);
+      gsap.to(this.boatGroup.position, {
+        duration: 1,
+        ease: 'sin.inOut',
+        x: 0,
+        z: 0,
+      });
+    }
   }
 
   private resetArrowHighlight(): void {
@@ -141,15 +191,12 @@ export class Player {
     if (deltaX === 1 && deltaY === 0) {
       return 'up';
     }
-
     if (deltaX === -1 && deltaY === 0) {
       return 'down';
     }
-
     if (deltaX === 0 && deltaY === 1) {
       return 'right';
     }
-
     if (deltaX === 0 && deltaY === -1) {
       return 'left';
     }
@@ -164,6 +211,23 @@ export class Player {
     const blockedArrowDirection = this.getBlockedArrowDirection();
 
     for (const [name, mesh] of this.arrowMeshes) {
+      // do not display arrows when the boat is on borders
+      if (name === 'left' && this.position.y === 0) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'right' && this.position.y === 6) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'down' && this.position.x === 0) {
+        mesh.visible = false;
+        continue;
+      }
+      if (name === 'up' && this.position.x === 4) {
+        mesh.visible = false;
+        continue;
+      }
       mesh.visible = isDisplayed && name !== blockedArrowDirection;
     }
   }
@@ -206,7 +270,8 @@ export class Player {
 
   public update(time: number) {
     this.boatGroup.rotation.y += 0.001;
-    this.boatGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
+    this.boatGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
+    this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
     this.birdGroup.rotation.y += 0.003;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;

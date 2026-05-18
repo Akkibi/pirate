@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Tile } from './tile';
+import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { modelLoader } from './modelLoader';
 import {
@@ -13,15 +13,46 @@ import { watch } from 'vue';
 import { DecorativeClouds } from './decorativeClouds';
 import { gameEvents } from '../events/gameEvents';
 import type { SceneManager } from './sceneManager';
+import { createWaterMaterial } from './shaders/waterMaterial';
+import { createIslandMaterial } from './shaders/islandMaterial';
+import { createTyphonMaterial } from './shaders/typhonMaterial';
 
 const TILE_AMOUNT_X = 5;
 const TILE_AMOUNT_Y = 7;
 
 const tileTypes = [
-  { name: 'water', url: './models/water.glb' },
-  { name: 'island', url: './models/island.glb' },
-  { name: 'monster', url: './models/monster.glb' },
-  { name: 'typhon', url: './models/typhon.glb' },
+  {
+    name: 'water',
+    url: './models/water.glb',
+    materialBuilder: (
+      _orig: THREE.Material | null,
+      opacity: Parameters<typeof createWaterMaterial>[0]
+    ) => createWaterMaterial(opacity),
+  },
+  {
+    name: 'island',
+    url: './models/island.glb',
+    materialBuilder: (
+      orig: THREE.Material | null,
+      opacity: Parameters<typeof createIslandMaterial>[1]
+    ) => createIslandMaterial(orig, opacity),
+  },
+  {
+    name: 'monster',
+    url: './models/monster.glb',
+    materialBuilder: (
+      orig: THREE.Material | null,
+      opacity: Parameters<typeof createIslandMaterial>[1]
+    ) => createIslandMaterial(orig, opacity),
+  },
+  {
+    name: 'typhon',
+    url: './models/typhon.glb',
+    materialBuilder: (
+      _orig: THREE.Material | null,
+      opacity: Parameters<typeof createTyphonMaterial>[0]
+    ) => createTyphonMaterial(opacity),
+  },
   { name: 'fog', url: './models/fog.glb' },
   { name: 'flag', url: './models/flag.glb' },
 ];
@@ -55,7 +86,11 @@ export class MapManager {
     this.mapGroup.add(environment);
 
     objectPool.init(scene, tileTypes).then(() => {
-      console.log('all loaded');
+      // Island writes depth (depthWrite=true) and must render before water.
+      // Water (depthWrite=false) renders after and uses the depth test to correctly
+      // occlude submerged island geometry without blocking the see-through effect.
+      objectPool.getInstancedMesh('water').renderOrder = 1;
+      objectPool.getInstancedMesh('typhon').renderOrder = 1;
       this.generateMap();
     });
 
@@ -252,5 +287,12 @@ export class MapManager {
       tile.setFogPosition();
     });
     console.log('position list:', gameState.userPositionHistory);
+  }
+
+  public getTileState(
+    position: THREE.Vector2
+  ): { state: TileStateType; entitiesHidden: boolean } | null {
+    const tile = this.tiles.find((tile) => tile.position.equals(position));
+    return tile ? { state: tile.state, entitiesHidden: tile.isHidden } : null;
   }
 }
