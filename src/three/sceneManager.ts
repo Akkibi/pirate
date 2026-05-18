@@ -5,7 +5,6 @@ import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
 import { Player } from './player';
 import { gameState } from '../utils/gameStore';
-import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { Corsair } from './corsair';
 import { objectPool } from './instancedModelManger';
 
@@ -20,7 +19,6 @@ export class SceneManager {
   public mapManager: MapManager;
   private seaSky: SeaSkyBackground;
   public player: Player;
-  private stats: Stats;
   private handleCanvasClick: (event: MouseEvent) => void;
   public corsair: Corsair;
 
@@ -47,10 +45,6 @@ export class SceneManager {
     this.player = new Player(this.scene);
     this.corsair = new Corsair(this.scene);
     this.mapManager = new MapManager(this, this.scene);
-
-    // Setup stats panel
-    this.stats = new Stats();
-    document.body.appendChild(this.stats.dom);
 
     // Setup event handlers
     this.onWindowResize = this.handleWindowResize.bind(this);
@@ -89,7 +83,6 @@ export class SceneManager {
   }
 
   private animate = (time: number) => {
-    this.stats.update();
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(time * 1000);
     this.player.update(time * 1000);
@@ -108,9 +101,6 @@ export class SceneManager {
     // so WebGPU node cleanup doesn't crash on a dead context.
     objectPool.dispose();
     this.renderer.dispose();
-    if (this.stats.dom.parentElement) {
-      this.stats.dom.parentElement.removeChild(this.stats.dom);
-    }
   }
 
   getScene(): THREE.Scene {
