@@ -3,6 +3,8 @@ import { computed, ref, onMounted } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
 import FullMessageButtonScreen from './components/screens/FullMessageButtonScreen.vue';
+import DifficultySetupScreen from './components/screens/DifficultySetupScreen.vue';
+import CardConfirmScreen from './components/screens/CardConfirmScreen.vue';
 import LookingAroundTimerScreen from './components/screens/LookingAroundTimerScreen.vue';
 import TopMessageLowerButtonScreen from './components/screens/TopMessageLowerButtonScreen.vue';
 import TopMessageLowerButtonCardsScreen from './components/screens/TopMessageLowerButtonCardsScreen.vue';
@@ -14,6 +16,11 @@ import { currentScreen, resolveScreen } from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
 import DebugControls from './components/debugControls.vue';
 import ScreenGrid from './components/ui/ScreenGrid.vue';
+import ScreenChrome from './components/ui/ScreenChrome.vue';
+import {
+  clearRequestedTreasureCardSelection,
+  requestTreasureCardSelection,
+} from './utils/treasureCardSelection';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -24,6 +31,8 @@ onMounted(() => {
 });
 
 const screenComponentMap = {
+  'difficulty-setup': DifficultySetupScreen,
+  'card-confirm': CardConfirmScreen,
   'full-message-button': FullMessageButtonScreen,
   'looking-around-timer': LookingAroundTimerScreen,
   'top-message-lower-button': TopMessageLowerButtonScreen,
@@ -39,6 +48,17 @@ const activeScreenComponent = computed(() => {
   return screenComponentMap[currentScreen.value.type];
 });
 
+const activeScreenChrome = computed(() => currentScreen.value?.props.chrome ?? null);
+const usesSideChromeLayout = computed(() => Boolean(currentScreen.value));
+
+function withoutChrome<T extends Record<string, unknown>>(props: T): Omit<T, 'chrome'> {
+  const screenProps = { ...props };
+
+  delete screenProps.chrome;
+
+  return screenProps;
+}
+
 const activeScreenProps = computed<Record<string, unknown> | null>(() => {
   const screen = currentScreen.value;
 
@@ -47,9 +67,29 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
   }
 
   switch (screen.type) {
+    case 'difficulty-setup':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        title: screen.content?.title,
+        body: screen.content?.body,
+        onConfirm: (maxRhum: number) => resolveScreen({ action: 'difficulty', maxRhum }),
+      };
+
+    case 'card-confirm':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        title: screen.content?.title,
+        body: screen.content?.body,
+        onConfirm: () => resolveScreen({ action: 'primary' }),
+        onCancel: () => resolveScreen({ action: 'secondary' }),
+      };
+
     case 'full-message-button':
       return {
-        ...screen.props,
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
           : () => resolveScreen({ action: 'primary' }),
@@ -61,7 +101,8 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 
     case 'looking-around-timer':
       return {
-        ...screen.props,
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
         onComplete: screen.props.onComplete
           ? screen.props.onComplete
           : () => resolveScreen({ action: 'timer-complete' }),
@@ -69,7 +110,8 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 
     case 'top-message-lower-button':
       return {
-        ...screen.props,
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
           : () => resolveScreen({ action: 'primary' }),
@@ -81,7 +123,8 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 
     case 'top-message-lower-button-cards':
       return {
-        ...screen.props,
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
         cards: screen.props.cards.map((card) => ({
           ...card,
           onSelect: () => resolveScreen({ action: 'card', cardId: card.id }),
@@ -97,7 +140,8 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 
     case 'top-message-lower-button-dice':
       return {
-        ...screen.props,
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
           : () => resolveScreen({ action: 'primary' }),
@@ -125,6 +169,33 @@ function resumeGame() {
 
 function toggleUI() {
   UIShown.value = !UIShown.value;
+}
+
+function handleChromeCardUse(cardInstanceId: string | number) {
+  const screen = currentScreen.value;
+
+  if (!screen?.props.chrome?.canUseCards) {
+    return;
+  }
+
+  requestTreasureCardSelection(cardInstanceId);
+
+  if (screen.type === 'top-message-lower-button-dice') {
+    resolveScreen({ action: 'secondary' });
+    return;
+  }
+
+  if (screen.type === 'top-message-lower-button') {
+    resolveScreen({ action: 'primary' });
+    return;
+  }
+
+  if (screen.type === 'top-message-lower-button-cards') {
+    resolveScreen({ action: 'card', cardId: cardInstanceId });
+    return;
+  }
+
+  clearRequestedTreasureCardSelection();
 }
 </script>
 
@@ -159,7 +230,20 @@ function toggleUI() {
 
     <ScreenGrid overlay class="z-20">
       <div
-        class="pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-30 flex flex-row h-full items-start justify-end gap-2 self-start"
+        v-if="started && UIShown && activeScreenChrome"
+        class="resource-stable screen-chrome-layer col-span-full col-start-1 row-span-full row-start-1 z-30"
+      >
+        <ScreenChrome
+          :phase="activeScreenChrome.phase"
+          :show-rhum="activeScreenChrome.showRhum"
+          :show-peanuts="activeScreenChrome.showPeanuts"
+          :can-use-cards="activeScreenChrome.canUseCards"
+          @use-card="handleChromeCardUse"
+        />
+      </div>
+
+      <div
+        class="resource-stable pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-40 flex flex-row h-full items-start justify-end gap-2 self-start"
       >
         <button
           v-if="started"
@@ -181,20 +265,17 @@ function toggleUI() {
       >
         <!-- This template is replacing the <slot/> component in the Parchment in every ScreenComponent -->
         <template #message v-if="currentScreen.content">
-          <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
-            <p
-              v-if="currentScreen.content.title"
-              class="screen-message-title font-title text-4xl sm:text-6xl"
-            >
+          <div class="screen-message">
+            <p v-if="currentScreen.content.title" class="screen-message-title font-title">
               {{ currentScreen.content.title }}
             </p>
-            <p v-if="currentScreen.content.body" class="text-sm sm:text-base">
+            <p v-if="currentScreen.content.body" class="screen-message-body">
               {{ currentScreen.content.body }}
             </p>
-            <p v-if="currentScreen.content.caption" class="text-xs sm:text-sm">
+            <p v-if="currentScreen.content.caption" class="screen-message-caption">
               {{ currentScreen.content.caption }}
             </p>
-            <p v-if="currentScreen.content.footer" class="text-xs sm:text-sm">
+            <p v-if="currentScreen.content.footer" class="screen-message-footer">
               {{ currentScreen.content.footer }}
             </p>
           </div>
@@ -207,7 +288,40 @@ function toggleUI() {
 </template>
 
 <style scoped>
+.screen-message {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.15rem, 0.85vmin, 0.5rem);
+  overflow: hidden;
+  color: #71320e;
+  text-align: center;
+}
+
 .screen-message-title {
+  max-width: min(100%, 64rem);
+  font-size: clamp(1.15rem, 5.4vmin, 4rem);
+  line-height: 0.88;
+  overflow-wrap: anywhere;
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+}
+
+.screen-message-body {
+  max-width: min(100%, 48rem);
+  font-size: clamp(0.72rem, 2vmin, 1.1rem);
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.screen-message-caption,
+.screen-message-footer {
+  max-width: min(100%, 44rem);
+  font-size: clamp(0.62rem, 1.55vmin, 0.92rem);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
 }
 </style>

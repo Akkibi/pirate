@@ -2,7 +2,16 @@
 import { watch } from 'vue';
 import { gameText } from '../content/gameText';
 import { gameEvents, type GameEvents } from '../events/gameEvents';
-import { gameState, resetGameState } from './gameStore';
+import {
+  addTreasureCardsToHand,
+  discardTreasureCards,
+  drawTreasureCards,
+  formatBoardCoordinate,
+  gameState,
+  resetGameState,
+  setRhumCapacity,
+  setTreasureDeck,
+} from './gameStore';
 import {
   clearSavedGameProgress,
   peekSavedGameProgress,
@@ -17,8 +26,13 @@ import {
 import { showScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
 import { runParrotTurn, type ParrotCheckpoint } from './gameLoopParrotTurn';
 import { runCrewTurn, type CrewCheckpoint } from './gameLoopCrewTurn';
+import { createTreasureDeck, toTreasureCardView } from './treasureCards';
 
-type IntroCheckpoint = 'intro.gameStart' | 'intro.boatPlacement';
+type IntroCheckpoint =
+  | 'intro.gameStart'
+  | 'intro.difficulty'
+  | 'intro.boatPlacement'
+  | 'intro.initialCardChoice';
 
 class UndoNavigationError extends Error {
   constructor() {
@@ -42,6 +56,8 @@ export class GameLoop {
   async startTurn(): Promise<void> {
     try {
       gameState.turnCount++;
+      gameState.usedTreasureThisTurn = false;
+      gameState.tequilaTonight = false;
 
       gameState.entitiesVisible = false;
 
@@ -123,7 +139,9 @@ export class GameLoop {
   private async runFromHistoryEntryToTurnEnd(entry: SavedGameProgress): Promise<boolean> {
     switch (entry.checkpoint) {
       case 'intro.gameStart':
+      case 'intro.difficulty':
       case 'intro.boatPlacement':
+      case 'intro.initialCardChoice':
         await this.introGame(entry.checkpoint);
         gameState.currentPhase = 'parrot';
         await this.parrotTurn();
@@ -136,7 +154,9 @@ export class GameLoop {
 
       case 'parrot.dawnIntro':
       case 'parrot.foodChoice':
+      case 'parrot.actionChoice':
       case 'parrot.observeSurroundings':
+      case 'parrot.corsairLocation':
       case 'parrot.lookAroundTimer':
       case 'parrot.helpCrew':
         gameState.currentPhase = 'parrot';
@@ -236,22 +256,107 @@ export class GameLoop {
           primaryButtonLabel: gameText.setup.gameStart.primaryButton,
         },
       });
+
+      startAt = 'intro.difficulty';
     }
 
-    const boatStartPosition = gameState.userPosition;
+    if (startAt === 'intro.difficulty') {
+      const difficulty = await this.showCheckpointScreen('intro.difficulty', {
+        type: 'difficulty-setup',
+        content: {
+          title: "L'Arrachee doit charger sa cale",
+          body: 'Moins de rhum rend la partie plus difficile. 6 bouteilles sont conseillees pour une premiere partie.',
+        },
+        props: {
+          initialValue: gameState.maxRhum,
+          minValue: 3,
+          maxValue: 9,
+        },
+      });
 
-    await this.showCheckpointScreen('intro.boatPlacement', {
-      type: 'full-message-button',
+      if (difficulty.action === 'difficulty') {
+        setRhumCapacity(difficulty.maxRhum);
+        setTreasureDeck(createTreasureDeck());
+        gameState.gameStartedAt = Date.now();
+      }
+
+      startAt = 'intro.boatPlacement';
+    }
+
+    if (startAt === 'intro.boatPlacement') {
+      const boatStartPosition = gameState.userPosition;
+
+      await this.showCheckpointScreen('intro.boatPlacement', {
+        type: 'full-message-button',
+        content: {
+          ...gameText.setup.boatPlacement,
+          title: `${gameText.setup.boatPlacement.title}
+          ${formatBoardCoordinate(boatStartPosition)}`,
+        },
+        props: {
+          primaryButtonLabel: gameText.setup.boatPlacement.primaryButton,
+        },
+      });
+
+      startAt = 'intro.initialCardChoice';
+    }
+
+    if (startAt === 'intro.initialCardChoice') {
+      await this.initialCrewCardChoice();
+    }
+  }
+
+  private async initialCrewCardChoice(): Promise<void> {
+    if (gameState.crewHand.length > 0) {
+      return;
+    }
+
+    const drawnCards = drawTreasureCards(4);
+
+    if (drawnCards.length === 0) {
+      return;
+    }
+
+    const result = await showScreen({
+      type: 'top-message-lower-button-cards',
       content: {
-        ...gameText.setup.boatPlacement,
-        title: `${gameText.setup.boatPlacement.title}
-          ${'ABCDEFG'[6 - boatStartPosition.y]},
-          ${boatStartPosition.x + 1}`,
+        title: "L'equipage s'equipe",
+        body: 'Choisissez une carte a ajouter a votre main. Les autres seront defaussees.',
       },
       props: {
-        primaryButtonLabel: gameText.setup.boatPlacement.primaryButton,
+        chrome: {
+          phase: 'aurore',
+          showRhum: true,
+          showPeanuts: true,
+        },
+        cards: drawnCards.map((card) => {
+          const view = toTreasureCardView(card);
+
+          return {
+            id: view.id,
+            title: view.title,
+            caption: view.caption,
+            badge: view.phaseLabel,
+            imageSrc: view.imageSrc,
+            imageAlt: view.imageAlt,
+          };
+        }),
+        primaryButtonLabel: 'A toi fidele perroquet.',
       },
     });
+
+    const keptCard =
+      result.action === 'card'
+        ? drawnCards.find((card) => card.instanceId === result.cardId)
+        : undefined;
+
+    if (!keptCard) {
+      discardTreasureCards(drawnCards);
+      return;
+    }
+
+    addTreasureCardsToHand([keptCard]);
+    discardTreasureCards(drawnCards.filter((card) => card.instanceId !== keptCard.instanceId));
   }
 
   private async parrotTurn(
@@ -280,9 +385,31 @@ export class GameLoop {
   }
 
   private async handleGameOver(): Promise<void> {
+    const elapsedMs = Math.max(0, Date.now() - gameState.gameStartedAt);
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
+    const elapsedLabel = `${elapsedMinutes.toString().padStart(2, '0')}:${elapsedSeconds
+      .toString()
+      .padStart(2, '0')}`;
+    const resultContent =
+      gameState.gameResult === 'won'
+        ? {
+            title: 'Le Capitaine a ete retrouve !',
+            body: `Felicitations ! Temps de jeu ${elapsedLabel}. Rhum consomme : ${gameState.rhumConsumed}.`,
+          }
+        : gameState.gameResult === 'lost-corsair'
+          ? {
+              title: 'Vous avez perdu.',
+              body: `L'equipage est capture par la fregate corsaire. Temps de jeu ${elapsedLabel}.`,
+            }
+          : {
+              title: 'Vous avez perdu.',
+              body: `L'equipage n'a plus de rhum et se revolte. Temps de jeu ${elapsedLabel}. Rhum consomme : ${gameState.rhumConsumed}.`,
+            };
+
     await this.showCheckpointScreen('gameOver', {
       type: 'full-message-button',
-      content: gameText.gameOver,
+      content: resultContent,
       props: {
         primaryButtonLabel: gameText.gameOver.primaryButton,
       },

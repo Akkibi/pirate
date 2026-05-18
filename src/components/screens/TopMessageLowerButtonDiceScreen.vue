@@ -1,5 +1,5 @@
 <template>
-  <div v-if="shouldShowParchment" class="col-start-3 col-span-4 row-span-2 row-start-1">
+  <div v-if="shouldShowParchment" :class="parchmentClasses">
     <Parchment
       size="fill"
       surface-class="h-full"
@@ -12,7 +12,8 @@
 
   <div
     :class="[
-      'dice-slot col-span-8 row-span-4 row-start-3 flex min-h-0 min-w-0 items-center justify-center transition-opacity duration-300',
+      'dice-slot row-span-4 row-start-3 flex min-h-0 min-w-0 items-center justify-center transition-opacity duration-300',
+      diceSlotLayoutClasses,
       diceVisible ? 'opacity-100' : 'opacity-0',
     ]"
   >
@@ -34,11 +35,15 @@
   <div
     v-if="hasPrimaryButton"
     :class="[
-      'col-span-4 col-start-3 row-start-7 transition-opacity duration-300',
+      primaryButtonClasses,
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
   >
-    <GameButton :label="primaryButtonLabel" :on-click="onPrimaryButtonClick">
+    <GameButton
+      :label="primaryButtonLabel"
+      :on-click="onPrimaryButtonClick"
+      :revealed="buttonsVisible"
+    >
       <slot name="primary">{{ primaryButtonLabel }}</slot>
     </GameButton>
   </div>
@@ -46,7 +51,7 @@
   <div
     v-if="hasSecondaryButton"
     :class="[
-      'col-span-4 col-start-3 row-start-8 transition-opacity duration-300',
+      secondaryButtonClasses,
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
   >
@@ -54,6 +59,7 @@
       variant="secondary"
       :label="secondaryButtonLabel"
       :on-click="onSecondaryButtonClick"
+      :revealed="buttonsVisible"
     >
       <slot name="secondary">{{ secondaryButtonLabel }}</slot>
     </GameButton>
@@ -62,11 +68,16 @@
   <div
     v-if="showUndo"
     :class="[
-      'col-span-2 col-start-1 row-start-8 transition-opacity duration-300',
+      undoButtonClasses,
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
   >
-    <GameButton variant="undo" :label="undoLabel" :on-click="onUndoClick">
+    <GameButton
+      variant="undo"
+      :label="undoLabel"
+      :on-click="onUndoClick"
+      :revealed="buttonsVisible"
+    >
       <slot name="undo">{{ undoLabel }}</slot>
     </GameButton>
   </div>
@@ -107,6 +118,7 @@ const props = withDefaults(
     throwDice?: boolean;
     resultValue?: number;
     onRollComplete?: ((value: number) => void | Promise<void>) | undefined;
+    sideChromeLayout?: boolean;
   }>(),
   {
     message: '',
@@ -122,6 +134,7 @@ const props = withDefaults(
     onUndoClick: undefined,
     rollDuration: 1200,
     onRollComplete: undefined,
+    sideChromeLayout: false,
   }
 );
 
@@ -136,6 +149,41 @@ const hasPrimaryButton = computed(
 const hasSecondaryButton = computed(
   () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary)
 );
+const parchmentClasses = computed(() => [
+  'row-span-2 row-start-1',
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-3 col-span-4',
+]);
+const diceSlotLayoutClasses = computed(() =>
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8'
+);
+const normalFullButtonClasses = computed(() =>
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-1 col-span-8'
+);
+const normalLeftButtonClasses = computed(() =>
+  props.sideChromeLayout ? 'col-start-2 col-span-3' : 'col-start-1 col-span-4'
+);
+const normalRightButtonClasses = computed(() =>
+  props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
+);
+const normalButtonsShareFirstRow = computed(
+  () => props.showUndo && hasPrimaryButton.value && hasSecondaryButton.value
+);
+const primaryButtonClasses = computed(() => [
+  'transition-opacity duration-300',
+  normalButtonsShareFirstRow.value
+    ? `${normalLeftButtonClasses.value} row-start-7`
+    : `${normalFullButtonClasses.value} ${hasSecondaryButton.value || props.showUndo ? 'row-start-7' : 'row-start-8'}`,
+]);
+const secondaryButtonClasses = computed(() => [
+  'transition-opacity duration-300',
+  normalButtonsShareFirstRow.value
+    ? `${normalRightButtonClasses.value} row-start-7`
+    : `${normalFullButtonClasses.value} ${props.showUndo ? 'row-start-7' : 'row-start-8'}`,
+]);
+const undoButtonClasses = computed(() => [
+  'col-span-2 row-start-8 transition-opacity duration-300',
+  props.sideChromeLayout ? 'col-start-2' : 'col-start-1',
+]);
 const diceVisible = ref(false);
 const buttonsVisible = ref(false);
 const hasRolled = ref(false);
