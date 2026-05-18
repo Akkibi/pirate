@@ -1,0 +1,49 @@
+<template>
+  <div
+    class="pointer-events-none flex max-w-full flex-wrap items-center gap-2 rounded-md border-2 border-amber-900/80 bg-[#211207]/85 px-2 py-1 text-xs text-amber-100 shadow-lg backdrop-blur-sm sm:text-sm"
+  >
+    <div class="flex items-center gap-1">
+      <span class="font-bold">Rhum</span>
+      <span>{{ gameState.currentRhum }}/{{ gameState.maxRhum }}</span>
+    </div>
+    <div class="h-4 w-px bg-amber-700/70"></div>
+    <div class="flex items-center gap-1">
+      <span class="font-bold">Carte</span>
+      <span>{{ gameState.usedTreasureThisTurn ? 'jouee' : 'dispo' }}</span>
+    </div>
+    <div class="h-4 w-px bg-amber-700/70"></div>
+    <div class="flex items-center gap-1">
+      <span class="font-bold">Main</span>
+      <span>{{ gameState.crewHand.length }}</span>
+    </div>
+    <div class="h-4 w-px bg-amber-700/70"></div>
+    <div class="flex items-center gap-1">
+      <span class="font-bold">Cacahuetes</span>
+      <span>{{ gameState.peanutTokens }}</span>
+    </div>
+    <div class="h-4 w-px bg-amber-700/70"></div>
+    <div class="flex items-center gap-1">
+      <span class="font-bold">Equip.</span>
+      <span>{{ equipmentLabel }}</span>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { gameState } from '../../utils/gameStore';
+
+const equipmentLabel = computed(() => {
+  const equipped = [];
+
+  if (gameState.bottleTokenEquipped) {
+    equipped.push('bouteille');
+  }
+
+  if (gameState.cannonTokenEquipped) {
+    equipped.push('canon');
+  }
+
+  return equipped.length > 0 ? equipped.join(' + ') : 'aucun';
+});
+</script>
