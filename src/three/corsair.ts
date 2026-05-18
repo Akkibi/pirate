@@ -16,9 +16,8 @@ export class Corsair {
     this.isDisplayedInMap = false;
     this.isDisplayed = false;
 
-    const corsair = modelLoader.get('./models/boat.glb').scene.clone();
+    const corsair = modelLoader.get('./models/corsair.glb').scene.clone();
     corsair.scale.multiplyScalar(0.5);
-    corsair.position.y = -0.1;
     this.corsairGroup.add(corsair);
     this.corsairGroup.rotation.y = Math.PI;
 
@@ -73,7 +72,10 @@ export class Corsair {
   }
 
   public update(time: number): void {
+    // this.corsairGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
+
     this.corsairGroup.rotation.y += 0.001;
-    this.corsairGroup.rotation.z = Math.sin(time * 0.001 - 1) * 0.4;
+    this.corsairGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
+    this.corsairGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
   }
 }

@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   /*border: 1px solid currentColor;*/
-  background: no-repeat url('images/dice-bg.webp') center / contain;
+  background: no-repeat url('/images/dice-bg.webp') center / contain;
   font-size: calc(var(--dice-size) / 2);
   font-weight: 700;
   border-radius: 2px;

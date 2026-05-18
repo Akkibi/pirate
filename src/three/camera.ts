@@ -7,7 +7,7 @@ import gsap from 'gsap';
 export const cameraPositions = {
   default: new THREE.Vector3(-10, 3.5, 0),
   parrot: new THREE.Vector3(-5, 8.5, 0),
-  crew: new THREE.Vector3(-10, 5, 0),
+  crew: new THREE.Vector3(-5, 4, 0),
 };
 
 export class Camera {
@@ -15,6 +15,7 @@ export class Camera {
   private cameraGroup: THREE.Group;
   private camera: THREE.PerspectiveCamera;
   private isFocused: boolean = true;
+  private globalPosition: THREE.Vector2;
   private targetPosition: THREE.Vector2;
   private phase: PhaseType;
 
@@ -25,6 +26,7 @@ export class Camera {
     this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
 
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
+    this.globalPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.phase = gameState.currentPhase;
 
     // const helper = new THREE.PolarGridHelper(4, 2, 4, 4);
@@ -70,12 +72,14 @@ export class Camera {
   setFocused(focused: boolean): void {
     this.isFocused = focused;
     this.updatePosition();
+    this.setPosition(this.globalPosition);
     this.updateView();
   }
 
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
     this.phase = phase;
+    this.setPosition(this.globalPosition);
     this.updateView();
   }
 
@@ -115,10 +119,11 @@ export class Camera {
 
   public update(time: number): void {
     this.cameraGroup.rotation.x = Math.sin(time * 0.0005) * 0.02;
+    // this.cameraGroup.rotation.x = time * 0.0005;
     this.cameraGroup.rotation.z = Math.sin(time * 0.00021) * 0.02;
   }
 
-  updatePosition(): void {
+  private updatePosition(): void {
     const newPos = this.isFocused
       ? new THREE.Vector3(2, this.cameraGroup.position.y, 3)
       : new THREE.Vector3(
@@ -137,9 +142,15 @@ export class Camera {
   }
 
   setPosition(position: THREE.Vector2): void {
+    this.globalPosition.copy(position);
     this.targetPosition.copy(position);
-    this.targetPosition.x = (position.x + 2) / 2;
-    this.targetPosition.y = (position.y + 3) / 2;
+    if (this.phase === 'parrot') {
+      this.targetPosition.x = (position.x + 2) / 2;
+      this.targetPosition.y = (position.y + 3) / 2;
+    } else {
+      this.targetPosition.x = position.x;
+      this.targetPosition.y = position.y;
+    }
     this.updatePosition();
   }
 }
