@@ -9,13 +9,14 @@
     :show-undo="showUndo"
     :undo-label="undoLabel"
     :on-undo-click="onUndoClick"
+    :side-chrome-layout="sideChromeLayout"
   >
     <template #message>
       <slot name="message">{{ message }}</slot>
     </template>
 
     <template #cards="{ revealed }">
-      <div class="w-full h-full">
+      <div class="h-full min-h-0 w-full">
         <ChoiceCards :cards="cards" :revealed="revealed" />
       </div>
     </template>
@@ -51,6 +52,7 @@ withDefaults(
     showUndo?: boolean;
     undoLabel?: string;
     onUndoClick?: ButtonHandler;
+    sideChromeLayout?: boolean;
   }>(),
   {
     message: '',
@@ -62,6 +64,7 @@ withDefaults(
     showUndo: false,
     undoLabel: 'Undo',
     onUndoClick: undefined,
+    sideChromeLayout: false,
   }
 );
 </script>

@@ -25,7 +25,10 @@
             backgroundSize: '100% 100%',
           }"
         >
-          <div ref="textRef" class="opacity-0">
+          <div
+            ref="textRef"
+            class="flex h-full min-h-0 w-full items-center justify-center overflow-hidden opacity-0"
+          >
             <slot>{{ text }}</slot>
           </div>
         </div>
@@ -127,15 +130,15 @@ const parchmentClasses = computed(() => [
 ]);
 
 const surfaceClasses = computed(() => [
-  'relative flex h-full min-h-0 items-stretch justify-stretch  py-4 px-2',
+  'relative flex h-full min-h-0 items-stretch justify-stretch px-[clamp(0.5rem,1.5vw,1rem)] py-[clamp(0.5rem,2vh,1rem)]',
   sizeClasses[props.size],
   props.surfaceClass,
 ]);
 
 const contentClasses = computed(() => [
-  'relative min-h-0 w-full h-full',
+  'relative min-h-0 w-full h-full overflow-hidden text-black',
   hasDefaultSlot.value
-    ? `p-3 ${props.contentClass}`
+    ? `p-[clamp(0.5rem,1.8vmin,1rem)] ${props.contentClass}`
     : `flex items-center justify-center px-6 py-4 text-center ${textSizeClasses[props.size]} ${props.contentClass} text-black`,
 ]);
 
