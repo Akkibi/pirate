@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { positionWorld, mix, clamp, vec3, vec4, diffuseColor } from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
 import { gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
@@ -6,6 +7,9 @@ import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
 import { gameEvents } from '../events/gameEvents';
+
+const _teal = new THREE.Color(0x008c74);
+const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
 import type { SceneManager } from './sceneManager';
 
 export class Player {
@@ -32,6 +36,19 @@ export class Player {
 
     const boat = modelLoader.get('./models/boat.glb').scene.clone();
     boat.scale.multiplyScalar(0.5);
+    boat.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const orig = child.material as THREE.MeshBasicMaterial;
+        const mat = new THREE.MeshBasicNodeMaterial();
+        mat.color.copy(orig.color);
+        mat.vertexColors = orig.vertexColors;
+        if (orig.map) mat.map = orig.map;
+        const factor = clamp(positionWorld.y.negate().div(0.25), 0, 1);
+        mat.outputNode = vec4(mix(diffuseColor.rgb, TEAL_COLOR, factor), diffuseColor.a);
+        mat.side = THREE.DoubleSide;
+        child.material = mat;
+      }
+    });
     this.boatGroup.add(boat);
 
     const bird = modelLoader.get('./models/bird.glb').scene.clone();
