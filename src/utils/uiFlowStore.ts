@@ -1,5 +1,6 @@
 import { shallowRef } from 'vue';
 import type { ChoiceCard } from '../types/ui';
+import type { TreasureCardView } from './treasureCards';
 
 export interface ScreenContent {
   title?: string;
@@ -8,7 +9,20 @@ export interface ScreenContent {
   footer?: string;
 }
 
+export type DayPhaseIndicator = 'aurore' | 'matinee' | 'journee' | 'soiree';
+
+export interface ScreenChrome {
+  phase?: DayPhaseIndicator;
+  showRhum?: boolean;
+  showPeanuts?: boolean;
+  canUseCards?: boolean;
+}
+
 type ChoiceCardInput = Omit<ChoiceCard, 'onSelect'>;
+
+type ScreenChromeProps = {
+  chrome?: ScreenChrome;
+};
 
 type BaseButtonProps = {
   showParchment?: boolean;
@@ -22,11 +36,30 @@ type BaseButtonProps = {
 
 export type UIScreen =
   | {
+      type: 'difficulty-setup';
+      content?: ScreenContent;
+      props: {
+        initialValue: number;
+        minValue?: number;
+        maxValue?: number;
+      } & ScreenChromeProps;
+    }
+  | {
+      type: 'card-confirm';
+      content?: ScreenContent;
+      props: {
+        card: TreasureCardView;
+        confirmLabel?: string;
+        cancelLabel?: string;
+      } & ScreenChromeProps;
+    }
+  | {
       type: 'full-message-button';
       content?: ScreenContent;
-      props: BaseButtonProps & {
-        primaryButtonLabel: string;
-      };
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          primaryButtonLabel: string;
+        };
     }
   | {
       type: 'looking-around-timer';
@@ -35,29 +68,31 @@ export type UIScreen =
         replayKey?: string | number | boolean | null;
         stepDuration?: number;
         onComplete?: () => void;
-      };
+      } & ScreenChromeProps;
     }
   | {
       type: 'top-message-lower-button';
       content?: ScreenContent;
-      props: BaseButtonProps;
+      props: BaseButtonProps & ScreenChromeProps;
     }
   | {
       type: 'top-message-lower-button-cards';
       content?: ScreenContent;
-      props: BaseButtonProps & {
-        cards: ChoiceCardInput[];
-      };
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          cards: ChoiceCardInput[];
+        };
     }
   | {
       type: 'top-message-lower-button-dice';
       content?: ScreenContent;
-      props: BaseButtonProps & {
-        rollDuration?: number;
-        throwDice?: boolean;
-        resultValue?: number;
-        onRollComplete?: (value: number) => void;
-      };
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          rollDuration?: number;
+          throwDice?: boolean;
+          resultValue?: number;
+          onRollComplete?: (value: number) => void;
+        };
     };
 
 type ActiveUIScreen = UIScreen & {
@@ -68,6 +103,7 @@ export type UIScreenResult =
   | { action: 'primary' }
   | { action: 'secondary' }
   | { action: 'undo' }
+  | { action: 'difficulty'; maxRhum: number }
   | { action: 'timer-complete' }
   | { action: 'card'; cardId: string | number | undefined };
 
@@ -77,10 +113,6 @@ let nextScreenInstanceId = 1;
 let pendingResolve: ((value: UIScreenResult) => void) | null = null;
 
 export function showScreen(screen: UIScreen): Promise<UIScreenResult> {
-  //   if (currentScreen.value) {
-  //     throw new Error("A screen is already active.");
-  //   }
-
   currentScreen.value = {
     ...screen,
     instanceId: nextScreenInstanceId++,

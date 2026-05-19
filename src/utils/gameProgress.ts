@@ -9,10 +9,14 @@ const GAME_PROGRESS_STORAGE_KEY = 'pirate.game.progress';
 
 export type GameCheckpoint =
   | 'intro.gameStart'
+  | 'intro.difficulty'
   | 'intro.boatPlacement'
+  | 'intro.initialCardChoice'
   | 'parrot.dawnIntro'
   | 'parrot.foodChoice'
+  | 'parrot.actionChoice'
   | 'parrot.observeSurroundings'
+  | 'parrot.corsairLocation'
   | 'parrot.lookAroundTimer'
   | 'parrot.helpCrew'
   | 'crew.morningIntro'

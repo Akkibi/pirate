@@ -1,5 +1,5 @@
 <template>
-  <div class="col-span-8 row-span-2 flex items-start justify-baseline px-10">
+  <div :class="timerClasses">
     <div
       v-for="step in countdownSteps"
       v-show="currentStep === step"
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
 
 const props = withDefaults(
@@ -26,12 +26,14 @@ const props = withDefaults(
     replayKey?: string | number | boolean | null;
     stepDuration?: number;
     onComplete?: ButtonHandler;
+    sideChromeLayout?: boolean;
   }>(),
   {
     visible: true,
     replayKey: null,
     stepDuration: 1000,
     onComplete: undefined,
+    sideChromeLayout: false,
   }
 );
 
@@ -41,6 +43,10 @@ const emit = defineEmits<{
 
 const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
+const timerClasses = computed(() => [
+  'row-span-2 flex items-start justify-baseline px-10',
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
+]);
 
 let countdownTimer: number | null = null;
 

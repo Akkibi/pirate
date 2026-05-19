@@ -6,5 +6,8 @@ export interface ChoiceCard {
   imageSrc?: string;
   imageAlt?: string;
   caption: string;
+  badge?: string;
+  disabled?: boolean;
+  disabledReason?: string;
   onSelect?: ButtonHandler;
 }

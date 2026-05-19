@@ -1,13 +1,20 @@
 import { gameText } from '../content/gameText';
 import { type GameEvents } from '../events/gameEvents';
-import { gameState } from './gameStore';
+import { formatBoardCoordinate, gameState } from './gameStore';
 import { type GameCheckpoint, type GameProgressData } from './gameProgress';
-import { resolveScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
+import {
+  resolveScreen,
+  type ScreenChrome,
+  type UIScreen,
+  type UIScreenResult,
+} from './uiFlowStore';
 
 export type ParrotCheckpoint =
   | 'parrot.dawnIntro'
   | 'parrot.foodChoice'
+  | 'parrot.actionChoice'
   | 'parrot.observeSurroundings'
+  | 'parrot.corsairLocation'
   | 'parrot.lookAroundTimer'
   | 'parrot.helpCrew';
 
@@ -29,6 +36,12 @@ interface RunParrotTurnOptions {
   progressData?: GameProgressData;
 }
 
+const PARROT_CHROME: ScreenChrome = {
+  phase: 'aurore',
+  showRhum: true,
+  showPeanuts: true,
+};
+
 export async function runParrotTurn({
   showCheckpointScreen,
   waitForEvent,
@@ -37,39 +50,19 @@ export async function runParrotTurn({
 }: RunParrotTurnOptions): Promise<void> {
   const isFirstTurn = gameState.turnCount === 1;
   let shouldWaitForMapReveal = false;
-  let remainingParrotActions = progressData?.remainingParrotActions ?? 1;
+  let remainingParrotActions = progressData?.remainingParrotActions ?? (isFirstTurn ? 2 : 1);
   let currentStep: ParrotCheckpoint | undefined = startAt;
 
   while (currentStep) {
     if (currentStep === 'parrot.dawnIntro') {
-      if (isFirstTurn) {
-        await showCheckpointScreen(
-          'parrot.dawnIntro',
-          {
-            type: 'full-message-button',
-            content: gameText.turn1.parrot.dawnIntro,
-            props: {
-              primaryButtonLabel: 'Suivant',
-              showUndo: true,
-            },
-          },
-          {
-            remainingParrotActions,
-          }
-        );
-
-        currentStep = 'parrot.observeSurroundings';
-        continue;
-      }
-
-      const dawnChoice = await showCheckpointScreen(
+      await showCheckpointScreen(
         'parrot.dawnIntro',
         {
           type: 'full-message-button',
-          content: gameText.turn2Plus.parrot.dawnWithFoodCheck,
+          content: gameText.turn1.parrot.dawnIntro,
           props: {
-            primaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.primaryButton,
-            secondaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.secondaryButton,
+            chrome: PARROT_CHROME,
+            primaryButtonLabel: 'Suivant',
             showUndo: true,
           },
         },
@@ -78,24 +71,31 @@ export async function runParrotTurn({
         }
       );
 
-      currentStep =
-        dawnChoice.action === 'primary' ? 'parrot.foodChoice' : 'parrot.observeSurroundings';
+      if (isFirstTurn) {
+        remainingParrotActions = 2;
+        currentStep = 'parrot.observeSurroundings';
+        continue;
+      }
+
+      currentStep = gameState.peanutTokens > 0 ? 'parrot.foodChoice' : 'parrot.actionChoice';
 
       continue;
     }
 
     if (currentStep === 'parrot.foodChoice') {
-      const foodChoice = await showCheckpointScreen(
+      const peanutChoice = await showCheckpointScreen(
         'parrot.foodChoice',
         {
-          type: 'top-message-lower-button-cards',
-          content: gameText.turn2Plus.parrot.foodChoice,
+          type: 'full-message-button',
+          content: {
+            title: "C'est l'aurore !",
+            body: `Veux-tu utiliser une cacahuete ? Reserve : ${gameState.peanutTokens}.`,
+          },
           props: {
+            chrome: PARROT_CHROME,
+            primaryButtonLabel: 'Oui',
+            secondaryButtonLabel: 'Non',
             showUndo: true,
-            cards: gameText.turn2Plus.parrot.foodChoice.cards.map((card) => ({
-              ...card,
-              id: card.title,
-            })),
           },
         },
         {
@@ -103,41 +103,77 @@ export async function runParrotTurn({
         }
       );
 
-      if (foodChoice.action === 'card' && foodChoice.cardId === 'Cacahuète') {
-        currentStep = 'parrot.observeSurroundings';
+      if (peanutChoice.action === 'primary') {
+        gameState.peanutTokens = Math.max(0, gameState.peanutTokens - 1);
+        remainingParrotActions = 2;
+      } else {
+        remainingParrotActions = 1;
+      }
+
+      currentStep = 'parrot.actionChoice';
+
+      continue;
+    }
+
+    if (currentStep === 'parrot.actionChoice') {
+      const actionChoice = await showCheckpointScreen(
+        'parrot.actionChoice',
+        {
+          type: 'top-message-lower-button-cards',
+          content: {
+            title: "C'est l'aurore !",
+            body: `Tu as droit a ${remainingParrotActions} action${
+              remainingParrotActions > 1 ? 's' : ''
+            }.`,
+          },
+          props: {
+            chrome: PARROT_CHROME,
+            showUndo: true,
+            cards: [
+              {
+                id: 'observe',
+                title: 'Observer les alentours',
+                caption: 'Regarde les 12 cases proches du bateau pendant 5 secondes.',
+              },
+              {
+                id: 'corsair',
+                title: 'Reperer la fregate corsaire',
+                caption: 'Affiche la case ou se situe actuellement la fregate.',
+              },
+              {
+                id: 'share',
+                title: "Partager a l'Equipage",
+                caption: 'Utilise les tuiles et pions physiques pour transmettre des indices.',
+              },
+            ],
+          },
+        },
+        {
+          remainingParrotActions,
+        }
+      );
+
+      if (actionChoice.action === 'card' && actionChoice.cardId === 'observe') {
+        gameState.entitiesVisible = true;
+        shouldWaitForMapReveal = true;
+        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+        currentStep = 'parrot.lookAroundTimer';
+      } else if (actionChoice.action === 'card' && actionChoice.cardId === 'corsair') {
+        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+        currentStep = 'parrot.corsairLocation';
+      } else if (actionChoice.action === 'card' && actionChoice.cardId === 'share') {
+        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+        currentStep = 'parrot.helpCrew';
       }
 
       continue;
     }
 
     if (currentStep === 'parrot.observeSurroundings') {
-      const choice = await showCheckpointScreen(
-        'parrot.observeSurroundings',
-        {
-          type: 'top-message-lower-button',
-          props: {
-            primaryButtonLabel: gameText.turn1.parrot.observeSurroundings.primaryButton,
-            secondaryButtonLabel: isFirstTurn ? undefined : 'Poser une tuile',
-            showUndo: true,
-            primaryButtonOnClick: () => {
-              gameState.entitiesVisible = true;
-              resolveScreen({ action: 'primary' });
-            },
-          },
-        },
-        {
-          remainingParrotActions,
-        }
-      );
-
-      if (choice.action === 'primary') {
-        shouldWaitForMapReveal = true;
-        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
-        currentStep = 'parrot.lookAroundTimer';
-      } else {
-        remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
-        currentStep = 'parrot.helpCrew';
-      }
+      gameState.entitiesVisible = true;
+      shouldWaitForMapReveal = true;
+      remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
+      currentStep = 'parrot.lookAroundTimer';
 
       continue;
     }
@@ -153,6 +189,7 @@ export async function runParrotTurn({
         {
           type: 'looking-around-timer',
           props: {
+            chrome: PARROT_CHROME,
             onComplete: () => {
               gameState.entitiesVisible = false;
               resolveScreen({ action: 'timer-complete' });
@@ -168,8 +205,34 @@ export async function runParrotTurn({
       if (isFirstTurn) {
         currentStep = 'parrot.helpCrew';
       } else {
-        currentStep = remainingParrotActions > 0 ? 'parrot.observeSurroundings' : undefined;
+        currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
       }
+
+      continue;
+    }
+
+    if (currentStep === 'parrot.corsairLocation') {
+      await showCheckpointScreen(
+        'parrot.corsairLocation',
+        {
+          type: 'full-message-button',
+          content: {
+            title: 'Le bateau corsaire est en :',
+            body: formatBoardCoordinate(gameState.corsairPosition),
+            caption: "Tu ne peux pas communiquer cette position a l'Equipage.",
+          },
+          props: {
+            chrome: PARROT_CHROME,
+            primaryButtonLabel:
+              remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
+          },
+        },
+        {
+          remainingParrotActions,
+        }
+      );
+
+      currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
 
       continue;
     }
@@ -179,9 +242,14 @@ export async function runParrotTurn({
         'parrot.helpCrew',
         {
           type: 'full-message-button',
-          content: gameText.turn1.parrot.helpCrew,
+          content: {
+            title: gameText.turn1.parrot.helpCrew.title,
+            body: 'Place au maximum 1 monstre + 1 ile + 1 typhon, ou 2 elements identiques, ou deplace 1 element, ou echange 2 elements. Tu peux aussi indiquer la derniere position connue de la fregate avec sa figurine.',
+          },
           props: {
-            primaryButtonLabel: gameText.turn1.parrot.helpCrew.primaryButton,
+            chrome: PARROT_CHROME,
+            primaryButtonLabel:
+              remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
           },
         },
         {
@@ -193,7 +261,7 @@ export async function runParrotTurn({
         return;
       }
 
-      currentStep = remainingParrotActions > 0 ? 'parrot.observeSurroundings' : undefined;
+      currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
 
       continue;
     }

@@ -1,6 +1,9 @@
 <template>
   <div class="col-span-8 row-span-2 row-start-2 flex items-end justify-center px-3">
-    <div id="title" class="px-2 text-center text-[clamp(3.1rem,14vw,6rem)] text-[#f7e8c6]">
+    <div
+      id="title"
+      class="px-2 text-center font-title text-[clamp(3.1rem,14vw,6rem)] text-[#f7e8c6]"
+    >
       Pirates
     </div>
   </div>
@@ -81,7 +84,6 @@ function resumeGame() {
 
 <style scoped>
 #title {
-  font-family: 'Black Crest', 'IM Fell English', Georgia, serif;
   line-height: 0.85;
   text-shadow: 0 12px 30px rgba(17, 10, 7, 0.55);
 }
