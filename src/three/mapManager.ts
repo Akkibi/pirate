@@ -19,6 +19,7 @@ import { createTyphonMaterial } from './shaders/typhonMaterial';
 
 const TILE_AMOUNT_X = 5;
 const TILE_AMOUNT_Y = 7;
+const MONSTER_POOL_KEYS = ['monster_baleine', 'monster_pieuvre', 'monster_serpent'] as const;
 
 const tileTypes = [
   {
@@ -38,8 +39,24 @@ const tileTypes = [
     ) => createIslandMaterial(orig, opacity),
   },
   {
-    name: 'monster',
-    url: './models/monster.glb',
+    name: 'monster_baleine',
+    url: './models/monsters/baleine.glb',
+    materialBuilder: (
+      orig: THREE.Material | null,
+      opacity: Parameters<typeof createIslandMaterial>[1]
+    ) => createIslandMaterial(orig, opacity),
+  },
+  {
+    name: 'monster_pieuvre',
+    url: './models/monsters/pieuvre.glb',
+    materialBuilder: (
+      orig: THREE.Material | null,
+      opacity: Parameters<typeof createIslandMaterial>[1]
+    ) => createIslandMaterial(orig, opacity),
+  },
+  {
+    name: 'monster_serpent',
+    url: './models/monsters/serpent.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -173,7 +190,11 @@ export class MapManager {
     }
 
     boardTiles.forEach((boardTile) => {
-      const tile = new Tile(new THREE.Vector2(boardTile.x, boardTile.y), boardTile.state);
+      const tile = new Tile(
+        new THREE.Vector2(boardTile.x, boardTile.y),
+        boardTile.state,
+        boardTile.monsterType
+      );
       this.tiles.push(tile);
       this.mapGroup.add(tile.tileGroup);
     });
@@ -195,6 +216,12 @@ export class MapManager {
     this.positionGroup('island', boardTiles);
     this.positionGroup('typhon', boardTiles);
     this.positionGroup('monster', boardTiles);
+
+    boardTiles.forEach((tile) => {
+      if (tile.state === 'monster') {
+        tile.monsterType = MONSTER_POOL_KEYS[Math.floor(Math.random() * MONSTER_POOL_KEYS.length)];
+      }
+    });
 
     // place water at the spot of boat
 

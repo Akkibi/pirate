@@ -12,6 +12,7 @@ export class Tile {
   public position: THREE.Vector2;
   public tileGroup: THREE.Group;
   public state: TileStateType;
+  public monsterType: string | null = null;
   private idx: number;
   private fogIdx: number;
   private waterIdx: number;
@@ -24,7 +25,7 @@ export class Tile {
   private isTileShared: boolean = false;
   public isHidden: boolean;
 
-  constructor(position: THREE.Vector2, state: TileStateType) {
+  constructor(position: THREE.Vector2, state: TileStateType, monsterType?: string) {
     this.position = position;
     this.idx = -1;
     this.waterIdx = -1;
@@ -33,6 +34,9 @@ export class Tile {
     this.tileGroup = new THREE.Group();
     this.fogDistance = FOG_MIN_DISTANCE;
     this.state = state;
+    if (state === 'monster') {
+      this.monsterType = monsterType ?? null;
+    }
     this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     this.tileGroup.position.set(position.x, 0, position.y);
     console.log('new tile', this.state, position);
@@ -91,7 +95,7 @@ export class Tile {
       // move the tile object opposite to the boat
       // update current object idx to (-0.25, 0, 0.25)
 
-      instanceTween.to(this.state, this.idx, {
+      instanceTween.to(this.poolKey, this.idx, {
         x: this.position.x - 0.2,
         z: this.position.y + 0.2,
         duration: 2,
@@ -100,7 +104,7 @@ export class Tile {
       this.isTileShared = true;
       return;
     } else if (this.isTileShared) {
-      instanceTween.to(this.state, this.idx, {
+      instanceTween.to(this.poolKey, this.idx, {
         x: this.position.x,
         z: this.position.y,
         duration: 2,
@@ -130,7 +134,7 @@ export class Tile {
     this.tileGroup.clear();
 
     if (this.idx !== -1) {
-      objectPool.releaseInstance(this.state, this.idx);
+      objectPool.releaseInstance(this.poolKey, this.idx);
       this.idx = -1;
     }
     if (this.waterIdx !== -1) {
@@ -150,8 +154,8 @@ export class Tile {
 
     // release previous instance
     if (this.idx !== -1) {
-      console.log('releasing tile', this.state, this.position);
-      objectPool.releaseInstance(this.state, this.idx);
+      console.log('releasing tile', this.poolKey, this.position);
+      objectPool.releaseInstance(this.poolKey, this.idx);
       this.idx = -1;
     }
     if (this.waterIdx !== -1) {
@@ -173,6 +177,10 @@ export class Tile {
     }
   }
 
+  private get poolKey(): string {
+    return this.state === 'monster' && this.monsterType ? this.monsterType : this.state;
+  }
+
   private isRenderableTileState(
     state: TileStateType
   ): state is Exclude<TileStateType, 'water' | 'corsair'> {
@@ -192,9 +200,9 @@ export class Tile {
 
   private placeTile() {
     if (this.idx !== -1) return;
-    this.idx = objectPool.reserveInstance(this.state);
+    this.idx = objectPool.reserveInstance(this.poolKey);
     objectPool.updateTransformFull(
-      this.state,
+      this.poolKey,
       this.idx,
       new THREE.Vector3(this.position.x, 0, this.position.y),
       this.state === 'typhon'
