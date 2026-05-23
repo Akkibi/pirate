@@ -3,11 +3,12 @@ import type { PhaseType } from '../utils/gameStore';
 import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 import gsap from 'gsap';
+import { DecorativeClouds } from './decorativeClouds';
 
 export const cameraPositions = {
-  default: new THREE.Vector3(-10, 3.5, 0),
-  parrot: new THREE.Vector3(-5, 8.5, 0),
-  crew: new THREE.Vector3(-5, 4, 0),
+  focused: new THREE.Vector3(-10, 3.5, 0),
+  overview: new THREE.Vector3(-5, 8.5, 0),
+  gameplay: new THREE.Vector3(-5, 4, 0),
 };
 
 export class Camera {
@@ -18,12 +19,16 @@ export class Camera {
   private globalPosition: THREE.Vector2;
   private targetPosition: THREE.Vector2;
   private phase: PhaseType;
+  private clouds: DecorativeClouds;
 
   constructor(scene: THREE.Scene, width: number, height: number) {
     this.cameraGroup = new THREE.Group();
     this.cameraGroup.position.add(new THREE.Vector3(50, 0, 2.5));
     this.cameraPositionGroup = new THREE.Group();
     this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
+
+    this.clouds = new DecorativeClouds();
+    scene.add(this.clouds.cloudGroup);
 
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.globalPosition = new THREE.Vector2().copy(gameState.userPosition);
@@ -37,7 +42,7 @@ export class Camera {
     this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
 
-    this.cameraPositionGroup.position.copy(cameraPositions.default);
+    this.cameraPositionGroup.position.copy(cameraPositions.focused);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));
 
     this.initWatchers();
@@ -111,11 +116,11 @@ export class Camera {
   updateView(): void {
     let newViewPos: THREE.Vector3;
     if (this.isFocused) {
-      newViewPos = cameraPositions.default;
+      newViewPos = cameraPositions.focused;
     } else if (gameState.entitiesVisible || gameState.displayCorsair) {
-      newViewPos = cameraPositions.parrot;
+      newViewPos = cameraPositions.overview;
     } else {
-      newViewPos = cameraPositions.crew;
+      newViewPos = cameraPositions.gameplay;
     }
     gsap.to(this.cameraPositionGroup.position, {
       duration: 2,

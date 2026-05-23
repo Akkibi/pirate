@@ -10,7 +10,6 @@ import {
   setBoardTiles,
 } from '../utils/gameStore';
 import { watch } from 'vue';
-import { DecorativeClouds } from './decorativeClouds';
 import { gameEvents } from '../events/gameEvents';
 import type { SceneManager } from './sceneManager';
 import { createWaterMaterial } from './shaders/waterMaterial';
@@ -79,7 +78,6 @@ export class MapManager {
   private mapGroup: THREE.Group;
   private tiles: Tile[];
   private stopWatchers: Array<() => void> = [];
-  private clouds: DecorativeClouds;
   private revealRunId = 0;
   private sceneManager: SceneManager;
 
@@ -89,9 +87,6 @@ export class MapManager {
     this.mapGroup = new THREE.Group();
     this.tiles = [];
     this.scene.add(this.mapGroup);
-
-    this.clouds = new DecorativeClouds();
-    this.scene.add(this.clouds.cloudGroup);
 
     // generate board and board environment
     const board = modelLoader.get('./models/board.glb').scene.clone();
@@ -171,7 +166,7 @@ export class MapManager {
       this.scene.remove(child);
       child.clear();
     });
-    this.scene.remove(this.mapGroup, this.clouds.cloudGroup);
+    this.scene.remove(this.mapGroup);
   }
 
   public generateMap(): void {
