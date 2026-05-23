@@ -63,6 +63,18 @@ export class Camera {
         this.setFocused(newFocused);
       }
     );
+    watch(
+      () => gameState.entitiesVisible,
+      () => {
+        this.updateView();
+      }
+    );
+    watch(
+      () => gameState.displayCorsair,
+      () => {
+        this.updateView();
+      }
+    );
 
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
@@ -97,7 +109,14 @@ export class Camera {
   }
 
   updateView(): void {
-    const newViewPos = this.isFocused ? cameraPositions.default : cameraPositions[this.phase];
+    let newViewPos: THREE.Vector3;
+    if (this.isFocused) {
+      newViewPos = cameraPositions.default;
+    } else if (gameState.entitiesVisible || gameState.displayCorsair) {
+      newViewPos = cameraPositions.parrot;
+    } else {
+      newViewPos = cameraPositions.crew;
+    }
     gsap.to(this.cameraPositionGroup.position, {
       duration: 2,
       ease: 'expo.out',
