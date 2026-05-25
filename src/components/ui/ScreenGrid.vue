@@ -21,9 +21,16 @@ const props = withDefaults(
 );
 
 const gridClasses = computed(() => [
-  'grid h-full min-h-0 w-full grid-cols-[repeat(8,minmax(0,1fr))] grid-rows-[repeat(8,minmax(0,1fr))] overflow-hidden',
+  'screen-grid grid h-full min-h-0 w-full grid-cols-[repeat(8,minmax(0,1fr))] grid-rows-[repeat(8,minmax(0,1fr))] overflow-hidden',
   props.overlay ? 'absolute inset-0 z-20' : 'relative',
   props.pointerEvents === 'none' ? 'pointer-events-none' : 'pointer-events-auto',
-  props.padded ? 'gap-1.5 p-2 sm:gap-3 sm:p-4' : '',
+  props.padded ? 'screen-grid--padded' : '',
 ]);
 </script>
+
+<style scoped>
+.screen-grid--padded {
+  gap: var(--ui-grid-gap);
+  padding: var(--ui-grid-padding);
+}
+</style>

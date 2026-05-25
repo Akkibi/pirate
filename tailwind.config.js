@@ -12,6 +12,11 @@ export default {
         serif: titleFont,
         sans: bodyFont,
       },
+      screens: {
+        'compact-landscape': { raw: '(orientation: landscape) and (max-height: 430px)' },
+        playable: { raw: '(min-width: 640px) and (min-height: 480px)' },
+        tabletop: { raw: '(min-width: 1024px) and (min-height: 620px)' },
+      },
     },
   },
   plugins: [],

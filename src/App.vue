@@ -315,7 +315,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.15rem, 0.85vmin, 0.5rem);
+  gap: var(--ui-message-gap);
   overflow: hidden;
   color: #71320e;
   text-align: center;
@@ -323,7 +323,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
 .screen-message-title {
   max-width: min(100%, 64rem);
-  font-size: clamp(1.15rem, 5.4vmin, 4rem);
+  font-size: var(--ui-message-title-size);
   line-height: 0.88;
   overflow-wrap: anywhere;
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
@@ -331,7 +331,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
 .screen-message-body {
   max-width: min(100%, 48rem);
-  font-size: clamp(0.72rem, 2vmin, 1.1rem);
+  font-size: var(--ui-message-body-size);
   line-height: 1.18;
   overflow-wrap: anywhere;
 }
@@ -339,7 +339,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 .screen-message-caption,
 .screen-message-footer {
   max-width: min(100%, 44rem);
-  font-size: clamp(0.62rem, 1.55vmin, 0.92rem);
+  font-size: var(--ui-message-caption-size);
   line-height: 1.12;
   overflow-wrap: anywhere;
 }

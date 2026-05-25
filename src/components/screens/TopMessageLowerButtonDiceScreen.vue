@@ -310,7 +310,7 @@ onBeforeUnmount(() => {
 }
 
 .dice-stage {
-  --dice-size: min(60cqh, 60cqw, clamp(5.5rem, 28vw, 8rem));
+  --dice-size: var(--ui-dice-size);
   --dice-half-size: calc(var(--dice-size) / 2);
   flex: none;
   perspective: 900px;

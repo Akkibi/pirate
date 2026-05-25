@@ -4,10 +4,10 @@
       v-for="step in countdownSteps"
       v-show="currentStep === step"
       :key="step"
-      class="text-[clamp(3rem,10vw,6rem)] leading-none text-amber-950 relative"
+      class="countdown-number relative leading-none text-amber-950"
     >
       <span
-        class="absolute w-22 h-22 animate-spin-slow bg-amber-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        class="countdown-spin absolute animate-spin-slow bg-amber-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
       ></span>
       <span class="relative z-10">
         {{ currentStep }}
@@ -44,7 +44,7 @@ const emit = defineEmits<{
 const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
 const timerClasses = computed(() => [
-  'row-span-2 flex items-start justify-baseline px-10',
+  'countdown-timer row-span-2 flex items-start justify-baseline',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
 ]);
 
@@ -109,3 +109,29 @@ onBeforeUnmount(() => {
   clearCountdownTimer();
 });
 </script>
+
+<style scoped>
+.countdown-timer {
+  padding-inline: clamp(1rem, 6vmin, 2.5rem);
+}
+
+.countdown-number {
+  font-size: clamp(2.3rem, 11vmin, 5rem);
+}
+
+.countdown-spin {
+  width: clamp(3.8rem, 16vmin, 5.5rem);
+  height: clamp(3.8rem, 16vmin, 5.5rem);
+}
+
+@media (min-width: 1024px) and (min-height: 620px) {
+  .countdown-number {
+    font-size: clamp(3rem, 9vmin, 6rem);
+  }
+
+  .countdown-spin {
+    width: clamp(5rem, 10vmin, 5.5rem);
+    height: clamp(5rem, 10vmin, 5.5rem);
+  }
+}
+</style>

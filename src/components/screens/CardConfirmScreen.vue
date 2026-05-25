@@ -27,7 +27,7 @@
           </div>
           <p class="text-left text-sm leading-relaxed">{{ card.caption }}</p>
         </div>
-        <p v-if="body" class="max-w-xl text-sm sm:text-base">
+        <p v-if="body" class="card-confirm-body max-w-xl">
           {{ body }}
         </p>
       </div>
@@ -104,7 +104,7 @@ const confirmButtonLayoutClasses = computed(() =>
 
 <style scoped>
 .screen-message-title {
-  font-size: clamp(1.25rem, 4.8vmin, 3.4rem);
+  font-size: var(--ui-message-title-size);
   line-height: 0.95;
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
 }
@@ -117,7 +117,7 @@ const confirmButtonLayoutClasses = computed(() =>
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.35rem, 1.25vmin, 0.85rem);
+  gap: clamp(0.25rem, 1.15vmin, 0.7rem);
   overflow: hidden;
   text-align: center;
 }
@@ -125,8 +125,8 @@ const confirmButtonLayoutClasses = computed(() =>
 .card-confirm-image {
   display: block;
   width: auto;
-  height: min(62%, 18rem);
-  max-width: min(70%, 16rem);
+  height: min(60%, 16rem);
+  max-width: min(68%, 15rem);
   object-fit: contain;
   filter: drop-shadow(0 0.22rem 0.22rem rgba(0, 0, 0, 0.18));
 }
@@ -138,5 +138,10 @@ const confirmButtonLayoutClasses = computed(() =>
   background: #16a34a;
   padding: clamp(0.65rem, 1.5vmin, 1rem);
   color: #000;
+}
+
+.card-confirm-body {
+  font-size: var(--ui-message-body-size);
+  line-height: 1.18;
 }
 </style>

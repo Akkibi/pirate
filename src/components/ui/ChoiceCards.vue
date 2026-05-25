@@ -72,7 +72,7 @@ const gridClasses = computed(() => [
 const gridStyle = computed<CSSProperties>(() => ({
   gridTemplateColumns: `repeat(${columnCount.value}, minmax(0, 1fr))`,
   gridTemplateRows: `repeat(${rowCount.value}, minmax(0, 1fr))`,
-  gap: 'clamp(0.35rem, 1.4vmin, 0.9rem)',
+  gap: 'var(--ui-choice-card-gap)',
 }));
 
 function handleCardClick(card: ChoiceCard) {
@@ -155,44 +155,44 @@ function cardStyles(index: number): CSSProperties {
 
 .choice-card-image-disabled {
   position: absolute;
-  right: clamp(0.35rem, 1vmin, 0.7rem);
-  bottom: clamp(0.35rem, 1vmin, 0.7rem);
-  left: clamp(0.35rem, 1vmin, 0.7rem);
+  right: clamp(0.25rem, 0.9vmin, 0.6rem);
+  bottom: clamp(0.25rem, 0.9vmin, 0.6rem);
+  left: clamp(0.25rem, 0.9vmin, 0.6rem);
   border-radius: 0.35rem;
   background: rgba(255, 238, 185, 0.92);
-  padding: clamp(0.2rem, 0.65vmin, 0.45rem);
+  padding: clamp(0.16rem, 0.55vmin, 0.4rem);
   color: #4b1d0a;
-  font-size: clamp(0.58rem, 1.2vmin, 0.8rem);
+  font-size: clamp(0.52rem, 1.1vmin, 0.72rem);
   font-weight: 900;
   line-height: 1.05;
   text-align: center;
 }
 
 .choice-card-copy {
-  gap: clamp(0.2rem, 0.8vmin, 0.45rem);
-  padding: clamp(0.45rem, 1.4vmin, 0.9rem);
+  gap: clamp(0.16rem, 0.7vmin, 0.4rem);
+  padding: clamp(0.34rem, 1.15vmin, 0.75rem);
 }
 
 .choice-card-title {
-  font-size: clamp(0.78rem, 1.8vmin, 1.08rem);
+  font-size: clamp(0.68rem, 1.55vmin, 1rem);
   line-height: 1.02;
   overflow-wrap: anywhere;
 }
 
 .choice-card-badge {
-  padding: clamp(0.12rem, 0.45vmin, 0.25rem) clamp(0.25rem, 0.75vmin, 0.5rem);
-  font-size: clamp(0.48rem, 1vmin, 0.65rem);
+  padding: clamp(0.1rem, 0.4vmin, 0.22rem) clamp(0.22rem, 0.65vmin, 0.45rem);
+  font-size: clamp(0.44rem, 0.9vmin, 0.6rem);
   line-height: 1;
 }
 
 .choice-card-caption {
-  font-size: clamp(0.62rem, 1.35vmin, 0.88rem);
+  font-size: clamp(0.56rem, 1.18vmin, 0.8rem);
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
 .choice-card-disabled {
-  font-size: clamp(0.56rem, 1.1vmin, 0.75rem);
+  font-size: clamp(0.5rem, 1vmin, 0.7rem);
   line-height: 1.1;
 }
 </style>

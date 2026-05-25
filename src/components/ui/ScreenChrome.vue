@@ -273,7 +273,7 @@ const handOverlayStyle = computed(
   () =>
     ({
       '--hand-overlay-count': Math.max(1, handOverlayCards.value.length),
-      '--hand-overlay-gap': 'clamp(0.75rem, 1.8vmin, 1.4rem)',
+      '--hand-overlay-gap': 'var(--ui-hand-overlay-gap)',
     }) as CSSProperties
 );
 
@@ -306,10 +306,10 @@ watch(showHandStack, (shown) => {
 <style scoped>
 .phase-panel {
   position: absolute;
-  top: clamp(0.45rem, 1.8vmin, 1.2rem);
-  left: clamp(1rem, 3vw, 4.75rem);
+  top: var(--ui-grid-padding);
+  left: var(--ui-chrome-side-inset);
   display: flex;
-  width: clamp(3.2rem, 6.6vmin, 5.4rem);
+  width: var(--ui-phase-width);
   flex-direction: column;
   align-items: center;
   gap: clamp(2rem, 2vmin, 2rem);
@@ -331,12 +331,12 @@ watch(showHandStack, (shown) => {
 
 .hand-stack-button {
   position: absolute;
-  bottom: clamp(1rem, 3vmin, 2rem);
-  left: clamp(0.95rem, 2.9vw, 4.65rem);
+  bottom: var(--ui-chrome-bottom-inset);
+  left: var(--ui-chrome-side-inset);
   z-index: 16;
   pointer-events: auto;
-  width: clamp(2.75rem, 6.1vmin, 4.7rem);
-  height: clamp(3.85rem, 8.5vmin, 6.65rem);
+  width: var(--ui-hand-stack-width);
+  height: var(--ui-hand-stack-height);
   padding: 0;
   border: 0;
   background: transparent;
@@ -392,7 +392,7 @@ watch(showHandStack, (shown) => {
   border-radius: 999px;
   background: #f6d37a;
   color: #532609;
-  font-size: clamp(0.62rem, 1.6vmin, 0.82rem);
+  font-size: clamp(0.58rem, 1.45vmin, 0.82rem);
   font-weight: 900;
   line-height: 1;
   filter: drop-shadow(0 0.13rem 0.14rem rgba(0, 0, 0, 0.3));
@@ -400,14 +400,14 @@ watch(showHandStack, (shown) => {
 
 .peanut-stack {
   position: absolute;
-  bottom: clamp(1rem, 3vmin, 2rem);
-  left: clamp(0.95rem, 2.9vw, 4.65rem);
+  bottom: var(--ui-chrome-bottom-inset);
+  left: var(--ui-chrome-side-inset);
   z-index: 16;
   display: flex;
-  width: clamp(2.1rem, 4.8vmin, 3.35rem);
+  width: var(--ui-resource-width);
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.25rem, 1vmin, 0.55rem);
+  gap: var(--ui-resource-gap);
 }
 
 .peanut-stack__token {
@@ -448,7 +448,7 @@ watch(showHandStack, (shown) => {
   gap: var(--hand-overlay-gap);
   align-items: center;
   justify-content: center;
-  padding: clamp(0.75rem, 2vmin, 1.5rem);
+  padding: var(--ui-hand-overlay-padding);
 }
 
 .hand-overlay__close {
@@ -515,9 +515,9 @@ watch(showHandStack, (shown) => {
 
 .rhum-meter {
   position: absolute;
-  top: clamp(4.5rem, 12vmin, 7.5rem);
-  right: clamp(0.35rem, 1.1vw, 1rem);
-  width: clamp(2.1rem, 4.8vmin, 3.35rem);
+  top: var(--ui-rhum-top);
+  right: var(--ui-grid-padding);
+  width: var(--ui-resource-width);
 }
 
 .rhum-meter__stack {
@@ -525,7 +525,7 @@ watch(showHandStack, (shown) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.25rem, 1vmin, 0.55rem);
+  gap: var(--ui-resource-gap);
 }
 
 .rhum-meter__bottle {
