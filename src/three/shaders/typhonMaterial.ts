@@ -17,12 +17,15 @@ import {
   mx_worley_noise_float,
   mx_noise_vec3,
   atan2,
+  floor,
+  mod,
 } from 'three/tsl';
 
 // Water base — same constants as waterMaterial.ts
 const WATER_SCALE = 2;
 const WATER_SPEED = 0.4;
 const BASE_OPACITY = 0.45;
+const CHESS_DARKEN = 0.12;
 
 // sRGB hex → linear: WebGPU pipeline is linear; the renderer applies linearToSRGB at output
 const _deep = new THREE.Color(0x008c74);
@@ -51,7 +54,13 @@ export function createTyphonMaterial(
   // ── Water base (world-space → seamless across all tiles) ─────────────────
   const worldXZ = positionWorld.xz.mul(WATER_SCALE).add(time.mul(WATER_SPEED));
   const worley = mx_worley_noise_float(worldXZ, 0.85);
-  const waterColor = mix(DEEP_COLOR, SURFACE_COLOR, worley);
+  const chess = mod(
+    floor(positionWorld.x.add(0.5)).add(floor(positionWorld.z.add(0.5))),
+    float(2.0)
+  );
+  const waterColor = mix(DEEP_COLOR, SURFACE_COLOR, worley).mul(
+    float(1.0).sub(chess.mul(float(CHESS_DARKEN)))
+  );
   // ── Typhon spiral ─────────────────────────────────────────────────────────
   // positionGeometry is the raw geometry attribute — before the per-instance
   // matrix is applied. This keeps the spiral centered on every tile regardless
@@ -60,7 +69,7 @@ export function createTyphonMaterial(
   const geoPos = positionGeometry;
 
   // Blender: dot(Object, Object) = squared distance from tile center
-  const dotProd = geoPos.dot(geoPos);
+  const dotProd = geoPos.dot(geoPos.add(vec3(0, 1, 0)));
 
   // 3D noise for organic arm distortion (Blender Noise on Generated+offset, −0.5)
   const noiseVec = mx_noise_vec3(geoPos.add(vec3(1.67, 0.0, 0.0))).mul(0.5);
@@ -104,7 +113,8 @@ export function createTyphonMaterial(
   const typhonColor = mix(rLow, rHigh, step(float(0.5), t));
 
   // Arms (outerMask=0) → typhon colour.  Background (outerMask=1) → water Voronoi.
-  mat.colorNode = mix(waterColor, typhonColor, innerMask);
+  mat.colorNode = mix(waterColor, typhonColor, innerMask.mul(dotProd.add(0.3)));
+  // mat.colorNode = innerMask.mul(dotProd.add(0.5));
   mat.opacityNode = mix(instanceOpacityNode.mul(float(BASE_OPACITY)), float(0.9), innerMask);
   return mat;
 }

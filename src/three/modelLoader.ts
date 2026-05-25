@@ -5,7 +5,9 @@ import { gameState } from '../utils/gameStore';
 const ALL_MODELS = [
   './models/water.glb',
   './models/island.glb',
-  './models/monster.glb',
+  './models/monsters/baleine.glb',
+  './models/monsters/pieuvre.glb',
+  './models/monsters/serpent.glb',
   './models/typhon.glb',
   './models/fog.glb',
   './models/flag.glb',

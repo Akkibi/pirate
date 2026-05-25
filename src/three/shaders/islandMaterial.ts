@@ -31,6 +31,7 @@ export function createIslandMaterial(
   mat.opacityNode = instanceOpacityNode;
   mat.transparent = true;
   mat.depthWrite = true;
+  mat.side = THREE.DoubleSide;
 
   return mat;
 }

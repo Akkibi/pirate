@@ -10,6 +10,7 @@ export interface BoardTileSnapshot {
   x: number;
   y: number;
   state: BoardTileState;
+  monsterType?: string;
 }
 
 export interface BoardPositionSnapshot {
@@ -180,6 +181,7 @@ export function createGameStateSnapshot(): GameStateSnapshot {
       x: tile.x,
       y: tile.y,
       state: tile.state,
+      monsterType: tile.monsterType,
     })),
     exhaustedIslandPositions: gameState.exhaustedIslandPositions.map((position) => ({
       x: position.x,
@@ -223,6 +225,7 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
       x: tile.x,
       y: tile.y,
       state: tile.state,
+      monsterType: tile.monsterType,
     }))
   );
   gameState.exhaustedIslandPositions.splice(
