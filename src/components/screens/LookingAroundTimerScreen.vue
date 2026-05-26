@@ -65,7 +65,7 @@ const emit = defineEmits<{
   (event: 'finished'): void;
 }>();
 
-const countdownSteps = [5, 4, 3, 2, 1];
+// const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
 const timerClasses = computed(() => [
   'row-span-2 flex items-start justify-baseline px-10',
