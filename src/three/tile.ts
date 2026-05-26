@@ -91,16 +91,52 @@ export class Tile {
       gameState.userPosition.x === this.position.x &&
       gameState.userPosition.y === this.position.y
     ) {
-      // this.boatGroup.position.set(0.25, 0, -0.25);
-      // move the tile object opposite to the boat
-      // update current object idx to (-0.25, 0, 0.25)
-
       instanceTween.to(this.poolKey, this.idx, {
         x: this.position.x - 0.2,
         z: this.position.y + 0.2,
         duration: 2,
         ease: 'expo.out',
       });
+
+      if (this.state === 'monster') {
+        const posProxy = { y: 0 };
+        gsap.to(posProxy, {
+          y: 0.5,
+          duration: 0.5,
+          ease: 'sin.inOut',
+          yoyo: true,
+          repeat: 1,
+          onUpdate: () => {
+            objectPool.updatePosition(
+              this.poolKey,
+              this.idx,
+              new THREE.Vector3(this.position.x - 0.2, posProxy.y, this.position.y + 0.2)
+            );
+          },
+        });
+
+        const mat = new THREE.Matrix4();
+        const quat = new THREE.Quaternion();
+        const pos = new THREE.Vector3();
+        const scale = new THREE.Vector3();
+        objectPool.getInstancedMesh(this.poolKey).getMatrixAt(this.idx, mat);
+        mat.decompose(pos, quat, scale);
+        const startAngle = new THREE.Euler().setFromQuaternion(quat).y;
+        const rotProxy = { angle: startAngle };
+        gsap.to(rotProxy, {
+          angle: startAngle + Math.PI * 2,
+          duration: 1,
+          ease: 'expo.out',
+          onUpdate: () => {
+            objectPool.updateRotation(
+              this.poolKey,
+              this.idx,
+              new THREE.Euler(0, rotProxy.angle, 0)
+            );
+          },
+        });
+      }
+
       this.isTileShared = true;
       return;
     } else if (this.isTileShared) {
