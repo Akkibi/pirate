@@ -88,7 +88,7 @@ export class Player {
         const mesh = new THREE.Mesh(geometry, material);
         mesh.renderOrder = 999;
         mesh.position.copy(arrow.position.clone().add(new THREE.Vector3(0, 0.4, 0)));
-        mesh.lookAt(cameraPositions.crew);
+        mesh.lookAt(cameraPositions.gameplay);
         mesh.visible = gameState.displayArrows;
 
         this.arrowMeshes.set(arrow.name, mesh);
