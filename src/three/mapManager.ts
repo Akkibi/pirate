@@ -1,4 +1,7 @@
 import * as THREE from 'three/webgpu';
+import { Line2NodeMaterial } from 'three/webgpu';
+import { Line2 } from 'three/examples/jsm/lines/webgpu/Line2.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { modelLoader } from './modelLoader';
@@ -80,6 +83,14 @@ export class MapManager {
   private stopWatchers: Array<() => void> = [];
   private revealRunId = 0;
   private sceneManager: SceneManager;
+  private pathLine: Line2 | null = null;
+  private readonly pathMaterial = new Line2NodeMaterial({
+    color: 0x000000,
+    linewidth: 10,
+    dashed: true,
+    dashSize: 0.18,
+    gapSize: 0.1,
+  });
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.scene = scene;
@@ -161,6 +172,14 @@ export class MapManager {
     });
     this.tiles = [];
 
+    // Dispose path line
+    if (this.pathLine) {
+      this.pathLine.geometry.dispose();
+      this.mapGroup.remove(this.pathLine);
+      this.pathLine = null;
+    }
+    this.pathMaterial.dispose();
+
     // Remove mapGroup from scene
     this.mapGroup.children.forEach((child) => {
       this.scene.remove(child);
@@ -174,6 +193,7 @@ export class MapManager {
       Math.round(Math.random() * 4),
       Math.round(Math.random() * 6)
     );
+    gameState.userPositionHistory.splice(0, gameState.userPositionHistory.length);
     gameState.userPosition = startPosition;
 
     // generate board tiles
@@ -308,7 +328,29 @@ export class MapManager {
     this.tiles.forEach((tile) => {
       tile.setFogPosition();
     });
-    console.log('position list:', gameState.userPositionHistory);
+    this.rebuildPath();
+  }
+
+  private rebuildPath(): void {
+    if (this.pathLine) {
+      this.pathLine.geometry.dispose();
+      this.mapGroup.remove(this.pathLine);
+      this.pathLine = null;
+    }
+
+    const history = gameState.userPositionHistory;
+    if (history.length < 2) return;
+
+    const points = history.map((p) => new THREE.Vector3(p.x, -0.1, p.y));
+    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5);
+    const sampled = curve.getPoints(history.length * 10);
+
+    const geometry = new LineGeometry();
+    geometry.setPositions(sampled.flatMap((p) => [p.x, p.y, p.z]));
+
+    this.pathLine = new Line2(geometry, this.pathMaterial);
+    this.pathLine.computeLineDistances();
+    this.mapGroup.add(this.pathLine);
   }
 
   public getTileState(
