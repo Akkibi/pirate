@@ -1,17 +1,41 @@
 <template>
   <div :class="timerClasses">
-    <div
-      v-for="step in countdownSteps"
-      v-show="currentStep === step"
-      :key="step"
-      class="countdown-number relative leading-none text-amber-950"
-    >
-      <span
-        class="countdown-spin absolute animate-spin-slow bg-amber-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-      ></span>
-      <span class="relative z-10">
-        {{ currentStep }}
-      </span>
+    <div class="mt-6 relative">
+      <!-- Tally counter outer casing -->
+      <div
+        class="relative bg-amber-950 rounded-sm border-2 border-amber-800 px-5 py-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]"
+      >
+        <!-- Corner rivets -->
+        <span
+          class="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
+        ></span>
+        <span
+          class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
+        ></span>
+        <span
+          class="absolute bottom-1.5 left-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
+        ></span>
+        <span
+          class="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
+        ></span>
+
+        <!-- Display window -->
+        <div
+          class="relative overflow-hidden bg-stone-950 border border-amber-900/60 rounded-sm px-6 py-2 w-24 text-center"
+        >
+          <!-- Mechanical divider line -->
+          <span class="absolute inset-x-0 top-1/2 h-px bg-amber-900/60 z-10"></span>
+
+          <!-- Animated digit -->
+          <Transition name="ticker" mode="out-in">
+            <span
+              :key="currentStep"
+              class="relative block text-5xl font-bold text-amber-400 font-mono leading-none tabular-nums"
+              >{{ currentStep }}</span
+            >
+          </Transition>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -41,7 +65,7 @@ const emit = defineEmits<{
   (event: 'finished'): void;
 }>();
 
-const countdownSteps = [5, 4, 3, 2, 1];
+// const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
 const timerClasses = computed(() => [
   'countdown-timer row-span-2 flex items-start justify-baseline',
@@ -111,27 +135,32 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.countdown-timer {
-  padding-inline: clamp(1rem, 6vmin, 2.5rem);
+.ticker-enter-active {
+  animation: tick-in 0.12s ease-out;
+}
+.ticker-leave-active {
+  animation: tick-out 0.12s ease-in;
 }
 
-.countdown-number {
-  font-size: clamp(2.3rem, 11vmin, 5rem);
-}
-
-.countdown-spin {
-  width: clamp(3.8rem, 16vmin, 5.5rem);
-  height: clamp(3.8rem, 16vmin, 5.5rem);
-}
-
-@media (min-width: 1024px) and (min-height: 620px) {
-  .countdown-number {
-    font-size: clamp(3rem, 9vmin, 6rem);
+@keyframes tick-in {
+  from {
+    transform: translateY(60%);
+    opacity: 0;
   }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
-  .countdown-spin {
-    width: clamp(5rem, 10vmin, 5.5rem);
-    height: clamp(5rem, 10vmin, 5.5rem);
+@keyframes tick-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-60%);
+    opacity: 0;
   }
 }
 </style>
