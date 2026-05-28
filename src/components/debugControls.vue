@@ -49,6 +49,12 @@
       <span class="text-xs opacity-55">Bottle :</span>
       {{ gameState.displayBottle ? 'On' : 'Off' }}
     </button>
+    <button
+      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      @click="gameEvents.emit('boat:shoot_cannons', {})"
+    >
+      Shoot Cannons
+    </button>
   </div>
   <div
     class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end gap-2 self-end"
@@ -126,6 +132,7 @@
 
 <script setup lang="ts">
 import { gameState } from '../utils/gameStore';
+import { gameEvents } from '../events/gameEvents';
 
 const moveCorsair = (direction: string) => {
   switch (direction) {

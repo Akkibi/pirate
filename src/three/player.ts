@@ -20,6 +20,7 @@ import { watch } from 'vue';
 import gsap from 'gsap';
 import { cameraPositions } from './camera';
 import { gameEvents } from '../events/gameEvents';
+import { ParticleSystemManager } from './particleSystemManager';
 
 const _teal = new THREE.Color(0x008c74);
 const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
@@ -219,6 +220,64 @@ export class Player {
       },
       { deep: true }
     );
+    gameEvents.on('boat:shoot_cannons', () => {
+      if (!this.cannonsMod) return;
+      const cannonLeft = this.cannonsMod.getObjectByName('cannon-left');
+      const cannonRight = this.cannonsMod.getObjectByName('cannon-right');
+      if (!cannonLeft || !cannonRight) return;
+
+      const psm = ParticleSystemManager.getInstance();
+      psm.removeAll();
+      const boatWorldPos = new THREE.Vector3();
+      this.boatGroup.getWorldPosition(boatWorldPos);
+
+      for (const cannon of [cannonLeft, cannonRight]) {
+        const cannonWorldPos = new THREE.Vector3();
+        cannon.getWorldPosition(cannonWorldPos);
+
+        const dir = new THREE.Vector3()
+          .subVectors(cannonWorldPos.clone().add(new THREE.Vector3(0, -0.15, 0)), boatWorldPos)
+          .normalize();
+
+        for (let i = 0; i < 20; i++) {
+          const spread = 0.4;
+          const velocity = new THREE.Vector3(
+            dir.x + (Math.random() - 0.5) * spread,
+            dir.y + (Math.random() - 0.5) * spread,
+            dir.z + (Math.random() - 0.5) * spread
+          )
+            .multiplyScalar(1 + Math.random() * 0.5)
+            .multiplyScalar(0.004);
+
+          const velocity2 = new THREE.Vector3(
+            (Math.random() - 0.5) * spread,
+            0.1 + (Math.random() - 0.5) * spread,
+            (Math.random() - 0.5) * spread
+          )
+            .multiplyScalar(1 + Math.random() * 0.5)
+            .multiplyScalar(0.001);
+
+          psm.addParticle(
+            cannonWorldPos.clone(),
+            velocity,
+            800,
+            new THREE.Vector2(0.04, 0.005),
+            -Math.atan2(velocity.z, velocity.x),
+            new THREE.Color(0, 0, 0),
+            0.5 + Math.random() * 0.5
+          );
+          psm.addParticle(
+            cannonWorldPos.clone(),
+            velocity2,
+            1000,
+            new THREE.Vector2(0.03, 0.02),
+            -Math.atan2(velocity2.z, velocity2.x),
+            new THREE.Color(0.5, 0.5, 0.5),
+            0.5 + Math.random() * 0.5
+          );
+        }
+      }
+    });
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
   }

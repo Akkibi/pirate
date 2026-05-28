@@ -7,6 +7,7 @@ import { Player } from './player';
 import { gameState } from '../utils/gameStore';
 import { Corsair } from './corsair';
 import { objectPool } from './instancedModelManger';
+import { ParticleSystemManager } from './particleSystemManager';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -21,6 +22,7 @@ export class SceneManager {
   public player: Player;
   private handleCanvasClick: (event: MouseEvent) => void;
   public corsair: Corsair;
+  private particleSystemManager: ParticleSystemManager;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -49,6 +51,10 @@ export class SceneManager {
     // Setup event handlers
     this.onWindowResize = this.handleWindowResize.bind(this);
     this.handleCanvasClick = this.onCanvasClick.bind(this);
+
+    this.particleSystemManager = ParticleSystemManager.getInstance();
+    this.particleSystemManager.setScene(this.scene);
+    this.particleSystemManager.setTexture('/images/point.png');
   }
 
   async init(): Promise<void> {
@@ -82,13 +88,14 @@ export class SceneManager {
     gsap.ticker.add(this.animate);
   }
 
-  private animate = (time: number) => {
+  private animate = (time: number, deltaTime: number) => {
     const timeSeconds = time * 1000;
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(timeSeconds);
     this.player.update(timeSeconds);
     this.corsair.update(timeSeconds);
     this.camera.update(timeSeconds);
+    this.particleSystemManager.update(deltaTime);
   };
 
   dispose(): void {
@@ -102,6 +109,7 @@ export class SceneManager {
     // so WebGPU node cleanup doesn't crash on a dead context.
     objectPool.dispose();
     this.renderer.dispose();
+    this.particleSystemManager.removeAll();
   }
 
   getScene(): THREE.Scene {
