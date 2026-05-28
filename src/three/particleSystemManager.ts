@@ -242,8 +242,8 @@ export class ParticleSystemManager {
         // const originalSize = this.particles[i].maxLifetime; // Store size in a better way if needed
 
         this.dummy.scale.set(
-          (1.1 - lifetimeRatio) * this.particles[i].scale.x * 10,
-          (1.1 - lifetimeRatio) * this.particles[i].scale.y * 10,
+          (1.1 - lifetimeRatio) * particle.scale.x * 10,
+          (1.1 - lifetimeRatio) * particle.scale.y * 10,
           1
         );
         this.dummy.updateMatrix();
@@ -266,7 +266,7 @@ export class ParticleSystemManager {
         // Keep particle in array at writeIndex
         if (writeIndex !== i) {
           this.particles[writeIndex] = particle;
-          this.particles[writeIndex].index = writeIndex;
+          particle.index = writeIndex;
         }
 
         writeIndex++;
