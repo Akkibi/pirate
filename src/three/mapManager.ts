@@ -90,6 +90,8 @@ export class MapManager {
     dashed: true,
     dashSize: 0.18,
     gapSize: 0.1,
+    opacity: 0.3,
+    transparent: true,
   });
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {

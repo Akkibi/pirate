@@ -226,7 +226,8 @@ export class Player {
   private updatePositionShift(): void {
     const tileType = this.sceneManager.mapManager.getTileState(this.position);
     if (!tileType) return;
-    const isTileShared = tileType.state == 'monster' || tileType.state == 'island';
+    const isMonsterTile = tileType.state == 'monster';
+    const isTileShared = isMonsterTile || tileType.state == 'island';
 
     if ((gameState.entitiesVisible || tileType.entitiesHidden) && isTileShared) {
       // this.boatGroup.position.set(0.25, 0, -0.25);
@@ -245,6 +246,18 @@ export class Player {
         z: 0,
       });
     }
+    const isTakingDamage = isMonsterTile || tileType.state == 'typhon';
+
+    if (isTakingDamage) {
+      gsap
+        .timeline({ overwrite: true })
+        .fromTo(
+          this.boatGroup.rotation,
+          { z: 0 },
+          { duration: 0.2, ease: 'expo.out', delay: 0.25, z: Math.PI * 0.5 }
+        )
+        .to(this.boatGroup.rotation, { duration: 2, ease: 'elastic.out(1, 0.3)', z: 0 });
+    }
   }
 
   private createArrowOverlay(arrowName: string): void {
@@ -258,7 +271,8 @@ export class Player {
       'font-title',
       'text-[5vh]',
       'text-amber-950',
-      '[-webkit-text-stroke:2px_#fbbf24]',
+      '[-webkit-text-stroke:3px_#fbbf24]',
+      '[paint-order:stroke_fill]',
       'hidden',
     ].join(' ');
     const canvas = this.sceneManager.getRenderer().domElement;
