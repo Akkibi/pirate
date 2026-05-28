@@ -342,11 +342,17 @@ onBeforeUnmount(() => {
 }
 
 .parchment-content {
-  padding: var(--ui-parchment-content-pad);
+  padding: var(--ui-parchment-content-pad) 2rem;
 }
 
 .parchment-text {
-  padding: var(--ui-parchment-text-pad-y) var(--ui-parchment-text-pad-x);
+  padding: var(--ui-parchment-text-pad-y) 2rem;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  line-height: 1.18;
+  text-wrap: pretty;
 }
 
 .parchment-text--sm {

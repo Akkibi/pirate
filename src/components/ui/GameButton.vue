@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
+import { playSound } from '../../utils/soundManager';
 
 type ButtonVariant = 'primary' | 'secondary' | 'undo';
 
@@ -80,6 +81,10 @@ const buttonClasses = computed(() => [
 ]);
 
 function handleClick() {
+  if (!props.disabled) {
+    playSound('uiClick');
+  }
+
   void props.onClick?.();
 }
 </script>

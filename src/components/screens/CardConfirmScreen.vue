@@ -141,7 +141,13 @@ const confirmButtonLayoutClasses = computed(() =>
 }
 
 .card-confirm-body {
+  width: min(100%, 52rem);
+  min-width: 0;
   font-size: var(--ui-message-body-size);
-  line-height: 1.18;
+  line-height: 1.22;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 </style>

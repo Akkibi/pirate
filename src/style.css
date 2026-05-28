@@ -28,8 +28,8 @@
 
     --ui-message-gap: clamp(0.12rem, 0.7vmin, 0.35rem);
     --ui-message-title-size: clamp(1.05rem, 5.1vmin, 2.25rem);
-    --ui-message-body-size: clamp(0.68rem, 2.05vmin, 0.95rem);
-    --ui-message-caption-size: clamp(0.58rem, 1.65vmin, 0.82rem);
+    --ui-message-body-size: clamp(0.9rem, 2.55vmin, 1.32rem);
+    --ui-message-caption-size: clamp(0.76rem, 2.05vmin, 1.08rem);
     --ui-full-message-gap: clamp(0.18rem, 0.9vmin, 0.45rem);
     --ui-full-message-title-size: clamp(2rem, 12vmin, 4.8rem);
 
@@ -43,8 +43,8 @@
     --ui-rhum-top: clamp(3.25rem, 11vmin, 5.1rem);
     --ui-resource-width: clamp(1.75rem, 4.7vmin, 2.7rem);
     --ui-resource-gap: clamp(0.18rem, 0.8vmin, 0.42rem);
-    --ui-hand-stack-width: clamp(2.25rem, 6vmin, 3.5rem);
-    --ui-hand-stack-height: clamp(3.15rem, 8.4vmin, 5.1rem);
+    --ui-hand-stack-width: clamp(3.15rem, 8.4vmin, 4.85rem);
+    --ui-hand-stack-height: clamp(4.4rem, 11.75vmin, 6.95rem);
     --ui-hand-overlay-gap: clamp(0.4rem, 1.2vmin, 0.8rem);
     --ui-hand-overlay-padding: clamp(0.45rem, 1.4vmin, 0.9rem);
   }
@@ -78,10 +78,46 @@
       --ui-rhum-top: clamp(2.75rem, 10vmin, 4rem);
       --ui-resource-width: clamp(1.5rem, 4.3vmin, 2.25rem);
       --ui-resource-gap: clamp(0.14rem, 0.65vmin, 0.32rem);
-      --ui-hand-stack-width: clamp(1.95rem, 5.7vmin, 2.95rem);
-      --ui-hand-stack-height: clamp(2.7rem, 8vmin, 4.3rem);
+      --ui-hand-stack-width: clamp(2.65rem, 7.4vmin, 3.95rem);
+      --ui-hand-stack-height: clamp(3.7rem, 10.4vmin, 5.55rem);
       --ui-hand-overlay-gap: clamp(0.3rem, 0.9vmin, 0.6rem);
       --ui-hand-overlay-padding: clamp(0.32rem, 1vmin, 0.65rem);
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 360px) {
+    :root {
+      --ui-grid-gap: clamp(0.16rem, 0.6vmin, 0.28rem);
+      --ui-grid-padding: clamp(0.18rem, 0.75vmin, 0.34rem);
+
+      --ui-button-font-size: clamp(0.66rem, 2.15vmin, 0.8rem);
+      --ui-button-padding-x: clamp(0.38rem, 1.2vmin, 0.56rem);
+      --ui-button-padding-y: clamp(0.14rem, 0.65vmin, 0.26rem);
+      --ui-button-rivet-size: 0.22rem;
+
+      --ui-parchment-end-width: clamp(1.7rem, 6vmin, 2.25rem);
+      --ui-parchment-surface-pad-x: clamp(0.22rem, 0.8vmin, 0.4rem);
+      --ui-parchment-surface-pad-y: clamp(0.14rem, 0.6vmin, 0.3rem);
+      --ui-parchment-content-pad: clamp(0.22rem, 0.8vmin, 0.45rem);
+      --ui-parchment-text-pad-x: clamp(0.72rem, 2.5vmin, 1.2rem);
+      --ui-parchment-text-pad-y: clamp(0.34rem, 1.05vmin, 0.58rem);
+
+      --ui-message-gap: clamp(0.08rem, 0.42vmin, 0.22rem);
+      --ui-message-title-size: clamp(0.82rem, 4.25vmin, 1.45rem);
+      --ui-message-body-size: clamp(0.72rem, 2.2vmin, 0.98rem);
+      --ui-message-caption-size: clamp(0.62rem, 1.8vmin, 0.84rem);
+      --ui-full-message-title-size: clamp(1.35rem, 9vmin, 2.7rem);
+      --ui-choice-card-gap: clamp(0.18rem, 0.75vmin, 0.42rem);
+      --ui-dice-size: min(70cqh, 50cqw, clamp(3.35rem, 22vmin, 4.65rem));
+
+      --ui-phase-width: clamp(1.85rem, 5.6vmin, 2.55rem);
+      --ui-rhum-top: clamp(2.35rem, 9.2vmin, 3.4rem);
+      --ui-resource-width: clamp(1.25rem, 3.95vmin, 1.85rem);
+      --ui-resource-gap: clamp(0.1rem, 0.52vmin, 0.24rem);
+      --ui-hand-stack-width: clamp(2.35rem, 6.6vmin, 3.35rem);
+      --ui-hand-stack-height: clamp(3.3rem, 9.3vmin, 4.75rem);
+      --ui-hand-overlay-gap: clamp(0.22rem, 0.75vmin, 0.48rem);
+      --ui-hand-overlay-padding: clamp(0.26rem, 0.8vmin, 0.52rem);
     }
   }
 
@@ -105,8 +141,8 @@
       --ui-parchment-text-fill: clamp(1rem, 2.1vmin, 1.2rem);
 
       --ui-message-title-size: clamp(1.2rem, 4.9vmin, 3rem);
-      --ui-message-body-size: clamp(0.78rem, 1.9vmin, 1.05rem);
-      --ui-message-caption-size: clamp(0.66rem, 1.45vmin, 0.9rem);
+      --ui-message-body-size: clamp(1rem, 2.2vmin, 1.42rem);
+      --ui-message-caption-size: clamp(0.86rem, 1.85vmin, 1.16rem);
       --ui-full-message-title-size: clamp(2.8rem, 13vmin, 7rem);
       --ui-landing-title-size: clamp(3rem, 13vmin, 5.4rem);
       --ui-choice-card-gap: clamp(0.35rem, 1.25vmin, 0.75rem);
@@ -118,8 +154,8 @@
       --ui-rhum-top: clamp(3.9rem, 11.5vmin, 6.3rem);
       --ui-resource-width: clamp(2rem, 4.6vmin, 3.05rem);
       --ui-resource-gap: clamp(0.22rem, 0.9vmin, 0.5rem);
-      --ui-hand-stack-width: clamp(2.55rem, 5.8vmin, 4.1rem);
-      --ui-hand-stack-height: clamp(3.55rem, 8.1vmin, 5.8rem);
+      --ui-hand-stack-width: clamp(3.45rem, 7.5vmin, 5.4rem);
+      --ui-hand-stack-height: clamp(4.85rem, 10.6vmin, 7.65rem);
       --ui-hand-overlay-gap: clamp(0.55rem, 1.4vmin, 1rem);
       --ui-hand-overlay-padding: clamp(0.6rem, 1.6vmin, 1.15rem);
     }
@@ -142,8 +178,8 @@
       --ui-parchment-text-fill: clamp(1.05rem, 1.8vmin, 1.25rem);
 
       --ui-message-title-size: clamp(1.4rem, 4.7vmin, 4rem);
-      --ui-message-body-size: clamp(0.9rem, 1.8vmin, 1.1rem);
-      --ui-message-caption-size: clamp(0.72rem, 1.35vmin, 0.92rem);
+      --ui-message-body-size: clamp(1.15rem, 2.2vmin, 1.55rem);
+      --ui-message-caption-size: clamp(0.96rem, 1.75vmin, 1.24rem);
       --ui-full-message-title-size: clamp(3.45rem, 12.5vmin, 12rem);
       --ui-choice-card-gap: clamp(0.45rem, 1.25vmin, 0.9rem);
       --ui-dice-size: min(60cqh, 60cqw, clamp(5.5rem, 16vmin, 8rem));
@@ -154,8 +190,8 @@
       --ui-rhum-top: clamp(4.5rem, 12vmin, 7.5rem);
       --ui-resource-width: clamp(2.1rem, 4.8vmin, 3.35rem);
       --ui-resource-gap: clamp(0.25rem, 1vmin, 0.55rem);
-      --ui-hand-stack-width: clamp(2.75rem, 6.1vmin, 4.7rem);
-      --ui-hand-stack-height: clamp(3.85rem, 8.5vmin, 6.65rem);
+      --ui-hand-stack-width: clamp(3.65rem, 7.7vmin, 6rem);
+      --ui-hand-stack-height: clamp(5.1rem, 10.8vmin, 8.45rem);
       --ui-hand-overlay-gap: clamp(0.75rem, 1.8vmin, 1.4rem);
       --ui-hand-overlay-padding: clamp(0.75rem, 2vmin, 1.5rem);
     }
@@ -164,11 +200,17 @@
   html,
   body {
     @apply m-0 overflow-hidden bg-slate-900 p-0 font-body text-white;
+    overscroll-behavior: none;
+    touch-action: none;
   }
 
   html,
   body,
   #app {
+    height: 100vh;
+    min-height: 100vh;
+    height: 100svh;
+    min-height: 100svh;
     height: 100dvh;
     min-height: 100dvh;
   }

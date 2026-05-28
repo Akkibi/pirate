@@ -25,6 +25,7 @@ import {
   clearRequestedTreasureCardSelection,
   requestTreasureCardSelection,
 } from './utils/treasureCardSelection';
+import { playSound, startBackgroundMusic } from './utils/soundManager';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -175,18 +176,21 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 });
 
 function startGame() {
+  startBackgroundMusic();
   started.value = true;
 
   initGame();
 }
 
 function resumeGame() {
+  startBackgroundMusic();
   started.value = true;
 
   initGame({ resume: true });
 }
 
 function toggleUI() {
+  playSound('uiClick');
   UIShown.value = !UIShown.value;
 }
 
@@ -330,17 +334,25 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 }
 
 .screen-message-body {
-  max-width: min(100%, 48rem);
+  width: min(100%, 52rem);
+  min-width: 0;
   font-size: var(--ui-message-body-size);
-  line-height: 1.18;
+  line-height: 1.22;
+  white-space: normal;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 
 .screen-message-caption,
 .screen-message-footer {
-  max-width: min(100%, 44rem);
+  width: min(100%, 48rem);
+  min-width: 0;
   font-size: var(--ui-message-caption-size);
-  line-height: 1.12;
+  line-height: 1.18;
+  white-space: normal;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 </style>

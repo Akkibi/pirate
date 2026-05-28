@@ -154,7 +154,7 @@ onMounted(() => {
 
 .full-message-copy :deep(.screen-message) {
   gap: var(--ui-full-message-gap);
-  padding-inline: var(--ui-parchment-content-pad);
+  padding-inline: 0;
 }
 
 .full-message-copy :deep(.screen-message-title) {

@@ -46,7 +46,7 @@
         class="hand-stack-button"
         type="button"
         aria-label="Voir les cartes tresor en main"
-        @click="handOverlayOpen = true"
+        @click="openHandOverlay"
       >
         <span
           v-for="card in handStackCards"
@@ -80,13 +80,13 @@
       </div>
     </Transition>
 
-    <Transition name="hand-overlay">
+    <Transition name="hand-overlay" :duration="{ enter: 980, leave: 760 }">
       <div v-if="handOverlayOpen && showHandStack" class="hand-overlay" aria-label="Cartes tresor">
         <button
           class="hand-overlay__scrim"
           type="button"
           aria-label="Fermer les cartes"
-          @click="handOverlayOpen = false"
+          @click="closeHandOverlay"
         ></button>
 
         <div class="hand-overlay__cards" :style="handOverlayStyle">
@@ -94,6 +94,7 @@
             v-for="card in handOverlayCards"
             :key="card.key"
             :class="['hand-overlay__card', card.usable ? 'hand-overlay__card--usable' : '']"
+            :style="card.style"
             type="button"
             :disabled="!card.usable"
             @click="handleOverlayCardClick(card)"
@@ -120,6 +121,7 @@ import {
   type TreasurePhase,
 } from '../../utils/treasureCards';
 import type { DayPhaseIndicator } from '../../utils/uiFlowStore';
+import { playSound } from '../../utils/soundManager';
 
 const props = withDefaults(
   defineProps<{
@@ -237,8 +239,7 @@ const handStackCards = computed(() => {
     const isUsable = isTopCard && card.instanceId === usableCard?.instanceId;
     const definition = getTreasureCardDefinition(card.cardId);
     const stackOffset = index - (visibleCards.length - 1);
-    const imageSrc =
-      isUsable && definition.imageSrc ? definition.imageSrc : '/images/cards/dos.png';
+    const imageSrc = definition.imageSrc ?? '/images/cards/dos.png';
     const style = {
       '--hand-card-x': `${stackOffset * 0.18}rem`,
       '--hand-card-y': `${Math.abs(stackOffset) * 0.16}rem`,
@@ -248,7 +249,7 @@ const handStackCards = computed(() => {
     return {
       key: card.instanceId,
       imageSrc,
-      alt: isUsable ? definition.title : 'Dos de carte tresor',
+      alt: definition.title,
       usable: isUsable,
       style,
     };
@@ -256,9 +257,14 @@ const handStackCards = computed(() => {
 });
 
 const handOverlayCards = computed(() =>
-  gameState.crewHand.map((card) => {
+  gameState.crewHand.map((card, index) => {
+    const cardCount = gameState.crewHand.length;
     const definition = getTreasureCardDefinition(card.cardId);
     const usable = isTreasureCardUsable(card);
+    const centerOffset = index - (cardCount - 1) / 2;
+    const spreadStep = Math.min(12, Math.max(6.8, 52 / Math.max(1, cardCount)));
+    const enterOrder = Math.min(index, 7);
+    const leaveOrder = Math.min(cardCount - index - 1, 7);
 
     return {
       key: card.instanceId,
@@ -266,6 +272,11 @@ const handOverlayCards = computed(() =>
       imageSrc: definition.imageSrc ?? '/images/cards/dos.png',
       alt: definition.title,
       usable,
+      style: {
+        '--hand-overlay-rest-x': `${centerOffset * spreadStep}vw`,
+        '--hand-overlay-enter-delay': `${enterOrder * 48}ms`,
+        '--hand-overlay-leave-delay': `${leaveOrder * 34}ms`,
+      } as CSSProperties,
     };
   })
 );
@@ -276,6 +287,11 @@ const handOverlayStyle = computed(
       '--hand-overlay-gap': 'var(--ui-hand-overlay-gap)',
     }) as CSSProperties
 );
+
+function openHandOverlay() {
+  playSound('uiClick');
+  handOverlayOpen.value = true;
+}
 
 function handleOverlayCardClick(card: { instanceId: string | number; usable: boolean }) {
   if (!card.usable) {
@@ -305,11 +321,14 @@ watch(showHandStack, (shown) => {
 
 <style scoped>
 .phase-panel {
+  --phase-panel-width: clamp(3.75rem, var(--ui-phase-width), 4.85rem);
+  --phase-panel-icon-width: calc(var(--phase-panel-width) * 0.9);
+
   position: absolute;
   top: var(--ui-grid-padding);
   left: var(--ui-chrome-side-inset);
   display: flex;
-  width: var(--ui-phase-width);
+  width: var(--phase-panel-width);
   flex-direction: column;
   align-items: center;
   gap: clamp(2rem, 2vmin, 2rem);
@@ -318,12 +337,22 @@ watch(showHandStack, (shown) => {
 .phase-panel__parent {
   position: absolute;
   top: -2rem;
-  left: -0.25rem;
+  left: 50%;
+  width: var(--phase-panel-width);
+  transform: translateX(-50%);
+}
+
+.phase-panel__parent svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .phase-panel__icon {
-  width: 100%;
+  position: relative;
+  width: var(--phase-panel-icon-width);
   height: auto;
+  display: block;
   object-fit: contain;
   z-index: 10;
   /* filter: drop-shadow(0 0.22rem 0.5rem rgba(0, 0, 0, 1)); */
@@ -331,8 +360,8 @@ watch(showHandStack, (shown) => {
 
 .hand-stack-button {
   position: absolute;
-  bottom: var(--ui-chrome-bottom-inset);
-  left: var(--ui-chrome-side-inset);
+  top: 50%;
+  left: 0;
   z-index: 16;
   pointer-events: auto;
   width: var(--ui-hand-stack-width);
@@ -340,6 +369,9 @@ watch(showHandStack, (shown) => {
   padding: 0;
   border: 0;
   background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  transform: translate3d(-48%, -50%, 0);
 }
 
 .hand-stack-card {
@@ -349,14 +381,14 @@ watch(showHandStack, (shown) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0);
+  transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0) rotate(90deg) scale(1.72);
   transition:
     filter 260ms ease,
     transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hand-stack-card--usable {
-  transform: translate3d(0, -1.5rem, 0) scale(2.04);
+  transform: translate3d(76%, -0.15rem, 0) rotate(90deg) scale(2.18);
 }
 
 .hand-stack-card--usable::after {
@@ -381,8 +413,8 @@ watch(showHandStack, (shown) => {
 
 .hand-stack-count {
   position: absolute;
-  right: -0.45rem;
-  bottom: -0.35rem;
+  right: -0.2rem;
+  bottom: -0.2rem;
   z-index: 20;
   display: grid;
   min-width: 1.25rem;
@@ -437,45 +469,49 @@ watch(showHandStack, (shown) => {
 }
 
 .hand-overlay__cards {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  grid-column: 1 / -1;
-  grid-row: 1 / 8;
-  display: flex;
-  width: 100%;
-  height: 100%;
-  max-height: 100%;
-  gap: var(--hand-overlay-gap);
-  align-items: center;
-  justify-content: center;
-  padding: var(--ui-hand-overlay-padding);
+  pointer-events: none;
 }
 
 .hand-overlay__close {
-  position: relative;
+  position: absolute;
+  right: max(1rem, 4vw);
+  bottom: 0.65rem;
+  left: max(1rem, 4vw);
   z-index: 2;
-  grid-column: 2 / 8;
-  grid-row: 8 / 9;
-  height: 100%;
+  height: clamp(2.45rem, 12vh, 4rem);
   min-height: 0;
   pointer-events: auto;
 }
 
 .hand-overlay__card {
-  position: relative;
+  --hand-overlay-source-x: calc(-50vw + (var(--ui-hand-stack-width) * 0.78));
+  --hand-overlay-source-y: -1.5vh;
+  --hand-overlay-rest-x: 0vw;
+  --hand-overlay-rest-y: 0rem;
+  --hand-overlay-rest-scale: 1;
+
+  position: absolute;
+  top: 43%;
+  left: 50%;
   width: min(
     calc(
-      (92vw - ((var(--hand-overlay-count) - 1) * var(--hand-overlay-gap))) /
+      (88vw - ((var(--hand-overlay-count) - 1) * var(--hand-overlay-gap))) /
         var(--hand-overlay-count)
     ),
-    calc(72vh * 0.7),
-    34rem
+    calc(66vh * 0.7),
+    14rem
   );
   aspect-ratio: 350 / 500;
-  flex: 0 1 auto;
   padding: 0;
   border: 0;
   background: transparent;
+  pointer-events: auto;
+  transform: translate(-50%, -50%)
+    translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0)
+    scale(var(--hand-overlay-rest-scale));
   transition:
     filter 220ms ease,
     opacity 220ms ease,
@@ -489,8 +525,10 @@ watch(showHandStack, (shown) => {
 }
 
 .hand-overlay__card--usable {
+  --hand-overlay-rest-y: -0.35rem;
+  --hand-overlay-rest-scale: 1.04;
+
   cursor: pointer;
-  transform: translate3d(0, -0.35rem, 0) scale(1.04);
 }
 
 .hand-overlay__card--usable::after {
@@ -566,7 +604,7 @@ watch(showHandStack, (shown) => {
 .hand-stack-enter-from,
 .hand-stack-leave-to {
   opacity: 0;
-  transform: translate3d(-0.45rem, 0.7rem, 0) scale(0.88);
+  transform: translate3d(-75%, -50%, 0) scale(0.88);
 }
 
 .hand-overlay-enter-active,
@@ -577,6 +615,25 @@ watch(showHandStack, (shown) => {
 .hand-overlay-enter-from,
 .hand-overlay-leave-to {
   opacity: 0;
+}
+
+.hand-overlay-enter-active .hand-overlay__card {
+  animation: hand-overlay-card-in 560ms cubic-bezier(0.16, 0.92, 0.18, 1.04) both;
+  animation-delay: var(--hand-overlay-enter-delay);
+}
+
+.hand-overlay-leave-active .hand-overlay__card {
+  animation: hand-overlay-card-out 430ms cubic-bezier(0.55, 0.05, 0.75, 0.2) both;
+  animation-delay: var(--hand-overlay-leave-delay);
+}
+
+.hand-overlay-enter-active .hand-overlay__close {
+  animation: hand-overlay-close-in 260ms ease both;
+  animation-delay: 430ms;
+}
+
+.hand-overlay-leave-active .hand-overlay__close {
+  animation: hand-overlay-close-out 160ms ease both;
 }
 
 .peanut-token-enter-active,
@@ -603,6 +660,67 @@ watch(showHandStack, (shown) => {
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes hand-overlay-card-in {
+  from {
+    opacity: 0.3;
+    transform: translate(-50%, -50%)
+      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(90deg)
+      scale(0.5);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      translate3d(calc(var(--hand-overlay-rest-x) + 0.18rem), var(--hand-overlay-rest-y), 0)
+      rotate(-2deg) scale(calc(var(--hand-overlay-rest-scale) * 1.02));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0) rotate(0deg)
+      scale(var(--hand-overlay-rest-scale));
+  }
+}
+
+@keyframes hand-overlay-card-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0) rotate(0deg)
+      scale(var(--hand-overlay-rest-scale));
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%)
+      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(90deg)
+      scale(0.46);
+  }
+}
+
+@keyframes hand-overlay-close-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.6rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hand-overlay-close-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 

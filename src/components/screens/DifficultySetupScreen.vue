@@ -27,6 +27,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import FullMessageButtonScreen from './FullMessageButtonScreen.vue';
+import { playSound } from '../../utils/soundManager';
 
 const props = withDefaults(
   defineProps<{
@@ -51,10 +52,12 @@ const props = withDefaults(
 const selectedValue = ref(props.initialValue);
 
 function increment() {
+  playSound('uiClick');
   selectedValue.value = Math.min(props.maxValue, selectedValue.value + 1);
 }
 
 function decrement() {
+  playSound('uiClick');
   selectedValue.value = Math.max(props.minValue, selectedValue.value - 1);
 }
 
@@ -87,10 +90,15 @@ function confirm() {
 }
 
 .difficulty-body {
-  max-width: min(100%, 50rem);
+  width: min(100%, 52rem);
+  min-width: 0;
   color: #7c3f16;
-  font-size: clamp(var(--ui-message-body-size), 2.35vmin, 1.35rem);
-  line-height: 1.2;
+  font-size: var(--ui-message-body-size);
+  line-height: 1.22;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 
 .difficulty-selector {
