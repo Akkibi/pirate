@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { positionWorld, mix, clamp, vec3, vec4, diffuseColor } from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
-import { gameState } from '../utils/gameStore';
+import { gameState, formatBoardCoordinate } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
 import { watch } from 'vue';
 import gsap from 'gsap';
@@ -19,7 +19,15 @@ export class Player {
   private birdGroup: THREE.Group;
   private arrowGroup: THREE.Group;
   private arrowMeshes: Map<string, THREE.Mesh> = new Map();
+  private arrowOverlays: Map<string, HTMLElement> = new Map();
   private sceneManager: SceneManager;
+
+  private readonly arrowOffsets: Record<string, { x: number; y: number }> = {
+    left: { x: 0, y: -1 },
+    right: { x: 0, y: 1 },
+    down: { x: -1, y: 0 },
+    up: { x: 1, y: 0 },
+  };
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -93,6 +101,7 @@ export class Player {
 
         this.arrowMeshes.set(arrow.name, mesh);
         this.arrowGroup.add(mesh);
+        this.createArrowOverlay(arrow.name);
         this.updateArrowVisibility(gameState.displayArrows);
       });
     });
@@ -161,6 +170,46 @@ export class Player {
     }
   }
 
+  private createArrowOverlay(arrowName: string): void {
+    const overlay = document.createElement('div');
+    overlay.className = [
+      'absolute',
+      'pointer-events-none',
+      '-translate-x-1/2',
+      '-translate-y-1/2',
+      'font-bold',
+      'font-mono',
+      'text-[4vh]',
+      'text-amber-900',
+      '[-webkit-text-stroke:1px_#fbbf24]',
+      'hidden',
+    ].join(' ');
+    const canvas = this.sceneManager.getRenderer().domElement;
+    canvas.parentElement?.appendChild(overlay);
+    this.arrowOverlays.set(arrowName, overlay);
+  }
+
+  private projectArrowToScreen(mesh: THREE.Mesh): { x: number; y: number } {
+    const worldPos = new THREE.Vector3();
+    mesh.getWorldPosition(worldPos);
+    const camera = this.sceneManager.camera.getNative();
+    const canvas = this.sceneManager.getRenderer().domElement;
+    worldPos.project(camera);
+    const x = (worldPos.x + 1) * 0.5 * canvas.clientWidth;
+    const y = -(worldPos.y - 1) * 0.5 * canvas.clientHeight;
+    return { x, y };
+  }
+
+  private getArrowTargetLabel(arrowName: string): string {
+    const offset = this.arrowOffsets[arrowName];
+    if (!offset) return '';
+    const target = {
+      x: gameState.userPosition.x + offset.x,
+      y: gameState.userPosition.y + offset.y,
+    };
+    return formatBoardCoordinate(target);
+  }
+
   private resetArrowHighlight(): void {
     for (const mesh of this.arrowMeshes.values()) {
       const material = mesh.material;
@@ -212,23 +261,19 @@ export class Player {
 
     for (const [name, mesh] of this.arrowMeshes) {
       // do not display arrows when the boat is on borders
-      if (name === 'left' && this.position.y === 0) {
-        mesh.visible = false;
-        continue;
+      const onBorder =
+        (name === 'left' && this.position.y === 0) ||
+        (name === 'right' && this.position.y === 6) ||
+        (name === 'down' && this.position.x === 0) ||
+        (name === 'up' && this.position.x === 4);
+
+      const visible = !onBorder && isDisplayed && name !== blockedArrowDirection;
+      mesh.visible = visible;
+      const overlay = this.arrowOverlays.get(name);
+      if (overlay) {
+        overlay.classList.toggle('hidden', !visible);
+        if (visible) overlay.textContent = this.getArrowTargetLabel(name);
       }
-      if (name === 'right' && this.position.y === 6) {
-        mesh.visible = false;
-        continue;
-      }
-      if (name === 'down' && this.position.x === 0) {
-        mesh.visible = false;
-        continue;
-      }
-      if (name === 'up' && this.position.x === 4) {
-        mesh.visible = false;
-        continue;
-      }
-      mesh.visible = isDisplayed && name !== blockedArrowDirection;
     }
   }
 
@@ -276,6 +321,16 @@ export class Player {
     this.birdGroup.rotation.y += 0.003;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
     this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;
+
+    if (gameState.displayArrows) {
+      for (const [name, mesh] of this.arrowMeshes) {
+        const overlay = this.arrowOverlays.get(name);
+        if (!overlay || !mesh.visible) continue;
+        const { x, y } = this.projectArrowToScreen(mesh);
+        overlay.style.left = `${x}px`;
+        overlay.style.top = `${y}px`;
+      }
+    }
   }
 
   getPosition() {
@@ -289,6 +344,10 @@ export class Player {
     this.playerGroup.removeFromParent();
     this.playerGroup.clear();
     this.arrowMeshes.clear();
+    for (const overlay of this.arrowOverlays.values()) {
+      overlay.remove();
+    }
+    this.arrowOverlays.clear();
   }
 
   public handleArrowClick(mousePosition: THREE.Vector2, camera: THREE.Camera): void {
