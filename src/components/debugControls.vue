@@ -1,6 +1,6 @@
 <template>
   <div
-    class="pointer-events-auto col-span-5 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end"
+    class="pointer-events-auto col-span-4 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end"
   >
     <button
       class="bg-amber-700 min-w-20 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
@@ -34,6 +34,20 @@
     >
       <span class="text-xs opacity-55">Corsair :</span>
       {{ gameState.displayCorsair ? 'On' : 'Off' }}
+    </button>
+    <button
+      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      @click="gameState.displayCannons = !gameState.displayCannons"
+    >
+      <span class="text-xs opacity-55">Cannons :</span>
+      {{ gameState.displayCannons ? 'On' : 'Off' }}
+    </button>
+    <button
+      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      @click="gameState.displayBottle = !gameState.displayBottle"
+    >
+      <span class="text-xs opacity-55">Bottle :</span>
+      {{ gameState.displayBottle ? 'On' : 'Off' }}
     </button>
   </div>
   <div

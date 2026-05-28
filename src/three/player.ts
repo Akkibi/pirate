@@ -1,5 +1,18 @@
 import * as THREE from 'three/webgpu';
-import { positionWorld, mix, clamp, vec3, vec4, diffuseColor } from 'three/tsl';
+import {
+  positionWorld,
+  mix,
+  clamp,
+  vec3,
+  vec4,
+  diffuseColor,
+  normalWorld,
+  cameraPosition,
+  normalize,
+  dot,
+  pow,
+  float,
+} from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
 import { gameState, formatBoardCoordinate } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
@@ -20,6 +33,8 @@ export class Player {
   private arrowGroup: THREE.Group;
   private arrowMeshes: Map<string, THREE.Mesh> = new Map();
   private arrowOverlays: Map<string, HTMLElement> = new Map();
+  private cannonsMod: THREE.Object3D | null = null;
+  private bottleMod: THREE.Object3D | null = null;
   private sceneManager: SceneManager;
 
   private readonly arrowOffsets: Record<string, { x: number; y: number }> = {
@@ -58,6 +73,49 @@ export class Player {
       }
     });
     this.boatGroup.add(boat);
+
+    const cannons = modelLoader.get('./models/boat-mods/cannons.glb').scene.clone();
+    cannons.scale.multiplyScalar(0.5);
+    cannons.visible = gameState.displayCannons;
+    this.boatGroup.add(cannons);
+    this.cannonsMod = cannons;
+
+    const bottle = modelLoader.get('./models/boat-mods/bottle.glb').scene.clone();
+    bottle.scale.multiplyScalar(0.5);
+    bottle.visible = gameState.displayBottle;
+    bottle.traverse((child) => {
+      if (child.name === 'shader-bottle' && child instanceof THREE.Mesh) {
+        const mat = new THREE.MeshBasicNodeMaterial();
+        mat.transparent = true;
+        mat.side = THREE.DoubleSide;
+        mat.depthWrite = false;
+        mat.blending = THREE.NormalBlending;
+
+        // Schlick Fresnel — IOR 1.5, F0 = ((1-1.5)/(1+1.5))^2 = 0.04
+        const viewDir = normalize(cameraPosition.sub(positionWorld));
+        const NdotV = dot(normalWorld, viewDir).clamp(0, 1);
+        const F0 = float(0.04);
+        const fresnel = F0.add(
+          float(1)
+            .sub(F0)
+            .mul(pow(float(1).sub(NdotV), float(5)))
+        );
+
+        // Math node: Fresnel × 4, clamped
+        const mixFactor = fresnel.mul(4).clamp(0, 1);
+
+        // Mix Shader: Transparent BSDF (center) → Color (edges)
+        mat.outputNode = mix(
+          vec4(0.8308, 0.7913, 0.5395, 0.0),
+          vec4(0.8308, 0.7913, 0.5395, 1.0),
+          mixFactor
+        );
+
+        child.material = mat;
+      }
+    });
+    this.boatGroup.add(bottle);
+    this.bottleMod = bottle;
 
     const bird = modelLoader.get('./models/bird.glb').scene.clone();
     this.birdGroup.add(bird);
@@ -127,6 +185,25 @@ export class Player {
       }
     );
     watch(
+      () => gameState.displayCannons,
+      (visible) => {
+        if (this.cannonsMod) this.cannonsMod.visible = visible;
+      }
+    );
+    watch(
+      () => gameState.displayBottle,
+      (visible) => {
+        if (this.bottleMod) {
+          this.bottleMod.visible = visible;
+          if (visible === true) {
+            this.boatGroup.scale.set(0.75, 0.75, 0.75);
+          } else {
+            this.boatGroup.scale.set(1, 1, 1);
+          }
+        }
+      }
+    );
+    watch(
       () => gameState.userPositionHistory.length,
       () => {
         if (gameState.displayArrows) {
@@ -177,11 +254,11 @@ export class Player {
       'pointer-events-none',
       '-translate-x-1/2',
       '-translate-y-1/2',
-      'font-bold',
-      'font-mono',
-      'text-[4vh]',
-      'text-amber-900',
-      '[-webkit-text-stroke:1px_#fbbf24]',
+      'font-black',
+      'font-title',
+      'text-[5vh]',
+      'text-amber-950',
+      '[-webkit-text-stroke:2px_#fbbf24]',
       'hidden',
     ].join(' ');
     const canvas = this.sceneManager.getRenderer().domElement;

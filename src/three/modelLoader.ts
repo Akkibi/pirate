@@ -17,6 +17,8 @@ const ALL_MODELS = [
   './models/bird.glb',
   './models/clouds.glb',
   './models/corsair.glb',
+  './models/boat-mods/cannons.glb',
+  './models/boat-mods/bottle.glb',
 ];
 
 class ModelLoader {
