@@ -174,7 +174,7 @@ export class Player {
   }
 
   private getBlockedArrowDirection(): string | null {
-    if (gameState.turnCount < 2 || gameState.userPositionHistory.length < 2) {
+    if (gameState.userPositionHistory.length < 2) {
       return null;
     }
 

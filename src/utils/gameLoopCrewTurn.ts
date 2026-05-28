@@ -8,8 +8,10 @@ import {
   gainRhum,
   gameState,
   getBoardTileStateAtPosition,
+  isSameBoardPosition,
   isIslandExhausted,
   markIslandExhausted,
+  moveCorsairOneStep,
   removeTreasureCardFromHand,
   setBoardTileStateAtPosition,
   spendRhum,
@@ -29,7 +31,11 @@ import {
   type TreasureCardInstance,
   type TreasurePhase,
 } from './treasureCards';
-import { consumeRequestedTreasureCardSelection } from './treasureCardSelection';
+import {
+  consumeRequestedTreasureCardSelection,
+  hasRequestedTreasureCardSelection,
+} from './treasureCardSelection';
+import { playSound } from './soundManager';
 
 export type CrewCheckpoint =
   | 'crew.morningIntro'
@@ -163,6 +169,10 @@ function getTileRevealLabel(tileState: BoardTileState): string {
 }
 
 function getCurrentTileState(): BoardTileState {
+  if (isSameBoardPosition(gameState.userPosition, gameState.corsairPosition)) {
+    return 'corsair';
+  }
+
   return getBoardTileStateAtPosition(gameState.userPosition) ?? 'water';
 }
 
@@ -249,6 +259,9 @@ async function chooseTreasureCardForPhase(
     title?: string;
     body?: string;
     tileState?: BoardTileState;
+  },
+  options?: {
+    allowManualChoice?: boolean;
   }
 ): Promise<TreasureCardInstance | null> {
   if (gameState.crewHand.length === 0 || !hasUsableTreasureCards(phase, context)) {
@@ -265,6 +278,10 @@ async function chooseTreasureCardForPhase(
     }
 
     return (await confirmTreasureCard(requestedCard)) ? requestedCard : null;
+  }
+
+  if (options?.allowManualChoice === false) {
+    return null;
   }
 
   const result = await showScreen({
@@ -366,6 +383,7 @@ async function resolveEquippedDefense(
     if (equipmentChoice.action === 'card' && equipmentChoice.cardId === 'cannon') {
       gameState.cannonTokenEquipped = false;
       eliminateCurrentDangerTile();
+      playSound('poudreACanon');
       await showScreen({
         type: 'full-message-button',
         content: {
@@ -379,6 +397,7 @@ async function resolveEquippedDefense(
       });
     } else {
       gameState.bottleTokenEquipped = false;
+      playSound('bateauEnBouteille');
       await showScreen({
         type: 'full-message-button',
         content: {
@@ -400,6 +419,7 @@ async function resolveEquippedDefense(
 
   if (gameState.bottleTokenEquipped) {
     gameState.bottleTokenEquipped = false;
+    playSound('bateauEnBouteille');
     await showScreen({
       type: 'full-message-button',
       content: {
@@ -421,6 +441,7 @@ async function resolveEquippedDefense(
   if (tileState === 'monster' && gameState.cannonTokenEquipped) {
     gameState.cannonTokenEquipped = false;
     eliminateCurrentDangerTile();
+    playSound('poudreACanon');
     await showScreen({
       type: 'full-message-button',
       content: {
@@ -465,7 +486,7 @@ async function diceCardsOptions(
           throwDice: options?.throwDice ?? true,
           resultValue: options?.resultValue,
           primaryButtonLabel: crewText.afterRoll.primaryButton,
-          secondaryButtonLabel: hasMorningCard ? crewText.afterRoll.secondaryButton : undefined,
+          secondaryButtonLabel: undefined,
         },
       },
       {
@@ -479,10 +500,16 @@ async function diceCardsOptions(
     }
   }
 
-  const selectedCard = await chooseTreasureCardForPhase('morning', {
-    title: 'Carte de matinee',
-    body: 'Tu peux jouer une seule carte tresor ce tour.',
-  });
+  const selectedCard = await chooseTreasureCardForPhase(
+    'morning',
+    {
+      title: 'Carte de matinee',
+      body: 'Tu peux jouer une seule carte tresor ce tour.',
+    },
+    {
+      allowManualChoice: options?.resumeFrom === 'crew.cardChoice',
+    }
+  );
 
   if (!selectedCard) {
     return diceCardsOptions(showCheckpointScreen, {
@@ -561,6 +588,7 @@ async function handleCrewTileReveal(
   const endTurn = remainingMoves <= 0;
 
   if (startAt === 'crew.revealCalmSea') {
+    playSound('calmSea');
     await showCheckpointScreen(
       'crew.revealCalmSea',
       {
@@ -612,6 +640,7 @@ async function handleCrewTileReveal(
 
     const gainedRhum = gainRhum(3);
     markIslandExhausted(gameState.userPosition);
+    playSound('island');
 
     await showCheckpointScreen(
       'crew.revealIsland',
@@ -632,11 +661,12 @@ async function handleCrewTileReveal(
       }
     );
 
-    const drawnCards = drawTreasureCards(2);
+    const drawnCards = drawTreasureCards(2, { uniqueCardIds: true });
     const captainCard = drawnCards.find((card) => card.cardId === 'capitaine');
 
     if (captainCard) {
       gameState.gameResult = 'won';
+      playSound('captain');
       discardTreasureCards(drawnCards.filter((card) => card.cardId !== 'capitaine'));
       return {
         remainingMoves,
@@ -702,6 +732,7 @@ async function handleCrewTileReveal(
 
   if (startAt === 'crew.revealCorsair') {
     gameState.gameResult = 'lost-corsair';
+    playSound('battle');
 
     await showCheckpointScreen(
       'crew.revealCorsair',
@@ -734,6 +765,7 @@ async function handleCrewTileReveal(
 
   if (startAt === 'crew.revealEncounter') {
     const hasAfternoonCard = hasUsableTreasureCards('afternoon', { tileState });
+    playSound(tileState === 'typhon' ? 'typhon' : 'monster');
     const encounterChoice = await showCheckpointScreen(
       'crew.revealEncounter',
       {
@@ -744,12 +776,11 @@ async function handleCrewTileReveal(
             'XX',
             getTileRevealLabel(tileState)
           ),
-          body: hasAfternoonCard ? 'Tu peux utiliser une carte.' : undefined,
+          body: undefined,
         },
         props: {
           chrome: hasAfternoonCard ? { ...AFTERNOON_CHROME, canUseCards: true } : AFTERNOON_CHROME,
-          primaryButtonLabel: hasAfternoonCard ? 'Utiliser une carte' : 'Suivant',
-          secondaryButtonLabel: hasAfternoonCard ? 'Subir' : undefined,
+          primaryButtonLabel: 'Suivant',
         },
       },
       {
@@ -758,17 +789,28 @@ async function handleCrewTileReveal(
       }
     );
 
-    if (encounterChoice.action === 'primary' && hasAfternoonCard) {
-      const selectedCard = await chooseTreasureCardForPhase('afternoon', {
-        title: 'Carte de journee',
-        body: 'La Bombe artisanale peut eliminer le danger sur cette case.',
-        tileState,
-      });
+    if (
+      encounterChoice.action === 'primary' &&
+      hasAfternoonCard &&
+      hasRequestedTreasureCardSelection()
+    ) {
+      const selectedCard = await chooseTreasureCardForPhase(
+        'afternoon',
+        {
+          title: 'Carte de journee',
+          body: 'La Bombe artisanale peut eliminer le danger sur cette case.',
+          tileState,
+        },
+        {
+          allowManualChoice: false,
+        }
+      );
 
       if (selectedCard?.cardId === 'bombe-artisanale') {
         markTreasureCardUsed(selectedCard);
         spendRhum(1);
         eliminateCurrentDangerTile();
+        playSound('bombeArtisanale');
 
         await showScreen({
           type: 'full-message-button',
@@ -884,7 +926,7 @@ async function runCrewMovementPhase(
       );
     }
 
-    await showCheckpointScreen(
+    const directionConfirmResult = await showCheckpointScreen(
       'crew.directionConfirm',
       {
         type: 'top-message-lower-button',
@@ -894,8 +936,8 @@ async function runCrewMovementPhase(
         },
         props: {
           chrome: AFTERNOON_CHROME,
-          showUndo: true,
-          primaryButtonLabel: getCrewText().directionConfirm.primaryButton,
+          primaryButtonLabel: 'Valider',
+          secondaryButtonLabel: 'Annuler',
           primaryButtonOnClick: () => {
             moveCrew(direction);
             resolveScreen({ action: 'primary' });
@@ -907,6 +949,18 @@ async function runCrewMovementPhase(
         direction,
       }
     );
+
+    if (directionConfirmResult.action === 'undo' || directionConfirmResult.action === 'secondary') {
+      return runCrewMovementPhase(
+        showCheckpointScreen,
+        waitForEvent,
+        saveCheckpointHistory,
+        'crew.afternoonIntro',
+        {
+          remainingMoves,
+        }
+      );
+    }
 
     gameState.displayArrows = false;
     remainingMoves = Math.max(remainingMoves - 1, 0);
@@ -931,26 +985,31 @@ async function maybePlayEveningTreasureCard(): Promise<void> {
     type: 'top-message-lower-button',
     content: {
       title: 'La nuit tombe !',
-      body: 'Tu peux utiliser une carte de soiree avant la tournee de rhum.',
+      body: 'La tournee de rhum approche.',
     },
     props: {
       chrome: {
         ...EVENING_CHROME,
         canUseCards: true,
       },
-      primaryButtonLabel: 'Utiliser une carte',
-      secondaryButtonLabel: 'Boire du rhum',
+      primaryButtonLabel: 'Boire du rhum',
     },
   });
 
-  if (prompt.action !== 'primary') {
+  if (prompt.action !== 'primary' || !hasRequestedTreasureCardSelection()) {
     return;
   }
 
-  const selectedCard = await chooseTreasureCardForPhase('evening', {
-    title: 'Carte de soiree',
-    body: 'Tu peux jouer une seule carte tresor ce tour.',
-  });
+  const selectedCard = await chooseTreasureCardForPhase(
+    'evening',
+    {
+      title: 'Carte de soiree',
+      body: 'Tu peux jouer une seule carte tresor ce tour.',
+    },
+    {
+      allowManualChoice: false,
+    }
+  );
 
   if (!selectedCard) {
     return maybePlayEveningTreasureCard();
@@ -960,14 +1019,17 @@ async function maybePlayEveningTreasureCard(): Promise<void> {
 
   if (selectedCard.cardId === 'bateau-en-bouteille') {
     gameState.bottleTokenEquipped = true;
+    playSound('bateauEnBouteille');
   }
 
   if (selectedCard.cardId === 'poudre-a-canon') {
     gameState.cannonTokenEquipped = true;
+    playSound('poudreACanon');
   }
 
   if (selectedCard.cardId === 'cacahuete') {
     gameState.peanutTokens += 1;
+    playSound('peanut');
   }
 
   if (selectedCard.cardId === 'tequilaaaa') {
@@ -990,14 +1052,13 @@ export async function runCrewTurn({
       content: crewText.morningIntro,
       props: {
         chrome: MORNING_CHROME,
-        primaryButtonLabel: 'Lancer les dés!',
+        primaryButtonLabel: 'Mesurer le vent',
       },
     });
     startAt = 'crew.diceRoll';
   }
 
   if (startAt === 'crew.diceRoll' || startAt === 'crew.cardChoice') {
-    console.log(gameState.diceResult);
     await diceCardsOptions(showCheckpointScreen, {
       throwDice: gameState.diceResult !== null ? false : progressData?.throwDice,
       resultValue: progressData?.resultValue,
@@ -1039,9 +1100,11 @@ export async function runCrewTurn({
 
   if (startAt === 'crew.nightFalls') {
     await maybePlayEveningTreasureCard();
+    moveCorsairOneStep();
 
     if (!gameState.tequilaTonight) {
       spendRhum(1);
+      playSound('rhumRound');
     }
 
     await showCheckpointScreen('crew.nightFalls', {

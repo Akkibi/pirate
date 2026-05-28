@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { objectPool } from './instancedModelManger';
 import { gsap } from 'gsap';
-import { gameState, type BoardTileState } from '../utils/gameStore';
+import { gameState, isIslandExhausted, type BoardTileState } from '../utils/gameStore';
 import { watch } from 'vue';
 import { instanceTween } from '../utils/instanceTween';
 export type TileStateType = BoardTileState;
@@ -14,12 +14,14 @@ export class Tile {
   public state: TileStateType;
   public monsterType: string | null = null;
   private idx: number;
+  private activePoolKey: string | null = null;
   private fogIdx: number;
   private waterIdx: number;
   private fogDistance: number;
   private fogDistanceBuffer: number;
   private isHistory: boolean;
   private stopWatcher: (() => void) | null = null;
+  private stopExhaustedIslandWatcher: (() => void) | null = null;
   private pendingTimeout: ReturnType<typeof setTimeout> | null = null;
   private activeTween: gsap.core.Tween | null = null;
   private isTileShared: boolean = false;
@@ -55,6 +57,7 @@ export class Tile {
       () => gameState.userPosition,
       () => {
         this.setFogPosition();
+        this.syncIslandVisualState();
         if (
           !this.isHistory &&
           gameState.userPosition.x === this.position.x &&
@@ -75,6 +78,17 @@ export class Tile {
       },
       { deep: true }
     );
+
+    this.stopExhaustedIslandWatcher = watch(
+      () => this.shouldUseExhaustedIslandPool(),
+      () => {
+        if (this.state !== 'island') {
+          return;
+        }
+
+        this.syncIslandVisualState();
+      }
+    );
   }
 
   private setTileVisited() {
@@ -84,6 +98,8 @@ export class Tile {
   private updatePositionShift() {
     // if position match
     if (this.idx === -1 || this.state === 'water' || this.state === 'typhon') return;
+
+    const poolKey = this.activePoolKey ?? this.poolKey;
 
     if (
       !this.isTileShared &&
@@ -140,7 +156,7 @@ export class Tile {
       this.isTileShared = true;
       return;
     } else if (this.isTileShared) {
-      instanceTween.to(this.poolKey, this.idx, {
+      instanceTween.to(poolKey, this.idx, {
         x: this.position.x,
         z: this.position.y,
         duration: 2,
@@ -150,10 +166,40 @@ export class Tile {
     }
   }
 
+  private isCurrentCrewPosition(): boolean {
+    return (
+      gameState.userPosition.x === this.position.x && gameState.userPosition.y === this.position.y
+    );
+  }
+
+  private shouldUseExhaustedIslandPool(): boolean {
+    return (
+      this.state === 'island' && isIslandExhausted(this.position) && !this.isCurrentCrewPosition()
+    );
+  }
+
+  private syncIslandVisualState(): void {
+    if (this.state !== 'island' || this.idx === -1) {
+      return;
+    }
+
+    const nextPoolKey = this.poolKey;
+
+    if (this.activePoolKey === nextPoolKey) {
+      return;
+    }
+
+    this.isTileShared = false;
+    this.updateObject(this.isHidden);
+    this.updatePositionShift();
+  }
+
   public destroy() {
     // Stop the watcher FIRST so no further reactions fire during cleanup
     this.stopWatcher?.();
     this.stopWatcher = null;
+    this.stopExhaustedIslandWatcher?.();
+    this.stopExhaustedIslandWatcher = null;
 
     // Cancel pending delayed updateObject call
     if (this.pendingTimeout !== null) {
@@ -170,8 +216,9 @@ export class Tile {
     this.tileGroup.clear();
 
     if (this.idx !== -1) {
-      objectPool.releaseInstance(this.poolKey, this.idx);
+      objectPool.releaseInstance(this.activePoolKey ?? this.poolKey, this.idx);
       this.idx = -1;
+      this.activePoolKey = null;
     }
     if (this.waterIdx !== -1) {
       objectPool.releaseInstance('water', this.waterIdx);
@@ -190,9 +237,10 @@ export class Tile {
 
     // release previous instance
     if (this.idx !== -1) {
-      console.log('releasing tile', this.poolKey, this.position);
-      objectPool.releaseInstance(this.poolKey, this.idx);
+      console.log('releasing tile', this.activePoolKey ?? this.poolKey, this.position);
+      objectPool.releaseInstance(this.activePoolKey ?? this.poolKey, this.idx);
       this.idx = -1;
+      this.activePoolKey = null;
     }
     if (this.waterIdx !== -1) {
       console.log('releasing tile', 'water', this.position);
@@ -214,6 +262,10 @@ export class Tile {
   }
 
   private get poolKey(): string {
+    if (this.shouldUseExhaustedIslandPool()) {
+      return 'island_exhausted';
+    }
+
     return this.state === 'monster' && this.monsterType ? this.monsterType : this.state;
   }
 
@@ -236,9 +288,11 @@ export class Tile {
 
   private placeTile() {
     if (this.idx !== -1) return;
-    this.idx = objectPool.reserveInstance(this.poolKey);
+    const poolKey = this.poolKey;
+    this.idx = objectPool.reserveInstance(poolKey);
+    this.activePoolKey = poolKey;
     objectPool.updateTransformFull(
-      this.poolKey,
+      poolKey,
       this.idx,
       new THREE.Vector3(this.position.x, 0, this.position.y),
       this.state === 'typhon'
@@ -246,6 +300,20 @@ export class Tile {
         : new THREE.Euler(0, Math.PI * 2 * Math.random(), 0),
       this.state === 'typhon' ? new THREE.Vector3(0.5, 0.5, 0.5) : new THREE.Vector3(0.4, 0.4, 0.4)
     );
+  }
+
+  public setState(state: TileStateType, monsterType?: string | null): void {
+    const nextMonsterType = state === 'monster' ? (monsterType ?? null) : null;
+
+    if (this.state === state && this.monsterType === nextMonsterType) {
+      return;
+    }
+
+    this.state = state;
+    this.monsterType = nextMonsterType;
+    this.isTileShared = false;
+    this.updateObject(this.isHidden);
+    this.updatePositionShift();
   }
 
   private placeWater() {

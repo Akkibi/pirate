@@ -6,6 +6,7 @@ import {
   type BoardTileSnapshot,
   type BoardTileState,
   type PhaseType,
+  ensureCorsairAwayFromBoat,
   gameState,
   setBoardTiles,
 } from '../utils/gameStore';
@@ -13,7 +14,7 @@ import { watch } from 'vue';
 import { gameEvents } from '../events/gameEvents';
 import type { SceneManager } from './sceneManager';
 import { createWaterMaterial } from './shaders/waterMaterial';
-import { createIslandMaterial } from './shaders/islandMaterial';
+import { createExhaustedIslandMaterial, createIslandMaterial } from './shaders/islandMaterial';
 import { createTyphonMaterial } from './shaders/typhonMaterial';
 
 const TILE_AMOUNT_X = 5;
@@ -36,6 +37,14 @@ const tileTypes = [
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
     ) => createIslandMaterial(orig, opacity),
+  },
+  {
+    name: 'island_exhausted',
+    url: './models/island.glb',
+    materialBuilder: (
+      orig: THREE.Material | null,
+      opacity: Parameters<typeof createIslandMaterial>[1]
+    ) => createExhaustedIslandMaterial(orig, opacity),
   },
   {
     name: 'monster_baleine',
@@ -148,6 +157,33 @@ export class MapManager {
         }
       )
     );
+    this.stopWatchers.push(
+      watch(
+        () =>
+          gameState.boardTiles
+            .map((tile) => `${tile.x}:${tile.y}:${tile.state}:${tile.monsterType ?? ''}`)
+            .join('|'),
+        () => {
+          this.syncTileStates();
+        }
+      )
+    );
+  }
+
+  private syncTileStates(): void {
+    const tileSnapshots = new Map(
+      gameState.boardTiles.map((tile) => [`${tile.x}:${tile.y}`, tile] as const)
+    );
+
+    this.tiles.forEach((tile) => {
+      const snapshot = tileSnapshots.get(`${tile.position.x}:${tile.position.y}`);
+
+      if (!snapshot) {
+        return;
+      }
+
+      tile.setState(snapshot.state, snapshot.monsterType);
+    });
   }
 
   public destroy(): void {
@@ -175,6 +211,7 @@ export class MapManager {
       Math.round(Math.random() * 6)
     );
     gameState.userPosition = startPosition;
+    ensureCorsairAwayFromBoat();
 
     // generate board tiles
     const boardTiles =
