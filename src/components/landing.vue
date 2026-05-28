@@ -1,6 +1,18 @@
 <template>
-  <div class="col-span-8 row-span-2 row-start-2 flex items-end justify-center px-3">
-    <div id="title" class="landing-title px-2 text-center font-title text-[#f7e8c6]">Pirates</div>
+  <div class="col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4">
+    <div class="landing-logo" aria-label="Captain!">
+      <div class="landing-logo__artwork">
+        <img
+          class="landing-logo__base"
+          src="/images/logo/captain_logo_withoutboussole2.png"
+          alt=""
+        />
+        <div class="landing-logo__compass" aria-hidden="true">
+          <img class="landing-logo__needles" src="/images/logo/bussole_aiguilles.png" alt="" />
+          <img class="landing-logo__pin" src="/images/logo/bussole_epingle.png" alt="" />
+        </div>
+      </div>
+    </div>
   </div>
 
   <div
@@ -78,10 +90,98 @@ function resumeGame() {
 </script>
 
 <style scoped>
-#title {
-  font-size: var(--ui-landing-title-size);
-  line-height: 0.85;
-  text-shadow: 0 12px 30px rgba(17, 10, 7, 0.55);
+.landing-logo {
+  position: relative;
+  width: min(88vw, 46rem, calc((50vh - 2rem) * 2.169));
+  aspect-ratio: 2572 / 1186;
+  pointer-events: none;
+  filter: drop-shadow(0 1.1rem 1.35rem rgba(17, 10, 7, 0.58));
+}
+
+.landing-logo__artwork {
+  position: absolute;
+  top: -39.63%;
+  left: -3.11%;
+  width: 106.22%;
+  aspect-ratio: 2732 / 2048;
+}
+
+.landing-logo__base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.landing-logo__compass {
+  position: absolute;
+  top: 41.25%;
+  left: 45.95%;
+  width: 11.5%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.landing-logo__compass::before {
+  position: absolute;
+  inset: 24%;
+  border-radius: 999px;
+  background: rgba(21, 13, 9, 0.35);
+  filter: blur(0.32rem);
+  transform: translate(0.42rem, 0.5rem) rotate(-11deg);
+  content: '';
+  animation: compass-shadow 4.2s ease-in-out infinite;
+}
+
+.landing-logo__needles,
+.landing-logo__pin {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.landing-logo__needles {
+  filter: drop-shadow(0.32rem 0.5rem 0 rgba(25, 19, 23, 0.42))
+    drop-shadow(0 0.18rem 0.16rem rgba(0, 0, 0, 0.26));
+  transform-origin: 50% 50%;
+  animation: compass-needles 4.2s ease-in-out infinite;
+}
+
+.landing-logo__pin {
+  z-index: 1;
+  filter: drop-shadow(0.12rem 0.18rem 0.08rem rgba(0, 0, 0, 0.38));
+}
+
+@keyframes compass-needles {
+  0%,
+  100% {
+    transform: rotate(-7deg) translate3d(-0.5%, 0.2%, 0);
+  }
+  45% {
+    transform: rotate(8deg) translate3d(0.7%, -0.25%, 0);
+  }
+  68% {
+    transform: rotate(3deg) translate3d(0.1%, 0, 0);
+  }
+}
+
+@keyframes compass-shadow {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: translate(0.36rem, 0.48rem) rotate(-10deg) scale(0.96);
+  }
+  45% {
+    opacity: 0.58;
+    transform: translate(0.58rem, 0.42rem) rotate(8deg) scale(1.04);
+  }
+  68% {
+    opacity: 0.48;
+    transform: translate(0.45rem, 0.5rem) rotate(3deg) scale(1);
+  }
 }
 
 .animate-hide {
