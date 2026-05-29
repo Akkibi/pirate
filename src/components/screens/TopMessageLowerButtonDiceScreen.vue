@@ -89,6 +89,7 @@ import Parchment from '../parchment.vue';
 import GameButton from '../ui/GameButton.vue';
 import type { ButtonHandler } from '../../types/ui';
 import { gameState } from '../../utils/gameStore';
+import { playSound } from '../../utils/soundManager';
 
 const DICE_FACES = [
   { value: 0, x: 0, y: 0 },
@@ -286,6 +287,8 @@ function startRoll() {
   const rollableFaces = getRollableDiceFaces();
   const rolledFace =
     rollableFaces[Math.floor(Math.random() * rollableFaces.length)] ?? DICE_FACES[0];
+
+  playSound('dice');
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {

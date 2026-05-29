@@ -164,7 +164,7 @@ export async function runParrotTurn({
                 title: 'Observer les alentours',
                 caption: 'Regarde les 12 cases proches du bateau pendant 5 secondes.',
                 variant: 'action',
-                imageSrc: '/images/action_cards/action_card_observerlesalentours.png',
+                imageSrc: '/images/action_cards/action_card_observerlesalentours.webp',
                 imageAlt: 'Observer les alentours',
               },
               {
@@ -172,7 +172,7 @@ export async function runParrotTurn({
                 title: 'Reperer la fregate corsaire',
                 caption: 'Affiche la case ou se situe actuellement la fregate.',
                 variant: 'action',
-                imageSrc: '/images/action_cards/action_card_repererlescorsaires.png',
+                imageSrc: '/images/action_cards/action_card_repererlescorsaires.webp',
                 imageAlt: 'Reperer les corsaires',
               },
               {
@@ -180,7 +180,7 @@ export async function runParrotTurn({
                 title: "Partager a l'Equipage",
                 caption: 'Utilise les tuiles et pions physiques pour transmettre des indices.',
                 variant: 'action',
-                imageSrc: '/images/action_cards/action_card_partagerdesinformations.png',
+                imageSrc: '/images/action_cards/action_card_partagerdesinformations.webp',
                 imageAlt: 'Partager des informations',
               },
             ],
@@ -219,6 +219,7 @@ export async function runParrotTurn({
     if (currentStep === 'parrot.lookAroundTimer') {
       if (shouldWaitForMapReveal) {
         await waitForEvent('parrot:map_revealed');
+        playSound('corsair');
         shouldWaitForMapReveal = false;
       }
 
@@ -252,6 +253,7 @@ export async function runParrotTurn({
     if (currentStep === 'parrot.corsairLocation') {
       gameState.displayCorsair = true;
       gameState.cameraFocusPosition = gameState.corsairPosition.clone();
+      playSound('corsair');
 
       try {
         await showCheckpointScreen(
@@ -284,6 +286,8 @@ export async function runParrotTurn({
     }
 
     if (currentStep === 'parrot.helpCrew') {
+      playSound('parrotShare');
+
       await showCheckpointScreen(
         'parrot.helpCrew',
         {

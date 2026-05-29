@@ -52,12 +52,12 @@ const props = withDefaults(
 const selectedValue = ref(props.initialValue);
 
 function increment() {
-  playSound('uiClick');
+  playSound('rhumSelect');
   selectedValue.value = Math.min(props.maxValue, selectedValue.value + 1);
 }
 
 function decrement() {
-  playSound('uiClick');
+  playSound('rhumSelect');
   selectedValue.value = Math.max(props.minValue, selectedValue.value - 1);
 }
 

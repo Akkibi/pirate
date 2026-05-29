@@ -348,6 +348,7 @@ function checkRhumLoss(): boolean {
   }
 
   gameState.gameResult = 'lost-rhum';
+  playSound('rhumDefeat');
   return true;
 }
 
@@ -530,6 +531,7 @@ async function diceCardsOptions(
 
   if (selectedCard.cardId === 'jeter-ancre') {
     gameState.diceResult = getAdjustedDiceResult(-1);
+    playSound('anchor');
     return diceCardsOptions(showCheckpointScreen, {
       throwDice: false,
       resultValue: gameState.diceResult,
@@ -1034,6 +1036,7 @@ async function maybePlayEveningTreasureCard(): Promise<void> {
 
   if (selectedCard.cardId === 'tequilaaaa') {
     gameState.tequilaTonight = true;
+    playSound('tequila');
   }
 }
 
