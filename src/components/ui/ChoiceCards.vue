@@ -25,7 +25,7 @@
         <template v-else>
           <div class="choice-card-flipper">
             <div class="choice-card-face choice-card-back">
-              <img src="/images/cards/dos.png" alt="" class="choice-card-image" />
+              <img src="/images/cards/dos.webp" alt="" class="choice-card-image" />
             </div>
             <div class="choice-card-face choice-card-front">
               <img
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, type CSSProperties } from 'vue';
+import { computed, onBeforeUnmount, ref, watch, type CSSProperties } from 'vue';
 import type { ChoiceCard } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
 
@@ -85,15 +85,19 @@ const rowCount = computed(() => Math.max(1, Math.ceil(props.cards.length / colum
 const gridClasses = computed(() => [
   'pointer-events-none relative h-full min-h-0 w-full overflow-visible',
 ]);
+const hasActionCards = computed(() => props.cards.some(isActionCard));
 const selectedCardKey = ref<string | number | null>(null);
 const resolvingSelection = ref(false);
 
 let selectionTimer: number | null = null;
+let revealSoundTimers: number[] = [];
 
 const gridStyle = computed<CSSProperties>(() => ({
   '--choice-card-columns': columnCount.value,
   '--choice-card-rows': rowCount.value,
-  '--choice-card-gap': 'var(--ui-choice-card-gap)',
+  '--choice-card-gap': hasActionCards.value
+    ? 'calc(var(--ui-choice-card-gap) * 2.35)'
+    : 'var(--ui-choice-card-gap)',
 }));
 
 function getCardKey(card: ChoiceCard): string | number {
@@ -108,12 +112,18 @@ function getSelectionDelay(card: ChoiceCard): number {
   return isActionCard(card) ? 180 : 620;
 }
 
+function getActionCardRotation(index: number): number {
+  const rotations = [-2.6, 1.8, -1.5, 2.4];
+
+  return rotations[index % rotations.length] ?? 0;
+}
+
 function handleCardClick(card: ChoiceCard) {
   if (card.disabled || resolvingSelection.value) {
     return;
   }
 
-  playSound('uiClick');
+  playSound(isActionCard(card) ? 'uiClick' : 'cards');
   selectedCardKey.value = getCardKey(card);
   resolvingSelection.value = true;
 
@@ -121,6 +131,29 @@ function handleCardClick(card: ChoiceCard) {
     selectionTimer = null;
     void card.onSelect?.();
   }, getSelectionDelay(card));
+}
+
+function clearRevealSoundTimers() {
+  for (const timer of revealSoundTimers) {
+    window.clearTimeout(timer);
+  }
+
+  revealSoundTimers = [];
+}
+
+function playRevealSoundsForCards() {
+  clearRevealSoundTimers();
+
+  props.cards.forEach((_, index) => {
+    const timer = window.setTimeout(
+      () => {
+        playSound('cards', { volume: 0.32 });
+      },
+      Math.min(index, 3) * 110
+    );
+
+    revealSoundTimers.push(timer);
+  });
 }
 
 function cardClasses(card: ChoiceCard) {
@@ -146,6 +179,7 @@ function cardStyles(index: number, card: ChoiceCard): CSSProperties {
   const isDimmed = resolvingSelection.value && !isSelected;
   const columnIndex = index % columnCount.value;
   const rowIndex = Math.floor(index / columnCount.value);
+  const actionRotation = isAction ? getActionCardRotation(index) : 0;
 
   return {
     left: `calc(${columnIndex} * (var(--choice-card-width) + var(--choice-card-gap)))`,
@@ -153,7 +187,7 @@ function cardStyles(index: number, card: ChoiceCard): CSSProperties {
     width: 'var(--choice-card-width)',
     height: 'var(--choice-card-height)',
     opacity: props.revealed ? (isDimmed ? '0.22' : '1') : '0',
-    transform: getCardTransform(isAction, isSelected),
+    transform: getCardTransform(isAction, isSelected, actionRotation),
     pointerEvents: props.revealed && !resolvingSelection.value ? 'auto' : 'none',
     transitionDelay: isSelected || isAction ? '0ms' : `${staggerIndex * 110}ms`,
     transitionDuration: isSelected ? `${getSelectionDelay(card)}ms` : isAction ? '220ms' : '480ms',
@@ -163,25 +197,38 @@ function cardStyles(index: number, card: ChoiceCard): CSSProperties {
   };
 }
 
-function getCardTransform(isAction: boolean, isSelected: boolean): string {
+function getCardTransform(isAction: boolean, isSelected: boolean, actionRotation: number): string {
   if (isSelected) {
     return isAction
-      ? 'translate3d(0, 0, 0) scale(0.96)'
+      ? `translate3d(0, 0, 0) rotate(${actionRotation}deg) scale(0.96)`
       : 'translate3d(-42vw, -3vh, 0) rotate(-8deg) scale(0.42)';
   }
 
   if (props.revealed) {
-    return 'translate3d(0, 0, 0)';
+    return isAction ? `translate3d(0, 0, 0) rotate(${actionRotation}deg)` : 'translate3d(0, 0, 0)';
   }
 
-  return isAction ? 'translate3d(0, 0, 0) scale(0.98)' : 'translate3d(0, 2rem, 0)';
+  return isAction
+    ? `translate3d(0, 0, 0) rotate(${actionRotation}deg) scale(0.98)`
+    : 'translate3d(0, 2rem, 0)';
 }
 
 onBeforeUnmount(() => {
   if (selectionTimer !== null) {
     window.clearTimeout(selectionTimer);
   }
+
+  clearRevealSoundTimers();
 });
+
+watch(
+  () => props.revealed,
+  (revealed) => {
+    if (revealed && props.cards.length > 0) {
+      playRevealSoundsForCards();
+    }
+  }
+);
 </script>
 
 <style scoped>

@@ -35,10 +35,27 @@
         v-for="token in peanutTokens"
         :key="`peanut-${token}`"
         class="peanut-stack__token"
-        src="/images/indicators/peanut.png"
+        src="/images/indicators/peanut.webp"
         alt="Cacahuete"
       />
     </TransitionGroup>
+
+    <Transition name="deck-stack">
+      <div
+        v-if="showDeckStack"
+        class="deck-stack"
+        :aria-label="`Cartes tresor restantes: ${remainingDeckCount}`"
+      >
+        <span
+          v-for="card in deckStackCards"
+          :key="card.key"
+          class="deck-stack-card"
+          :style="card.style"
+        >
+          <img class="deck-stack-card__image" src="/images/cards/dos.webp" alt="" />
+        </span>
+      </div>
+    </Transition>
 
     <Transition name="hand-stack">
       <button
@@ -56,26 +73,29 @@
         >
           <img class="hand-stack-card__image" :src="card.imageSrc" :alt="card.alt" />
         </span>
-        <span v-if="crewHandCount > 1" class="hand-stack-count">
-          {{ crewHandCount }}
-        </span>
       </button>
     </Transition>
 
     <Transition name="rhum-meter">
-      <div v-if="showRhum" class="rhum-meter" aria-label="Rhum">
+      <div v-if="showRhum" class="rhum-meter" :style="rhumMeterStyle" aria-label="Rhum">
         <TransitionGroup name="rhum-bottle" tag="div" class="rhum-meter__stack">
-          <img
+          <span
             v-for="bottle in rhumBottles"
-            :key="`${bottle.index}-${bottle.filled ? 'full' : 'empty'}`"
-            class="rhum-meter__bottle"
-            :src="
-              bottle.filled
-                ? '/images/indicators/rhum_full.png'
-                : '/images/indicators/rhum_empty.png'
-            "
-            :alt="bottle.filled ? 'Bouteille de rhum pleine' : 'Bouteille de rhum vide'"
-          />
+            :key="bottle.index"
+            class="rhum-meter__slot"
+            :style="bottle.style"
+          >
+            <img
+              class="rhum-meter__bottle"
+              :src="
+                bottle.filled
+                  ? '/images/indicators/rhum_full.webp'
+                  : '/images/indicators/rhum_empty.webp'
+              "
+              :alt="bottle.filled ? 'Bouteille de rhum pleine' : 'Bouteille de rhum vide'"
+            />
+            <span v-if="bottle.animated" class="rhum-meter__animation" aria-hidden="true"></span>
+          </span>
         </TransitionGroup>
       </div>
     </Transition>
@@ -112,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, type CSSProperties } from 'vue';
+import { computed, onBeforeUnmount, ref, watch, type CSSProperties } from 'vue';
 import GameButton from './GameButton.vue';
 import { gameState, getBoardTileStateAtPosition } from '../../utils/gameStore';
 import {
@@ -143,28 +163,31 @@ const emit = defineEmits<{
 }>();
 
 const handOverlayOpen = ref(false);
+const displayedRhumCount = ref(gameState.currentRhum);
+const initialRhumFillPlayed = ref(false);
+const rhumFillTimers: number[] = [];
 
 const phaseConfigs: Record<
   DayPhaseIndicator,
   { icon: string; label: string; parentColor: string }
 > = {
   aurore: {
-    icon: '/images/indicators/picto_aurore.png',
+    icon: '/images/indicators/picto_aurore.webp',
     label: 'Aurore',
     parentColor: '#CA889E',
   },
   matinee: {
-    icon: '/images/indicators/picto_matinee.png',
+    icon: '/images/indicators/picto_matinee.webp',
     label: 'Matinee',
     parentColor: '#E8B94E',
   },
   journee: {
-    icon: '/images/indicators/picto_journee.png',
+    icon: '/images/indicators/picto_journee.webp',
     label: 'Journee',
     parentColor: '#E18354',
   },
   soiree: {
-    icon: '/images/indicators/picto_soiree.png',
+    icon: '/images/indicators/picto_nuit.webp',
     label: 'Soiree',
     parentColor: '#3C4D90',
   },
@@ -192,13 +215,39 @@ const showPeanutStack = computed(
 const rhumBottles = computed(() =>
   Array.from({ length: gameState.maxRhum }, (_, index) => ({
     index,
-    filled: index < gameState.currentRhum,
+    filled: index < displayedRhumCount.value,
+    animated: index < displayedRhumCount.value,
+    style: {
+      '--rhum-bottle-animation-delay': `${index * 120}ms`,
+    } as CSSProperties,
   }))
+);
+const rhumMeterStyle = computed(
+  () =>
+    ({
+      '--rhum-meter-count': Math.max(1, gameState.maxRhum),
+    }) as CSSProperties
+);
+const remainingDeckCount = computed(() => gameState.treasureDeck.length);
+const showDeckStack = computed(
+  () => gameState.currentPhase === 'crew' && remainingDeckCount.value > 0
 );
 const crewHandCount = computed(() => gameState.crewHand.length);
 const showHandStack = computed(
   () => gameState.currentPhase === 'crew' && handStackCards.value.length > 0
 );
+const deckStackCards = computed(() => {
+  const visibleCardCount = Math.min(6, remainingDeckCount.value);
+
+  return Array.from({ length: visibleCardCount }, (_, index) => ({
+    key: `deck-${index}`,
+    style: {
+      '--deck-card-x': `${index * 0.12}rem`,
+      '--deck-card-y': `${index * 0.08}rem`,
+      '--deck-card-z': visibleCardCount - index,
+    } as CSSProperties,
+  }));
+});
 
 function isTreasureCardUsable(card: TreasureCardInstance): boolean {
   const phase = currentTreasurePhase.value;
@@ -235,14 +284,14 @@ const handStackCards = computed(() => {
   const visibleCards = [...cardsUnderTop, topCard];
 
   return visibleCards.map((card, index) => {
-    const isTopCard = card.instanceId === topCard.instanceId;
-    const isUsable = isTopCard && card.instanceId === usableCard?.instanceId;
+    const isUsable = isTreasureCardUsable(card);
     const definition = getTreasureCardDefinition(card.cardId);
-    const stackOffset = index - (visibleCards.length - 1);
-    const imageSrc = definition.imageSrc ?? '/images/cards/dos.png';
+    const fanOffset = index - (visibleCards.length - 1) / 2;
+    const imageSrc = definition.imageSrc ?? '/images/cards/dos.webp';
     const style = {
-      '--hand-card-x': `${stackOffset * 0.18}rem`,
-      '--hand-card-y': `${Math.abs(stackOffset) * 0.16}rem`,
+      '--hand-card-x': `${index * 0.42}rem`,
+      '--hand-card-y': `${Math.abs(fanOffset) * 0.18}rem`,
+      '--hand-card-rotation': `${45 + fanOffset * 9}deg`,
       '--hand-card-z': index + 1,
     } as CSSProperties;
 
@@ -262,17 +311,24 @@ const handOverlayCards = computed(() =>
     const definition = getTreasureCardDefinition(card.cardId);
     const usable = isTreasureCardUsable(card);
     const centerOffset = index - (cardCount - 1) / 2;
-    const spreadStep = Math.min(12, Math.max(6.8, 52 / Math.max(1, cardCount)));
+    const overlayGapVw = 1.2;
+    const overlayAvailableVw = 86;
+    const overlayCardWidthVw = Math.min(
+      16,
+      Math.max(0, (overlayAvailableVw - Math.max(0, cardCount - 1) * overlayGapVw) / cardCount)
+    );
+    const spreadStep = overlayCardWidthVw + overlayGapVw;
     const enterOrder = Math.min(index, 7);
     const leaveOrder = Math.min(cardCount - index - 1, 7);
 
     return {
       key: card.instanceId,
       instanceId: card.instanceId,
-      imageSrc: definition.imageSrc ?? '/images/cards/dos.png',
+      imageSrc: definition.imageSrc ?? '/images/cards/dos.webp',
       alt: definition.title,
       usable,
       style: {
+        '--hand-overlay-card-width': `${overlayCardWidthVw}vw`,
         '--hand-overlay-rest-x': `${centerOffset * spreadStep}vw`,
         '--hand-overlay-enter-delay': `${enterOrder * 48}ms`,
         '--hand-overlay-leave-delay': `${leaveOrder * 34}ms`,
@@ -306,6 +362,54 @@ function closeHandOverlay() {
   handOverlayOpen.value = false;
 }
 
+function clearRhumFillTimers() {
+  while (rhumFillTimers.length > 0) {
+    const timer = rhumFillTimers.pop();
+
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+    }
+  }
+}
+
+function clampRhumCount(count: number): number {
+  return Math.max(0, Math.min(gameState.maxRhum, count));
+}
+
+function shouldPlayInitialRhumFill(): boolean {
+  return (
+    props.showRhum &&
+    !initialRhumFillPlayed.value &&
+    props.phase === 'aurore' &&
+    gameState.turnCount === 0 &&
+    gameState.currentRhum > 0
+  );
+}
+
+function startInitialRhumFill() {
+  if (!shouldPlayInitialRhumFill()) {
+    return false;
+  }
+
+  clearRhumFillTimers();
+  initialRhumFillPlayed.value = true;
+  displayedRhumCount.value = 0;
+  playSound('rhumRound', { interrupt: true });
+
+  const targetRhum = gameState.currentRhum;
+  const fillStepDuration = Math.max(140, Math.min(240, 1500 / targetRhum));
+
+  Array.from({ length: targetRhum }, (_, index) => {
+    const timer = window.setTimeout(() => {
+      displayedRhumCount.value = clampRhumCount(index + 1);
+    }, index * fillStepDuration);
+
+    rhumFillTimers.push(timer);
+  });
+
+  return true;
+}
+
 watch(crewHandCount, (count) => {
   if (count === 0) {
     handOverlayOpen.value = false;
@@ -316,6 +420,41 @@ watch(showHandStack, (shown) => {
   if (!shown) {
     handOverlayOpen.value = false;
   }
+});
+
+watch(
+  () => gameState.currentRhum,
+  (currentRhum) => {
+    displayedRhumCount.value = clampRhumCount(currentRhum);
+  }
+);
+
+watch(
+  () => gameState.maxRhum,
+  () => {
+    clearRhumFillTimers();
+    displayedRhumCount.value = clampRhumCount(gameState.currentRhum);
+  }
+);
+
+watch(
+  () => props.showRhum,
+  (shown) => {
+    if (!shown) {
+      return;
+    }
+
+    if (!startInitialRhumFill()) {
+      displayedRhumCount.value = clampRhumCount(gameState.currentRhum);
+    }
+  },
+  {
+    immediate: true,
+  }
+);
+
+onBeforeUnmount(() => {
+  clearRhumFillTimers();
 });
 </script>
 
@@ -360,35 +499,77 @@ watch(showHandStack, (shown) => {
 
 .hand-stack-button {
   position: absolute;
-  top: 50%;
-  left: 0;
+  bottom: calc(var(--ui-hand-stack-height) * -0.28);
+  left: calc(var(--ui-hand-stack-width) * -0.42);
   z-index: 16;
   pointer-events: auto;
-  width: var(--ui-hand-stack-width);
-  height: var(--ui-hand-stack-height);
+  width: calc(var(--ui-hand-stack-width) * 2.65);
+  height: calc(var(--ui-hand-stack-height) * 2.05);
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
-  transform: translate3d(-48%, -50%, 0);
+}
+
+.deck-stack {
+  position: absolute;
+  top: clamp(8.5rem, 26vh, 14rem);
+  left: 0;
+  z-index: 15;
+  width: calc(var(--ui-hand-stack-width) * 1.38);
+  height: calc(var(--ui-hand-stack-height) * 1.38);
+  pointer-events: none;
+  transform: translate3d(-50%, 0, 0) rotate(90deg);
+  transform-origin: 50% 50%;
+}
+
+.deck-stack-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--deck-card-z);
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.28rem;
+  background: #f5f1df;
+  box-shadow:
+    0.1rem 0.1rem 0 #e95d39,
+    0.18rem 0.18rem 0 rgba(255, 255, 255, 0.92);
+  transform: translate3d(var(--deck-card-x), var(--deck-card-y), 0);
+}
+
+.deck-stack-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0.16rem 0.16rem rgba(0, 0, 0, 0.24));
 }
 
 .hand-stack-card {
   position: absolute;
-  inset: 0;
+  bottom: calc(var(--ui-hand-stack-height) * 0.08);
+  left: calc(var(--ui-hand-stack-width) * 0.22);
   z-index: var(--hand-card-z);
   display: flex;
+  width: calc(var(--ui-hand-stack-width) * 1.26);
+  height: calc(var(--ui-hand-stack-height) * 1.26);
   align-items: center;
   justify-content: center;
-  transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0) rotate(90deg) scale(1.72);
+  transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0)
+    rotate(var(--hand-card-rotation));
+  transform-origin: 16% 92%;
   transition:
     filter 260ms ease,
     transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hand-stack-card--usable {
-  transform: translate3d(76%, -0.15rem, 0) rotate(90deg) scale(2.18);
+  transform: translate3d(calc(var(--hand-card-x) + 0.08rem), calc(var(--hand-card-y) - 0.22rem), 0)
+    rotate(var(--hand-card-rotation)) scale(1.05);
 }
 
 .hand-stack-card--usable::after {
@@ -409,25 +590,6 @@ watch(showHandStack, (shown) => {
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0.22rem 0.22rem rgba(0, 0, 0, 0.28));
-}
-
-.hand-stack-count {
-  position: absolute;
-  right: -0.2rem;
-  bottom: -0.2rem;
-  z-index: 20;
-  display: grid;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  place-items: center;
-  border: 0.12rem solid #532609;
-  border-radius: 999px;
-  background: #f6d37a;
-  color: #532609;
-  font-size: clamp(0.58rem, 1.45vmin, 0.82rem);
-  font-weight: 900;
-  line-height: 1;
-  filter: drop-shadow(0 0.13rem 0.14rem rgba(0, 0, 0, 0.3));
 }
 
 .peanut-stack {
@@ -487,8 +649,11 @@ watch(showHandStack, (shown) => {
 }
 
 .hand-overlay__card {
-  --hand-overlay-source-x: calc(-50vw + (var(--ui-hand-stack-width) * 0.78));
-  --hand-overlay-source-y: -1.5vh;
+  --hand-overlay-source-x: calc(-50vw + (var(--ui-hand-stack-width) * 0.7));
+  --hand-overlay-source-y: calc(
+    50vh - var(--ui-chrome-bottom-inset) - (var(--ui-hand-stack-height) * 0.55)
+  );
+  --hand-overlay-card-width: 14vw;
   --hand-overlay-rest-x: 0vw;
   --hand-overlay-rest-y: 0rem;
   --hand-overlay-rest-scale: 1;
@@ -496,14 +661,7 @@ watch(showHandStack, (shown) => {
   position: absolute;
   top: 43%;
   left: 50%;
-  width: min(
-    calc(
-      (88vw - ((var(--hand-overlay-count) - 1) * var(--hand-overlay-gap))) /
-        var(--hand-overlay-count)
-    ),
-    calc(66vh * 0.7),
-    14rem
-  );
+  width: min(var(--hand-overlay-card-width), calc(66vh * 0.7), 14rem);
   aspect-ratio: 350 / 500;
   padding: 0;
   border: 0;
@@ -520,8 +678,6 @@ watch(showHandStack, (shown) => {
 
 .hand-overlay__card:disabled {
   cursor: default;
-  opacity: 0.72;
-  filter: saturate(0.8) brightness(0.78);
 }
 
 .hand-overlay__card--usable {
@@ -552,25 +708,60 @@ watch(showHandStack, (shown) => {
 }
 
 .rhum-meter {
+  --rhum-meter-gap: clamp(0.08rem, 0.58vmin, calc(var(--ui-resource-gap) * 1.15));
+  --rhum-meter-lane-height: calc(100dvh - var(--ui-rhum-top) - var(--ui-chrome-bottom-inset));
+  --rhum-animation-cycle-duration: 1500ms;
+
   position: absolute;
   top: var(--ui-rhum-top);
   right: var(--ui-grid-padding);
-  width: var(--ui-resource-width);
+  width: calc(var(--ui-resource-width) * 2);
+  height: var(--rhum-meter-lane-height);
 }
 
 .rhum-meter__stack {
   position: relative;
   display: flex;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   align-items: center;
-  gap: var(--ui-resource-gap);
+  gap: var(--rhum-meter-gap);
+}
+
+.rhum-meter__slot {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  max-height: calc(var(--ui-resource-width) * 2.44);
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .rhum-meter__bottle {
-  width: 100%;
-  height: auto;
+  position: relative;
+  z-index: 1;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0.2rem 0.18rem rgba(0, 0, 0, 0.24));
+}
+
+.rhum-meter__animation {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url('/images/animations/rhum_anim_1.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 1;
+  pointer-events: none;
+  animation: rhum-bottle-animation-frame var(--rhum-animation-cycle-duration) steps(1, end) infinite;
+  animation-delay: var(--rhum-bottle-animation-delay);
 }
 
 .rhum-meter-enter-active,
@@ -604,7 +795,20 @@ watch(showHandStack, (shown) => {
 .hand-stack-enter-from,
 .hand-stack-leave-to {
   opacity: 0;
-  transform: translate3d(-75%, -50%, 0) scale(0.88);
+  transform: translate3d(-16%, 18%, 0) scale(0.88);
+}
+
+.deck-stack-enter-active,
+.deck-stack-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.deck-stack-enter-from,
+.deck-stack-leave-to {
+  opacity: 0;
+  transform: translate3d(-62%, -8%, 0) rotate(90deg) scale(0.9);
 }
 
 .hand-overlay-enter-active,
@@ -663,12 +867,39 @@ watch(showHandStack, (shown) => {
   }
 }
 
+@keyframes rhum-bottle-animation-frame {
+  0%,
+  19.99% {
+    background-image: url('/images/animations/rhum_anim_1.webp');
+  }
+
+  20%,
+  39.99% {
+    background-image: url('/images/animations/rhum_anim_2.webp');
+  }
+
+  40%,
+  59.99% {
+    background-image: url('/images/animations/rhum_anim_3.webp');
+  }
+
+  60%,
+  79.99% {
+    background-image: url('/images/animations/rhum_anim_4.webp');
+  }
+
+  80%,
+  100% {
+    background-image: url('/images/animations/rhum_anim_5.webp');
+  }
+}
+
 @keyframes hand-overlay-card-in {
   from {
     opacity: 0.3;
     transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(90deg)
-      scale(0.5);
+      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(-10deg)
+      scale(0.45);
   }
 
   68% {
@@ -697,8 +928,8 @@ watch(showHandStack, (shown) => {
   to {
     opacity: 0;
     transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(90deg)
-      scale(0.46);
+      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(-10deg)
+      scale(0.42);
   }
 }
 
