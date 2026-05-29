@@ -48,7 +48,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Reduit de 1 le lancer de de.',
     playable: true,
-    imageSrc: '/images/cards/jeterlancre.png',
+    imageSrc: '/images/cards/jeterlancre.webp',
   },
   'de-pipe': {
     id: 'de-pipe',
@@ -57,7 +57,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Relance le de du vent.',
     playable: true,
-    imageSrc: '/images/cards/depipe.png',
+    imageSrc: '/images/cards/depipe.webp',
   },
   envollee: {
     id: 'envollee',
@@ -66,7 +66,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Augmente de 1 le lancer de de.',
     playable: true,
-    imageSrc: '/images/cards/lenvolee.png',
+    imageSrc: '/images/cards/lenvolee.webp',
   },
   'bombe-artisanale': {
     id: 'bombe-artisanale',
@@ -75,7 +75,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Sacrifie 1 rhum pour eliminer definitivement un monstre ou un typhon.',
     playable: true,
-    imageSrc: '/images/cards/bombeartisanale.png',
+    imageSrc: '/images/cards/bombeartisanale.webp',
   },
   'bateau-en-bouteille': {
     id: 'bateau-en-bouteille',
@@ -84,7 +84,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Equipe une protection qui absorbe le prochain monstre ou typhon.',
     playable: true,
-    imageSrc: '/images/cards/bateauenbouteille.png',
+    imageSrc: '/images/cards/bateauenbouteille.webp',
   },
   'poudre-a-canon': {
     id: 'poudre-a-canon',
@@ -93,7 +93,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Equipe un tir qui eliminera le prochain monstre rencontre.',
     playable: true,
-    imageSrc: '/images/cards/poudreacanon.png',
+    imageSrc: '/images/cards/poudreacanon.webp',
   },
   cacahuete: {
     id: 'cacahuete',
@@ -102,7 +102,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 6,
     effect: 'Ajoute un jeton cacahuete a la reserve du Perroquet.',
     playable: true,
-    imageSrc: '/images/cards/cacahuete.png',
+    imageSrc: '/images/cards/cacahuete.webp',
   },
   tequilaaaa: {
     id: 'tequilaaaa',
@@ -111,7 +111,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: "Remplace la ration de rhum du soir. L'Equipage ne boit pas de rhum ce tour.",
     playable: true,
-    imageSrc: '/images/cards/tequila.png',
+    imageSrc: '/images/cards/tequila.webp',
   },
   capitaine: {
     id: 'capitaine',

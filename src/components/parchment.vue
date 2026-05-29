@@ -16,7 +16,7 @@
         ref="leftEndRef"
         class="absolute top-0 z-10 h-full"
         :style="{
-          backgroundImage: 'url(/images/parchment/left_end.png)',
+          backgroundImage: 'url(/images/parchment/left_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
           left: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
@@ -27,7 +27,7 @@
           ref="contentRef"
           :class="contentClasses"
           :style="{
-            backgroundImage: 'url(/images/parchment/background.png)',
+            backgroundImage: 'url(/images/parchment/background.webp)',
             backgroundSize: '100% 100%',
             clipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
             WebkitClipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
@@ -45,7 +45,7 @@
         ref="rightEndRef"
         class="absolute top-0 z-10 h-full"
         :style="{
-          backgroundImage: 'url(/images/parchment/right_end.png)',
+          backgroundImage: 'url(/images/parchment/right_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
           right: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',

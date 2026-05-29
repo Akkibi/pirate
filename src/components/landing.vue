@@ -4,12 +4,12 @@
       <div class="landing-logo__artwork">
         <img
           class="landing-logo__base"
-          src="/images/logo/captain_logo_withoutboussole2.png"
+          src="/images/logo/captain_logo_withoutboussole2.webp"
           alt=""
         />
         <div class="landing-logo__compass" aria-hidden="true">
-          <img class="landing-logo__needles" src="/images/logo/bussole_aiguilles.png" alt="" />
-          <img class="landing-logo__pin" src="/images/logo/bussole_epingle.png" alt="" />
+          <img class="landing-logo__needles" src="/images/logo/bussole_aiguilles.webp" alt="" />
+          <img class="landing-logo__pin" src="/images/logo/bussole_epingle.webp" alt="" />
         </div>
       </div>
     </div>
