@@ -43,7 +43,6 @@ export const gameText = {
       morningIntro: {
         title: 'C’est le matin !',
         body: 'À ton tour, fidèle équipage !',
-        caption: 'Premier tour : choisis une carte parmi celles disponibles.',
       },
       diceRoll: {
         title: 'Lancé de dés',

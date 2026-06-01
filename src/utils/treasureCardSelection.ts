@@ -12,6 +12,10 @@ export function consumeRequestedTreasureCardSelection(): string | number | null 
   return instanceId;
 }
 
+export function hasRequestedTreasureCardSelection(): boolean {
+  return requestedTreasureCardInstanceId !== null;
+}
+
 export function clearRequestedTreasureCardSelection(): void {
   requestedTreasureCardInstanceId = null;
 }

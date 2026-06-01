@@ -8,6 +8,7 @@ import {
   type UIScreen,
   type UIScreenResult,
 } from './uiFlowStore';
+import { playSound } from './soundManager';
 
 export type ParrotCheckpoint =
   | 'parrot.dawnIntro'
@@ -42,6 +43,32 @@ const PARROT_CHROME: ScreenChrome = {
   showPeanuts: true,
 };
 
+function formatCaseCount(count: number): string {
+  return `${count} case${count > 1 ? 's' : ''}`;
+}
+
+function formatCorsairPositionFromBoat(): string {
+  const deltaX = gameState.corsairPosition.x - gameState.userPosition.x;
+  const deltaY = gameState.corsairPosition.y - gameState.userPosition.y;
+  const relativeParts: string[] = [];
+
+  if (deltaY !== 0) {
+    relativeParts.push(
+      `${formatCaseCount(Math.abs(deltaY))} a ${deltaY > 0 ? 'droite' : 'gauche'}`
+    );
+  }
+
+  if (deltaX !== 0) {
+    relativeParts.push(`${formatCaseCount(Math.abs(deltaX))} ${deltaX > 0 ? 'en haut' : 'en bas'}`);
+  }
+
+  if (relativeParts.length === 0) {
+    return 'La fregate corsaire est sur la case du bateau.';
+  }
+
+  return `La fregate corsaire est a ${relativeParts.join(' et ')} du bateau.`;
+}
+
 export async function runParrotTurn({
   showCheckpointScreen,
   waitForEvent,
@@ -55,6 +82,7 @@ export async function runParrotTurn({
 
   while (currentStep) {
     if (currentStep === 'parrot.dawnIntro') {
+      playSound('parrot');
       await showCheckpointScreen(
         'parrot.dawnIntro',
         {
@@ -106,6 +134,7 @@ export async function runParrotTurn({
       if (peanutChoice.action === 'primary') {
         gameState.peanutTokens = Math.max(0, gameState.peanutTokens - 1);
         remainingParrotActions = 2;
+        playSound('peanut');
       } else {
         remainingParrotActions = 1;
       }
@@ -134,16 +163,25 @@ export async function runParrotTurn({
                 id: 'observe',
                 title: 'Observer les alentours',
                 caption: 'Regarde les 12 cases proches du bateau pendant 5 secondes.',
+                variant: 'action',
+                imageSrc: '/images/action_cards/action_card_observerlesalentours.webp',
+                imageAlt: 'Observer les alentours',
               },
               {
                 id: 'corsair',
                 title: 'Reperer la fregate corsaire',
                 caption: 'Affiche la case ou se situe actuellement la fregate.',
+                variant: 'action',
+                imageSrc: '/images/action_cards/action_card_repererlescorsaires.webp',
+                imageAlt: 'Reperer les corsaires',
               },
               {
                 id: 'share',
                 title: "Partager a l'Equipage",
                 caption: 'Utilise les tuiles et pions physiques pour transmettre des indices.',
+                variant: 'action',
+                imageSrc: '/images/action_cards/action_card_partagerdesinformations.webp',
+                imageAlt: 'Partager des informations',
               },
             ],
           },
@@ -181,6 +219,7 @@ export async function runParrotTurn({
     if (currentStep === 'parrot.lookAroundTimer') {
       if (shouldWaitForMapReveal) {
         await waitForEvent('parrot:map_revealed');
+        playSound('corsair');
         shouldWaitForMapReveal = false;
       }
 
@@ -212,25 +251,34 @@ export async function runParrotTurn({
     }
 
     if (currentStep === 'parrot.corsairLocation') {
-      await showCheckpointScreen(
-        'parrot.corsairLocation',
-        {
-          type: 'full-message-button',
-          content: {
-            title: 'Le bateau corsaire est en :',
-            body: formatBoardCoordinate(gameState.corsairPosition),
-            caption: "Tu ne peux pas communiquer cette position a l'Equipage.",
+      gameState.displayCorsair = true;
+      gameState.cameraFocusPosition = gameState.corsairPosition.clone();
+      playSound('corsair');
+
+      try {
+        await showCheckpointScreen(
+          'parrot.corsairLocation',
+          {
+            type: 'top-message-lower-button',
+            content: {
+              title: 'Bateau corsaire repere',
+              body: formatCorsairPositionFromBoat(),
+              caption: `Corsaire : ${formatBoardCoordinate(gameState.corsairPosition)}. Bateau : ${formatBoardCoordinate(gameState.userPosition)}.`,
+            },
+            props: {
+              chrome: PARROT_CHROME,
+              primaryButtonLabel:
+                remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
+            },
           },
-          props: {
-            chrome: PARROT_CHROME,
-            primaryButtonLabel:
-              remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
-          },
-        },
-        {
-          remainingParrotActions,
-        }
-      );
+          {
+            remainingParrotActions,
+          }
+        );
+      } finally {
+        gameState.displayCorsair = false;
+        gameState.cameraFocusPosition = null;
+      }
 
       currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
 
@@ -238,6 +286,8 @@ export async function runParrotTurn({
     }
 
     if (currentStep === 'parrot.helpCrew') {
+      playSound('parrotShare');
+
       await showCheckpointScreen(
         'parrot.helpCrew',
         {

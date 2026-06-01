@@ -153,13 +153,13 @@ onMounted(() => {
 }
 
 .full-message-copy :deep(.screen-message) {
-  gap: clamp(0.25rem, 1.15vmin, 0.75rem);
-  padding-inline: clamp(0.25rem, 1.5vw, 1rem);
+  gap: var(--ui-full-message-gap);
+  padding-inline: 0;
 }
 
 .full-message-copy :deep(.screen-message-title) {
   max-width: min(100%, 78rem);
-  font-size: clamp(3.45rem, 16.2vmin, 6rem);
+  font-size: var(--ui-full-message-title-size);
   line-height: 0.78;
   overflow-wrap: anywhere;
   text-wrap: balance;

@@ -1,6 +1,6 @@
 <template>
   <button
-    class="bg-amber-700 border-2 border-amber-900 bg-opacity-50 p-1 text-sm text-amber-100 h-full aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
+    class="bg-amber-700 border-2 border-amber-900 bg-opacity-50 p-1 text-sm text-amber-100 aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
     @click="requestFullscreen"
   >
     <svg
@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import { playSound } from '../utils/soundManager';
+
 interface FullscreenHTMLElement extends HTMLElement {
   mozRequestFullScreen?: () => Promise<void>;
   webkitRequestFullscreen?: () => Promise<void>;
@@ -30,6 +32,8 @@ interface FullscreenHTMLElement extends HTMLElement {
 }
 
 const requestFullscreen = async () => {
+  playSound('uiClick');
+
   try {
     if (document.fullscreenElement) {
       await document.exitFullscreen();

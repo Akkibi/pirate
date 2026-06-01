@@ -89,6 +89,7 @@ import Parchment from '../parchment.vue';
 import GameButton from '../ui/GameButton.vue';
 import type { ButtonHandler } from '../../types/ui';
 import { gameState } from '../../utils/gameStore';
+import { playSound } from '../../utils/soundManager';
 
 const DICE_FACES = [
   { value: 0, x: 0, y: 0 },
@@ -166,18 +167,18 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => props.showUndo && hasPrimaryButton.value && hasSecondaryButton.value
+  () => hasPrimaryButton.value && hasSecondaryButton.value
 );
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalLeftButtonClasses.value} row-start-7`
+    ? `${normalRightButtonClasses.value} row-start-7`
     : `${normalFullButtonClasses.value} ${hasSecondaryButton.value || props.showUndo ? 'row-start-7' : 'row-start-8'}`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalRightButtonClasses.value} row-start-7`
+    ? `${normalLeftButtonClasses.value} row-start-7`
     : `${normalFullButtonClasses.value} ${props.showUndo ? 'row-start-7' : 'row-start-8'}`,
 ]);
 const undoButtonClasses = computed(() => [
@@ -216,6 +217,16 @@ function clampDiceValue(value: number | null | undefined): number {
 
 function getFaceForValue(value: number) {
   return DICE_FACES.find((face) => face.value === value) ?? DICE_FACES[0];
+}
+
+function getRollableDiceFaces() {
+  const lastResult = gameState.lastNaturalDiceResult;
+
+  if (lastResult !== 0 && lastResult !== 3) {
+    return DICE_FACES;
+  }
+
+  return DICE_FACES.filter((face) => face.value !== lastResult);
 }
 
 function presentDice() {
@@ -273,7 +284,11 @@ function startRoll() {
     return;
   }
 
-  const rolledFace = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)] ?? DICE_FACES[0];
+  const rollableFaces = getRollableDiceFaces();
+  const rolledFace =
+    rollableFaces[Math.floor(Math.random() * rollableFaces.length)] ?? DICE_FACES[0];
+
+  playSound('dice');
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -285,6 +300,7 @@ function startRoll() {
 
   clearRollTimer();
   rollTimer = window.setTimeout(() => {
+    gameState.lastNaturalDiceResult = rolledFace.value;
     completeDiceState(rolledFace.value);
   }, props.rollDuration);
 }
@@ -310,7 +326,7 @@ onBeforeUnmount(() => {
 }
 
 .dice-stage {
-  --dice-size: min(60cqh, 60cqw, clamp(5.5rem, 28vw, 8rem));
+  --dice-size: var(--ui-dice-size);
   --dice-half-size: calc(var(--dice-size) / 2);
   flex: none;
   perspective: 900px;

@@ -25,12 +25,14 @@ import {
   clearRequestedTreasureCardSelection,
   requestTreasureCardSelection,
 } from './utils/treasureCardSelection';
+import { playSound, startBackgroundMusic } from './utils/soundManager';
 
 const started = ref(false);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
 
 onMounted(() => {
+  startBackgroundMusic();
   void modelLoader.preloadAll();
 });
 
@@ -175,18 +177,22 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 });
 
 function startGame() {
+  playSound('pirateIntro');
+  startBackgroundMusic();
   started.value = true;
 
   initGame();
 }
 
 function resumeGame() {
+  startBackgroundMusic();
   started.value = true;
 
   initGame({ resume: true });
 }
 
 function toggleUI() {
+  playSound('uiClick');
   UIShown.value = !UIShown.value;
 }
 
@@ -222,11 +228,11 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
     <template v-if="!started">
       <div class="absolute inset-0">
-        <img class="h-full w-full object-cover opacity-70" src="/images/bg.webp" alt="background" />
-        <div
+        <img class="h-full w-full object-cover opacity-90" src="/images/bg.webp" alt="background" />
+        <!-- <div
           class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
-        ></div>
-        <div
+        ></div> -->
+        <!-- <div
           class="absolute -top-2 -left-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
         ></div>
         <div
@@ -238,10 +244,10 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         ></div>
         <div
           class="absolute -bottom-2 rotate-180 -right-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
-        ></div>
-        <div
+        ></div> -->
+        <!-- <div
           class="absolute inset-0 bg-[url('/images/boundstexture.webp')] bg-center bg-cover mix-blend-multiply"
-        ></div>
+        ></div> -->
       </div>
     </template>
 
@@ -315,7 +321,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.15rem, 0.85vmin, 0.5rem);
+  gap: var(--ui-message-gap);
   overflow: hidden;
   color: #71320e;
   text-align: center;
@@ -323,24 +329,32 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
 .screen-message-title {
   max-width: min(100%, 64rem);
-  font-size: clamp(1.15rem, 5.4vmin, 4rem);
+  font-size: var(--ui-message-title-size);
   line-height: 0.88;
   overflow-wrap: anywhere;
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
 }
 
 .screen-message-body {
-  max-width: min(100%, 48rem);
-  font-size: clamp(0.72rem, 2vmin, 1.1rem);
-  line-height: 1.18;
+  width: min(100%, 52rem);
+  min-width: 0;
+  font-size: var(--ui-message-body-size);
+  line-height: 1.22;
+  white-space: normal;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 
 .screen-message-caption,
 .screen-message-footer {
-  max-width: min(100%, 44rem);
-  font-size: clamp(0.62rem, 1.55vmin, 0.92rem);
-  line-height: 1.12;
+  width: min(100%, 48rem);
+  min-width: 0;
+  font-size: var(--ui-message-caption-size);
+  line-height: 1.18;
+  white-space: normal;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
 }
 </style>

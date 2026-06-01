@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
+import { playSound } from '../../utils/soundManager';
 
 const props = withDefaults(
   defineProps<{
@@ -68,7 +69,7 @@ const emit = defineEmits<{
 // const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
 const timerClasses = computed(() => [
-  'row-span-2 flex items-start justify-baseline px-10',
+  'countdown-timer row-span-2 flex items-start justify-baseline',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
 ]);
 
@@ -104,6 +105,7 @@ function startCountdown() {
     return;
   }
 
+  playSound('timer');
   tickCountdown();
 }
 

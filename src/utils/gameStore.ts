@@ -5,6 +5,8 @@ import type { TreasureCardInstance } from './treasureCards';
 export type PhaseType = 'crew' | 'parrot';
 export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island' | 'corsair';
 export type GameResult = 'won' | 'lost-rhum' | 'lost-corsair' | null;
+export const BOARD_TILE_COUNT_X = 5;
+export const BOARD_TILE_COUNT_Y = 7;
 
 export interface BoardTileSnapshot {
   x: number;
@@ -29,8 +31,10 @@ interface StoreInterface {
   currentRhum: number;
   rhumConsumed: number;
   diceResult: number | null;
+  lastNaturalDiceResult: number | null;
   userPosition: THREE.Vector2;
   corsairPosition: THREE.Vector2;
+  cameraFocusPosition: THREE.Vector2 | null;
   displayCorsair: boolean;
   userPositionHistory: Array<THREE.Vector2>;
   entitiesVisible: boolean;
@@ -65,7 +69,12 @@ export interface GameStateSnapshot {
   currentRhum: number;
   rhumConsumed: number;
   diceResult: number | null;
+  lastNaturalDiceResult: number | null;
   userPosition: {
+    x: number;
+    y: number;
+  };
+  corsairPosition?: {
     x: number;
     y: number;
   };
@@ -100,10 +109,12 @@ export const gameState = reactive({
   currentRhum: 6,
   rhumConsumed: 0,
   diceResult: null,
+  lastNaturalDiceResult: null,
   focusedView: false,
   userPosition: new THREE.Vector2(0, 0),
   displayCorsair: false,
   corsairPosition: new THREE.Vector2(0, 0),
+  cameraFocusPosition: null as THREE.Vector2 | null,
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: false,
   displayArrows: false,
@@ -137,7 +148,12 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
     currentRhum: 6,
     rhumConsumed: 0,
     diceResult: null,
+    lastNaturalDiceResult: null,
     userPosition: {
+      x: 0,
+      y: 0,
+    },
+    corsairPosition: {
       x: 0,
       y: 0,
     },
@@ -171,9 +187,14 @@ export function createGameStateSnapshot(): GameStateSnapshot {
     currentRhum: gameState.currentRhum,
     rhumConsumed: gameState.rhumConsumed,
     diceResult: gameState.diceResult,
+    lastNaturalDiceResult: gameState.lastNaturalDiceResult,
     userPosition: {
       x: gameState.userPosition.x,
       y: gameState.userPosition.y,
+    },
+    corsairPosition: {
+      x: gameState.corsairPosition.x,
+      y: gameState.corsairPosition.y,
     },
     userPositionHistory: gameState.userPositionHistory.map((position) => ({
       x: position.x,
@@ -215,7 +236,11 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.currentRhum = snapshot.currentRhum ?? gameState.maxRhum;
   gameState.rhumConsumed = snapshot.rhumConsumed ?? 0;
   gameState.diceResult = snapshot.diceResult;
+  gameState.lastNaturalDiceResult = snapshot.lastNaturalDiceResult ?? null;
   gameState.userPosition.set(snapshot.userPosition.x, snapshot.userPosition.y);
+  gameState.corsairPosition.set(snapshot.corsairPosition?.x ?? 0, snapshot.corsairPosition?.y ?? 0);
+  gameState.cameraFocusPosition = null;
+  gameState.displayCorsair = false;
   gameState.userPositionHistory.splice(
     0,
     gameState.userPositionHistory.length,
@@ -268,6 +293,76 @@ export function resetGameState(): void {
   applyGameStateSnapshot(createDefaultGameStateSnapshot());
 }
 
+export function isSameBoardPosition(
+  first: Pick<THREE.Vector2, 'x' | 'y'>,
+  second: Pick<THREE.Vector2, 'x' | 'y'>
+): boolean {
+  return first.x === second.x && first.y === second.y;
+}
+
+function clampBoardPosition(position: Pick<THREE.Vector2, 'x' | 'y'>): BoardPositionSnapshot {
+  return {
+    x: Math.max(0, Math.min(BOARD_TILE_COUNT_X - 1, Math.round(position.x))),
+    y: Math.max(0, Math.min(BOARD_TILE_COUNT_Y - 1, Math.round(position.y))),
+  };
+}
+
+function getAdjacentBoardPositions(
+  position: Pick<THREE.Vector2, 'x' | 'y'>
+): BoardPositionSnapshot[] {
+  const clampedPosition = clampBoardPosition(position);
+  const candidates = [
+    { x: clampedPosition.x + 1, y: clampedPosition.y },
+    { x: clampedPosition.x - 1, y: clampedPosition.y },
+    { x: clampedPosition.x, y: clampedPosition.y + 1 },
+    { x: clampedPosition.x, y: clampedPosition.y - 1 },
+  ];
+
+  return candidates.filter(
+    (candidate) =>
+      candidate.x >= 0 &&
+      candidate.x < BOARD_TILE_COUNT_X &&
+      candidate.y >= 0 &&
+      candidate.y < BOARD_TILE_COUNT_Y
+  );
+}
+
+function pickRandomBoardPosition(positions: BoardPositionSnapshot[]): BoardPositionSnapshot | null {
+  return positions[Math.floor(Math.random() * positions.length)] ?? null;
+}
+
+export function ensureCorsairAwayFromBoat(): void {
+  const clampedCorsairPosition = clampBoardPosition(gameState.corsairPosition);
+  gameState.corsairPosition.set(clampedCorsairPosition.x, clampedCorsairPosition.y);
+
+  if (!isSameBoardPosition(gameState.corsairPosition, gameState.userPosition)) {
+    return;
+  }
+
+  const nextPosition = pickRandomBoardPosition(
+    getAdjacentBoardPositions(gameState.corsairPosition)
+  );
+
+  if (nextPosition) {
+    gameState.corsairPosition.set(nextPosition.x, nextPosition.y);
+  }
+}
+
+export function moveCorsairOneStep(): void {
+  const clampedCorsairPosition = clampBoardPosition(gameState.corsairPosition);
+  const possiblePositions = getAdjacentBoardPositions(clampedCorsairPosition).filter(
+    (position) => !isSameBoardPosition(position, gameState.userPosition)
+  );
+  const nextPosition = pickRandomBoardPosition(possiblePositions);
+
+  if (!nextPosition) {
+    gameState.corsairPosition.set(clampedCorsairPosition.x, clampedCorsairPosition.y);
+    return;
+  }
+
+  gameState.corsairPosition.set(nextPosition.x, nextPosition.y);
+}
+
 export function setBoardTiles(tiles: BoardTileSnapshot[]): void {
   gameState.boardTiles.splice(0, gameState.boardTiles.length, ...tiles);
 }
@@ -297,8 +392,41 @@ export function setTreasureDeck(deck: TreasureCardInstance[]): void {
   gameState.treasureDeck.splice(0, gameState.treasureDeck.length, ...deck);
 }
 
-export function drawTreasureCards(count: number): TreasureCardInstance[] {
-  return gameState.treasureDeck.splice(0, count);
+export function drawTreasureCards(
+  count: number,
+  options?: {
+    uniqueCardIds?: boolean;
+  }
+): TreasureCardInstance[] {
+  if (!options?.uniqueCardIds) {
+    return gameState.treasureDeck.splice(0, count);
+  }
+
+  const drawnCards: TreasureCardInstance[] = [];
+  const deferredCards: TreasureCardInstance[] = [];
+
+  while (drawnCards.length < count && gameState.treasureDeck.length > 0) {
+    const nextCard = gameState.treasureDeck.shift();
+
+    if (!nextCard) {
+      break;
+    }
+
+    const isDuplicateChoice = drawnCards.some((card) => card.cardId === nextCard.cardId);
+
+    if (isDuplicateChoice) {
+      deferredCards.push(nextCard);
+      continue;
+    }
+
+    drawnCards.push(nextCard);
+  }
+
+  if (deferredCards.length > 0) {
+    gameState.treasureDeck.unshift(...deferredCards);
+  }
+
+  return drawnCards;
 }
 
 export function addTreasureCardsToHand(cards: TreasureCardInstance[]): void {
@@ -338,6 +466,10 @@ export function setBoardTileStateAtPosition(
   }
 
   matchingTile.state = state;
+
+  if (state !== 'monster') {
+    matchingTile.monsterType = undefined;
+  }
 }
 
 export function markIslandExhausted(position: Pick<THREE.Vector2, 'x' | 'y'>): void {

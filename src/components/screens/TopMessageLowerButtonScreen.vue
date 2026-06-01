@@ -132,7 +132,7 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => shouldShowUndo.value && hasPrimaryButton.value && hasSecondaryButton.value
+  () => hasPrimaryButton.value && hasSecondaryButton.value
 );
 const buttonRowCount = computed(() => {
   if (normalButtonCount.value === 0) {
@@ -140,7 +140,7 @@ const buttonRowCount = computed(() => {
   }
 
   if (normalButtonsShareFirstRow.value) {
-    return 2;
+    return 1 + Number(shouldShowUndo.value);
   }
 
   return Math.min(2, normalButtonCount.value + Number(shouldShowUndo.value));
@@ -161,13 +161,13 @@ const cardsAreaClasses = computed(() => [
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalLeftButtonClasses.value} row-start-7`
+    ? `${normalRightButtonClasses.value} row-start-7`
     : `${normalFullButtonClasses.value} ${hasSecondaryButton.value || shouldShowUndo.value ? 'row-start-7' : 'row-start-8'}`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'pointer-events-auto transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalRightButtonClasses.value} row-start-7`
+    ? `${normalLeftButtonClasses.value} row-start-7`
     : `${normalFullButtonClasses.value} ${shouldShowUndo.value ? 'row-start-7' : 'row-start-8'}`,
 ]);
 const undoButtonClasses = computed(() => [

@@ -8,7 +8,7 @@
       :class="parchmentClasses"
       :style="{
         '--parchment-clip-x': '50%',
-        '--parchment-end-width': 'clamp(3rem, 5.4vmin, 4rem)',
+        '--parchment-end-width': 'var(--ui-parchment-end-width)',
       }"
       @click="handleClick"
     >
@@ -16,7 +16,7 @@
         ref="leftEndRef"
         class="absolute top-0 z-10 h-full"
         :style="{
-          backgroundImage: 'url(/images/parchment/left_end.png)',
+          backgroundImage: 'url(/images/parchment/left_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
           left: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
@@ -27,7 +27,7 @@
           ref="contentRef"
           :class="contentClasses"
           :style="{
-            backgroundImage: 'url(/images/parchment/background.png)',
+            backgroundImage: 'url(/images/parchment/background.webp)',
             backgroundSize: '100% 100%',
             clipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
             WebkitClipPath: 'inset(0 var(--parchment-clip-x) 0 var(--parchment-clip-x))',
@@ -45,7 +45,7 @@
         ref="rightEndRef"
         class="absolute top-0 z-10 h-full"
         :style="{
-          backgroundImage: 'url(/images/parchment/right_end.png)',
+          backgroundImage: 'url(/images/parchment/right_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
           right: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
@@ -115,7 +115,7 @@ let autoHideTimer: number | null = null;
 
 const wrapperClasses = computed(() =>
   props.displayMode === 'overlay'
-    ? 'absolute inset-0 z-10 flex h-full w-full items-center justify-center p-2 sm:p-4 pointer-events-none'
+    ? 'parchment-overlay absolute inset-0 z-10 flex h-full w-full items-center justify-center pointer-events-none'
     : 'flex h-full w-full min-h-0 items-center justify-center'
 );
 
@@ -127,10 +127,10 @@ const sizeClasses: Record<ParchmentSize, string> = {
 };
 
 const textSizeClasses: Record<ParchmentSize, string> = {
-  sm: 'text-xl',
-  md: 'text-3xl',
-  bg: 'text-5xl sm:text-6xl',
-  fill: 'text-lg sm:text-xl',
+  sm: 'parchment-text--sm',
+  md: 'parchment-text--md',
+  bg: 'parchment-text--bg',
+  fill: 'parchment-text--fill',
 };
 
 const parchmentClasses = computed(() => [
@@ -141,7 +141,7 @@ const parchmentClasses = computed(() => [
 ]);
 
 const surfaceClasses = computed(() => [
-  'relative flex h-full min-h-0 items-stretch justify-stretch px-[clamp(0.5rem,1.5vw,1rem)] py-[clamp(0.5rem,2vh,1rem)]',
+  'parchment-surface relative flex h-full min-h-0 items-stretch justify-stretch',
   sizeClasses[props.size],
   props.surfaceClass,
 ]);
@@ -149,8 +149,8 @@ const surfaceClasses = computed(() => [
 const contentClasses = computed(() => [
   'relative min-h-0 w-full h-full overflow-hidden text-black',
   hasDefaultSlot.value
-    ? `p-[clamp(0.5rem,1.8vmin,1rem)] ${props.contentClass}`
-    : `flex items-center justify-center px-6 py-4 text-center ${textSizeClasses[props.size]} ${props.contentClass} text-black`,
+    ? `parchment-content ${props.contentClass}`
+    : `parchment-text flex items-center justify-center text-center ${textSizeClasses[props.size]} ${props.contentClass} text-black`,
 ]);
 
 function clearAutoHideTimer() {
@@ -331,3 +331,43 @@ onBeforeUnmount(() => {
   killActiveAnimations();
 });
 </script>
+
+<style scoped>
+.parchment-overlay {
+  padding: var(--ui-grid-padding);
+}
+
+.parchment-surface {
+  padding: var(--ui-parchment-surface-pad-y) var(--ui-parchment-surface-pad-x);
+}
+
+.parchment-content {
+  padding: var(--ui-parchment-content-pad) 2rem;
+}
+
+.parchment-text {
+  padding: var(--ui-parchment-text-pad-y) 2rem;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  line-height: 1.18;
+  text-wrap: pretty;
+}
+
+.parchment-text--sm {
+  font-size: var(--ui-parchment-text-sm);
+}
+
+.parchment-text--md {
+  font-size: var(--ui-parchment-text-md);
+}
+
+.parchment-text--bg {
+  font-size: var(--ui-parchment-text-bg);
+}
+
+.parchment-text--fill {
+  font-size: var(--ui-parchment-text-fill);
+}
+</style>

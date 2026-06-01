@@ -1,6 +1,7 @@
 import { shallowRef } from 'vue';
 import type { ChoiceCard } from '../types/ui';
 import type { TreasureCardView } from './treasureCards';
+import { stopScreenSounds } from './soundManager';
 
 export interface ScreenContent {
   title?: string;
@@ -126,6 +127,7 @@ export function showScreen(screen: UIScreen): Promise<UIScreenResult> {
 export function resolveScreen(result: UIScreenResult): void {
   const resolve = pendingResolve;
 
+  stopScreenSounds();
   pendingResolve = null;
   currentScreen.value = null;
 
@@ -133,6 +135,7 @@ export function resolveScreen(result: UIScreenResult): void {
 }
 
 export function clearScreen(): void {
+  stopScreenSounds();
   pendingResolve = null;
   currentScreen.value = null;
 }

@@ -1,9 +1,11 @@
 import * as THREE from 'three/webgpu';
-import { positionWorld, mix, clamp, vec3, vec4, diffuseColor, attribute } from 'three/tsl';
+import { positionWorld, mix, clamp, vec3, vec4, diffuseColor, attribute, float } from 'three/tsl';
 
 // sRGB hex → linear
 const _teal = new THREE.Color(0x008c74);
 const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
+const _exhausted = new THREE.Color(0x777b75);
+const EXHAUSTED_COLOR = vec3(_exhausted.r, _exhausted.g, _exhausted.b);
 
 export function createIslandMaterial(
   originalMaterial: THREE.Material | null,
@@ -32,6 +34,19 @@ export function createIslandMaterial(
   mat.transparent = true;
   mat.depthWrite = true;
   mat.side = THREE.DoubleSide;
+
+  return mat;
+}
+
+export function createExhaustedIslandMaterial(
+  originalMaterial: THREE.Material | null,
+  instanceOpacityNode: ReturnType<typeof attribute>
+): THREE.MeshBasicNodeMaterial {
+  const mat = createIslandMaterial(originalMaterial, instanceOpacityNode);
+  const factor = clamp(positionWorld.y.negate().div(0.25), 0, 1);
+  const islandColor = mix(diffuseColor.rgb, TEAL_COLOR, factor);
+
+  mat.outputNode = vec4(mix(islandColor, EXHAUSTED_COLOR, float(0.64)), diffuseColor.a);
 
   return mat;
 }

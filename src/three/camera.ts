@@ -58,7 +58,16 @@ export class Camera {
     watch(
       () => gameState.userPosition,
       (newPosition) => {
-        this.setPosition(newPosition);
+        if (!gameState.cameraFocusPosition) {
+          this.setPosition(newPosition);
+        }
+      },
+      { deep: true }
+    );
+    watch(
+      () => gameState.cameraFocusPosition,
+      (newPosition) => {
+        this.setPosition(newPosition ?? gameState.userPosition);
       },
       { deep: true }
     );
@@ -96,7 +105,7 @@ export class Camera {
   setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
     this.phase = phase;
-    this.setPosition(this.globalPosition);
+    this.setPosition(gameState.cameraFocusPosition ?? this.globalPosition);
     this.updateView();
   }
 

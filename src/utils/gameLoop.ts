@@ -27,6 +27,7 @@ import { showScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
 import { runParrotTurn, type ParrotCheckpoint } from './gameLoopParrotTurn';
 import { runCrewTurn, type CrewCheckpoint } from './gameLoopCrewTurn';
 import { createTreasureDeck, toTreasureCardView } from './treasureCards';
+import { playSound } from './soundManager';
 
 type IntroCheckpoint =
   | 'intro.gameStart'
@@ -66,9 +67,11 @@ export class GameLoop {
       }
 
       gameState.currentPhase = 'parrot';
+      playSound('crewToParrot');
       await this.parrotTurn();
 
       gameState.currentPhase = 'crew';
+      playSound('parrotToCrew');
       const shouldStopGame = await this.crewTurn();
 
       if (shouldStopGame) {

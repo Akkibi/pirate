@@ -1,6 +1,6 @@
 <template>
   <div
-    class="pointer-events-none flex max-w-full flex-wrap items-center gap-2 rounded-md border-2 border-amber-900/80 bg-[#211207]/85 px-2 py-1 text-xs text-amber-100 shadow-lg backdrop-blur-sm sm:text-sm"
+    class="status-hud pointer-events-none flex max-w-full flex-wrap items-center rounded-md border-2 border-amber-900/80 bg-[#211207]/85 text-amber-100 shadow-lg backdrop-blur-sm"
   >
     <div class="flex items-center gap-1">
       <span class="font-bold">Rhum</span>
@@ -47,3 +47,11 @@ const equipmentLabel = computed(() => {
   return equipped.length > 0 ? equipped.join(' + ') : 'aucun';
 });
 </script>
+
+<style scoped>
+.status-hud {
+  gap: clamp(0.25rem, 1vmin, 0.5rem);
+  padding: clamp(0.16rem, 0.55vmin, 0.25rem) clamp(0.35rem, 1vmin, 0.5rem);
+  font-size: clamp(0.62rem, 1.45vmin, 0.82rem);
+}
+</style>

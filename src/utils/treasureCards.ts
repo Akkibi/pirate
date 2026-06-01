@@ -38,6 +38,8 @@ export interface TreasureCardView {
   imageAlt?: string;
 }
 
+export const CAPTAIN_FINAL_SLOT_COUNT = 3;
+
 export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinition> = {
   'jeter-ancre': {
     id: 'jeter-ancre',
@@ -46,7 +48,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Reduit de 1 le lancer de de.',
     playable: true,
-    imageSrc: '/images/cards/jeter_l_ancre.png',
+    imageSrc: '/images/cards/jeterlancre.webp',
   },
   'de-pipe': {
     id: 'de-pipe',
@@ -55,7 +57,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Relance le de du vent.',
     playable: true,
-    imageSrc: '/images/cards/de_pipe.png',
+    imageSrc: '/images/cards/depipe.webp',
   },
   envollee: {
     id: 'envollee',
@@ -64,7 +66,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Augmente de 1 le lancer de de.',
     playable: true,
-    imageSrc: "/images/cards/l'envolee.png",
+    imageSrc: '/images/cards/lenvolee.webp',
   },
   'bombe-artisanale': {
     id: 'bombe-artisanale',
@@ -73,7 +75,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: 'Sacrifie 1 rhum pour eliminer definitivement un monstre ou un typhon.',
     playable: true,
-    imageSrc: '/images/cards/cartes.png',
+    imageSrc: '/images/cards/bombeartisanale.webp',
   },
   'bateau-en-bouteille': {
     id: 'bateau-en-bouteille',
@@ -82,7 +84,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Equipe une protection qui absorbe le prochain monstre ou typhon.',
     playable: true,
-    imageSrc: '/images/cards/bateau_en_bouteille.png',
+    imageSrc: '/images/cards/bateauenbouteille.webp',
   },
   'poudre-a-canon': {
     id: 'poudre-a-canon',
@@ -91,16 +93,16 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Equipe un tir qui eliminera le prochain monstre rencontre.',
     playable: true,
-    imageSrc: '/images/cards/poudre_a_canon.png',
+    imageSrc: '/images/cards/poudreacanon.webp',
   },
   cacahuete: {
     id: 'cacahuete',
     title: 'Cacahuete',
     phase: 'evening',
-    count: 3,
+    count: 6,
     effect: 'Ajoute un jeton cacahuete a la reserve du Perroquet.',
     playable: true,
-    imageSrc: '/images/cards/cacahuete.png',
+    imageSrc: '/images/cards/cacahuete.webp',
   },
   tequilaaaa: {
     id: 'tequilaaaa',
@@ -109,7 +111,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 2,
     effect: "Remplace la ration de rhum du soir. L'Equipage ne boit pas de rhum ce tour.",
     playable: true,
-    imageSrc: '/images/cards/tequilaaaa.png',
+    imageSrc: '/images/cards/tequila.webp',
   },
   capitaine: {
     id: 'capitaine',
@@ -118,9 +120,13 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Le Capitaine est retrouve. Vous gagnez la partie.',
     playable: false,
-    imageSrc: '/images/cards/capitain.png',
   },
 };
+
+export const TREASURE_DECK_TOTAL = Object.values(treasureCardDefinitions).reduce(
+  (total, definition) => total + definition.count,
+  0
+);
 
 export function getTreasureCardDefinition(cardId: TreasureCardId): TreasureCardDefinition {
   return treasureCardDefinitions[cardId];
@@ -177,8 +183,11 @@ export function createTreasureDeck(): TreasureCardInstance[] {
     instanceId: `capitaine-1-${Math.random().toString(36).slice(2, 8)}`,
     cardId: 'capitaine',
   };
-  const firstFinalSlot = Math.max(0, deck.length - 2);
-  const captainIndex = Math.min(deck.length, firstFinalSlot + Math.floor(Math.random() * 3));
+  const firstFinalSlot = Math.max(0, deck.length - (CAPTAIN_FINAL_SLOT_COUNT - 1));
+  const captainIndex = Math.min(
+    deck.length,
+    firstFinalSlot + Math.floor(Math.random() * CAPTAIN_FINAL_SLOT_COUNT)
+  );
 
   deck.splice(captainIndex, 0, captainCard);
 

@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
+import { playSound } from '../../utils/soundManager';
 
 type ButtonVariant = 'primary' | 'secondary' | 'undo';
 
@@ -72,7 +73,7 @@ const resolvedLabel = computed(() => {
 });
 
 const buttonClasses = computed(() => [
-  'game-button relative flex h-full min-h-0 w-full items-center justify-center overflow-visible px-3 py-2 sm:px-4 sm:py-3 sm:text-xl transition-opacity',
+  'game-button relative flex h-full min-h-0 w-full items-center justify-center overflow-visible transition-opacity',
   `game-button--${props.variant}`,
   props.revealed ? 'game-button--revealed' : 'game-button--concealed',
   props.variant === 'undo' ? 'gap-2 text-left' : '',
@@ -80,6 +81,10 @@ const buttonClasses = computed(() => [
 ]);
 
 function handleClick() {
+  if (!props.disabled) {
+    playSound('uiClick');
+  }
+
   void props.onClick?.();
 }
 </script>
@@ -89,28 +94,72 @@ function handleClick() {
   --button-bg: #71320e;
   --button-bg-hover: #5d2509;
   --button-border: #f3c15a;
+  --button-border-width: var(--ui-button-border-width);
+  --button-scoop: var(--ui-button-scoop);
+  --button-scoop-mask:
+    radial-gradient(
+        circle at 0 0,
+        transparent 0 var(--button-scoop),
+        #000 calc(var(--button-scoop) + 1px)
+      )
+      top left / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 100% 0,
+        transparent 0 var(--button-scoop),
+        #000 calc(var(--button-scoop) + 1px)
+      )
+      top right / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 0 100%,
+        transparent 0 var(--button-scoop),
+        #000 calc(var(--button-scoop) + 1px)
+      )
+      bottom left / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 100% 100%,
+        transparent 0 var(--button-scoop),
+        #000 calc(var(--button-scoop) + 1px)
+      )
+      bottom right / 51% 51% no-repeat;
   --button-text: #fff3cb;
 
   color: var(--button-text);
+  isolation: isolate;
   opacity: 0;
-  border: 4px solid var(--button-border);
-  border-radius: 1rem;
-  corner-shape: scoop;
-  background: #2a1107;
+  border: var(--button-border-width) solid transparent;
+  border-radius: var(--button-scoop);
+  background: transparent;
+  font-size: var(--ui-button-font-size);
+  line-height: 1;
+  padding: var(--ui-button-padding-y) var(--ui-button-padding-x);
   text-shadow: 0 2px 0 rgba(31, 10, 2, 0.8);
   transform: translate3d(0, 0.55rem, 0) scale(0.985);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   transition:
     opacity 140ms ease,
-    transform 420ms cubic-bezier(0.16, 0.92, 0.18, 1),
-    box-shadow 420ms cubic-bezier(0.16, 0.92, 0.18, 1);
+    transform 420ms cubic-bezier(0.16, 0.92, 0.18, 1);
   -webkit-tap-highlight-color: transparent;
+}
+
+.game-button::before {
+  position: absolute;
+  inset: calc(-1 * var(--button-border-width));
+  z-index: 0;
+  pointer-events: none;
+  background: var(--button-border);
+  content: '';
+  -webkit-mask: var(--button-scoop-mask);
+  mask: var(--button-scoop-mask);
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  transition: filter 420ms cubic-bezier(0.16, 0.92, 0.18, 1);
 }
 
 .game-button--revealed {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
-  box-shadow: 0 0.22rem 0.1rem rgba(38, 14, 3, 0.55);
+}
+
+.game-button--revealed::before {
+  filter: drop-shadow(0 0.22rem 0.1rem rgba(38, 14, 3, 0.55));
 }
 
 .game-button--revealed:disabled {
@@ -118,38 +167,40 @@ function handleClick() {
 }
 
 .button-background {
+  --button-scoop: var(--ui-button-inner-scoop);
+
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  border-radius: calc(1rem - 2px);
-  corner-shape: scoop;
   background: var(--button-bg);
   opacity: 0;
   transform: translate3d(0, 0.45rem, 0) scaleY(0.78);
   transform-origin: center bottom;
-  box-shadow:
-    3px 3px 4px rgba(0, 0, 0, 0.8),
-    inset 0 3px 0 rgba(255, 224, 133, 0.18);
+  box-shadow: inset 0 3px 0 rgba(255, 224, 133, 0.18);
+  -webkit-mask: var(--button-scoop-mask);
+  mask: var(--button-scoop-mask);
+  filter: drop-shadow(3px 3px 4px rgba(0, 0, 0, 0.8));
   transition:
     opacity 220ms ease,
     transform 360ms cubic-bezier(0.16, 0.92, 0.18, 1.08),
     background-color 120ms ease,
-    box-shadow 120ms ease;
+    box-shadow 120ms ease,
+    filter 120ms ease;
   transition-delay: 0ms;
 }
 
 .game-button--revealed .button-background {
   opacity: 1;
   transform: translate3d(0, 0, 0) scaleY(1);
-  transition-delay: 110ms, 110ms, 0ms, 110ms;
+  transition-delay: 110ms, 110ms, 0ms, 110ms, 110ms;
 }
 
 .rivet {
   position: absolute;
   z-index: 20;
-  width: 0.35rem;
-  height: 0.35rem;
+  width: var(--ui-button-rivet-size);
+  height: var(--ui-button-rivet-size);
   pointer-events: none;
   border-radius: 999px;
   background: var(--button-border);
@@ -199,6 +250,8 @@ function handleClick() {
 }
 
 .button-icon {
+  width: calc(var(--ui-button-font-size) * 1.15);
+  height: calc(var(--ui-button-font-size) * 1.15);
   opacity: 0;
   transform: translate3d(0, 0.45rem, 0);
   transition:
@@ -219,6 +272,7 @@ function handleClick() {
   box-shadow:
     inset 3px 3px 4px rgba(0, 0, 0, 0.82),
     inset 0 -2px 0 rgba(255, 224, 133, 0.1);
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
 }
 
 .game-button:not(:disabled):hover .text-message,
@@ -241,40 +295,5 @@ function handleClick() {
   --button-bg: #6b2618;
   --button-bg-hover: #50170f;
   --button-border: #e7a45e;
-}
-
-@media (min-width: 1024px) {
-  .game-button {
-    border-radius: 2rem;
-  }
-
-  .button-background {
-    border-radius: calc(2rem - 2px);
-  }
-
-  .rivet {
-    width: 0.75rem;
-    height: 0.75rem;
-  }
-
-  .rivet-top-left {
-    top: 0rem;
-    left: 0rem;
-  }
-
-  .rivet-top-right {
-    top: 0rem;
-    right: 0rem;
-  }
-
-  .rivet-bottom-left {
-    bottom: 0rem;
-    left: 0rem;
-  }
-
-  .rivet-bottom-right {
-    right: 0rem;
-    bottom: 0rem;
-  }
 }
 </style>

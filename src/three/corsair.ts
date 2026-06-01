@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { gameState } from '../utils/gameStore';
+import { BOARD_TILE_COUNT_X, BOARD_TILE_COUNT_Y, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
 import { watch } from 'vue';
 
@@ -44,12 +44,12 @@ export class Corsair {
       { deep: true }
     );
     this.displayCorsair(gameState.displayCorsair);
-    this.setPosition(gameState.userPosition);
+    this.setPosition(gameState.corsairPosition);
   }
 
   private setPosition(newPosition: THREE.Vector2): void {
-    const maxX = 5;
-    const maxZ = 7;
+    const maxX = BOARD_TILE_COUNT_X - 1;
+    const maxZ = BOARD_TILE_COUNT_Y - 1;
     this.corsairGroup.position.x = Math.max(0, Math.min(maxX, newPosition.x));
     this.corsairGroup.position.z = Math.max(0, Math.min(maxZ, newPosition.y));
   }

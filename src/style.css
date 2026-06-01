@@ -3,14 +3,214 @@
 @config '../tailwind.config.js';
 
 @layer base {
+  :root {
+    --ui-grid-gap: clamp(0.25rem, 1vmin, 0.45rem);
+    --ui-grid-padding: clamp(0.3rem, 1.35vmin, 0.55rem);
+
+    --ui-button-border-width: 2px;
+    --ui-button-font-size: clamp(0.78rem, 2.65vmin, 0.95rem);
+    --ui-button-padding-x: clamp(0.55rem, 1.8vmin, 0.8rem);
+    --ui-button-padding-y: clamp(0.22rem, 1vmin, 0.42rem);
+    --ui-button-scoop: 0.72rem;
+    --ui-button-inner-scoop: calc(var(--ui-button-scoop) - 2px);
+    --ui-button-rivet-size: 0.32rem;
+
+    --ui-parchment-end-width: clamp(2.3rem, 7.2vmin, 3.1rem);
+    --ui-parchment-surface-pad-x: clamp(0.35rem, 1.25vmin, 0.65rem);
+    --ui-parchment-surface-pad-y: clamp(0.25rem, 1vmin, 0.5rem);
+    --ui-parchment-content-pad: clamp(0.35rem, 1.25vmin, 0.7rem);
+    --ui-parchment-text-pad-x: clamp(1rem, 3.2vmin, 1.75rem);
+    --ui-parchment-text-pad-y: clamp(0.6rem, 1.8vmin, 1rem);
+    --ui-parchment-text-sm: clamp(0.9rem, 3.1vmin, 1.1rem);
+    --ui-parchment-text-md: clamp(1.05rem, 4.2vmin, 1.65rem);
+    --ui-parchment-text-bg: clamp(2rem, 10vmin, 4rem);
+    --ui-parchment-text-fill: clamp(0.86rem, 2.8vmin, 1rem);
+
+    --ui-message-gap: clamp(0.12rem, 0.7vmin, 0.35rem);
+    --ui-message-title-size: clamp(1.05rem, 5.1vmin, 2.25rem);
+    --ui-message-body-size: clamp(0.9rem, 2.55vmin, 1.32rem);
+    --ui-message-caption-size: clamp(0.76rem, 2.05vmin, 1.08rem);
+    --ui-full-message-gap: clamp(0.18rem, 0.9vmin, 0.45rem);
+    --ui-full-message-title-size: clamp(2rem, 12vmin, 4.8rem);
+
+    --ui-landing-title-size: clamp(2.65rem, 18vmin, 4.75rem);
+    --ui-choice-card-gap: clamp(0.25rem, 1.1vmin, 0.55rem);
+    --ui-dice-size: min(64cqh, 56cqw, clamp(4.4rem, 27vmin, 6.25rem));
+
+    --ui-chrome-side-inset: clamp(0.55rem, 2.2vmin, 0.9rem);
+    --ui-chrome-bottom-inset: clamp(0.55rem, 2.3vmin, 0.95rem);
+    --ui-phase-width: clamp(2.55rem, 6.4vmin, 3.8rem);
+    --ui-rhum-top: clamp(3.25rem, 11vmin, 5.1rem);
+    --ui-resource-width: clamp(1.75rem, 4.7vmin, 2.7rem);
+    --ui-resource-gap: clamp(0.18rem, 0.8vmin, 0.42rem);
+    --ui-hand-stack-width: clamp(3.15rem, 8.4vmin, 4.85rem);
+    --ui-hand-stack-height: clamp(4.4rem, 11.75vmin, 6.95rem);
+    --ui-hand-overlay-gap: clamp(0.4rem, 1.2vmin, 0.8rem);
+    --ui-hand-overlay-padding: clamp(0.45rem, 1.4vmin, 0.9rem);
+  }
+
+  @media (orientation: landscape) and (max-height: 430px) {
+    :root {
+      --ui-grid-gap: clamp(0.2rem, 0.8vmin, 0.35rem);
+      --ui-grid-padding: clamp(0.25rem, 1vmin, 0.45rem);
+
+      --ui-button-font-size: clamp(0.72rem, 2.4vmin, 0.88rem);
+      --ui-button-padding-x: clamp(0.45rem, 1.45vmin, 0.65rem);
+      --ui-button-padding-y: clamp(0.18rem, 0.8vmin, 0.34rem);
+      --ui-button-scoop: 0.62rem;
+      --ui-button-rivet-size: 0.28rem;
+
+      --ui-parchment-end-width: clamp(2rem, 6.6vmin, 2.65rem);
+      --ui-parchment-surface-pad-x: clamp(0.28rem, 1vmin, 0.5rem);
+      --ui-parchment-surface-pad-y: clamp(0.2rem, 0.8vmin, 0.4rem);
+      --ui-parchment-content-pad: clamp(0.28rem, 1vmin, 0.55rem);
+      --ui-parchment-text-pad-y: clamp(0.45rem, 1.4vmin, 0.75rem);
+      --ui-parchment-text-bg: clamp(1.7rem, 9vmin, 3.25rem);
+
+      --ui-message-title-size: clamp(0.95rem, 4.7vmin, 1.85rem);
+      --ui-full-message-title-size: clamp(1.65rem, 10.5vmin, 3.5rem);
+      --ui-landing-title-size: clamp(2.15rem, 16vmin, 3.8rem);
+      --ui-dice-size: min(68cqh, 52cqw, clamp(3.9rem, 24vmin, 5.5rem));
+
+      --ui-chrome-side-inset: clamp(0.42rem, 1.8vmin, 0.72rem);
+      --ui-chrome-bottom-inset: clamp(0.42rem, 1.9vmin, 0.75rem);
+      --ui-phase-width: clamp(2.2rem, 6vmin, 3.15rem);
+      --ui-rhum-top: clamp(2.75rem, 10vmin, 4rem);
+      --ui-resource-width: clamp(1.5rem, 4.3vmin, 2.25rem);
+      --ui-resource-gap: clamp(0.14rem, 0.65vmin, 0.32rem);
+      --ui-hand-stack-width: clamp(2.65rem, 7.4vmin, 3.95rem);
+      --ui-hand-stack-height: clamp(3.7rem, 10.4vmin, 5.55rem);
+      --ui-hand-overlay-gap: clamp(0.3rem, 0.9vmin, 0.6rem);
+      --ui-hand-overlay-padding: clamp(0.32rem, 1vmin, 0.65rem);
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 360px) {
+    :root {
+      --ui-grid-gap: clamp(0.16rem, 0.6vmin, 0.28rem);
+      --ui-grid-padding: clamp(0.18rem, 0.75vmin, 0.34rem);
+
+      --ui-button-font-size: clamp(0.66rem, 2.15vmin, 0.8rem);
+      --ui-button-padding-x: clamp(0.38rem, 1.2vmin, 0.56rem);
+      --ui-button-padding-y: clamp(0.14rem, 0.65vmin, 0.26rem);
+      --ui-button-rivet-size: 0.22rem;
+
+      --ui-parchment-end-width: clamp(1.7rem, 6vmin, 2.25rem);
+      --ui-parchment-surface-pad-x: clamp(0.22rem, 0.8vmin, 0.4rem);
+      --ui-parchment-surface-pad-y: clamp(0.14rem, 0.6vmin, 0.3rem);
+      --ui-parchment-content-pad: clamp(0.22rem, 0.8vmin, 0.45rem);
+      --ui-parchment-text-pad-x: clamp(0.72rem, 2.5vmin, 1.2rem);
+      --ui-parchment-text-pad-y: clamp(0.34rem, 1.05vmin, 0.58rem);
+
+      --ui-message-gap: clamp(0.08rem, 0.42vmin, 0.22rem);
+      --ui-message-title-size: clamp(0.82rem, 4.25vmin, 1.45rem);
+      --ui-message-body-size: clamp(0.72rem, 2.2vmin, 0.98rem);
+      --ui-message-caption-size: clamp(0.62rem, 1.8vmin, 0.84rem);
+      --ui-full-message-title-size: clamp(1.35rem, 9vmin, 2.7rem);
+      --ui-choice-card-gap: clamp(0.18rem, 0.75vmin, 0.42rem);
+      --ui-dice-size: min(70cqh, 50cqw, clamp(3.35rem, 22vmin, 4.65rem));
+
+      --ui-phase-width: clamp(1.85rem, 5.6vmin, 2.55rem);
+      --ui-rhum-top: clamp(2.35rem, 9.2vmin, 3.4rem);
+      --ui-resource-width: clamp(1.25rem, 3.95vmin, 1.85rem);
+      --ui-resource-gap: clamp(0.1rem, 0.52vmin, 0.24rem);
+      --ui-hand-stack-width: clamp(2.35rem, 6.6vmin, 3.35rem);
+      --ui-hand-stack-height: clamp(3.3rem, 9.3vmin, 4.75rem);
+      --ui-hand-overlay-gap: clamp(0.22rem, 0.75vmin, 0.48rem);
+      --ui-hand-overlay-padding: clamp(0.26rem, 0.8vmin, 0.52rem);
+    }
+  }
+
+  @media (min-width: 640px) and (min-height: 480px) {
+    :root {
+      --ui-grid-gap: clamp(0.4rem, 1.15vmin, 0.65rem);
+      --ui-grid-padding: clamp(0.55rem, 1.55vmin, 0.85rem);
+
+      --ui-button-border-width: 3px;
+      --ui-button-font-size: clamp(0.95rem, 2.25vmin, 1.15rem);
+      --ui-button-padding-x: clamp(0.75rem, 1.9vmin, 1rem);
+      --ui-button-padding-y: clamp(0.4rem, 1.2vmin, 0.65rem);
+      --ui-button-scoop: 1rem;
+      --ui-button-rivet-size: 0.45rem;
+
+      --ui-parchment-end-width: clamp(2.75rem, 5.4vmin, 3.6rem);
+      --ui-parchment-surface-pad-x: clamp(0.5rem, 1.5vw, 1rem);
+      --ui-parchment-surface-pad-y: clamp(0.45rem, 1.6vh, 0.85rem);
+      --ui-parchment-content-pad: clamp(0.5rem, 1.6vmin, 0.9rem);
+      --ui-parchment-text-bg: clamp(2.6rem, 10vmin, 5rem);
+      --ui-parchment-text-fill: clamp(1rem, 2.1vmin, 1.2rem);
+
+      --ui-message-title-size: clamp(1.2rem, 4.9vmin, 3rem);
+      --ui-message-body-size: clamp(1rem, 2.2vmin, 1.42rem);
+      --ui-message-caption-size: clamp(0.86rem, 1.85vmin, 1.16rem);
+      --ui-full-message-title-size: clamp(2.8rem, 13vmin, 7rem);
+      --ui-landing-title-size: clamp(3rem, 13vmin, 5.4rem);
+      --ui-choice-card-gap: clamp(0.35rem, 1.25vmin, 0.75rem);
+      --ui-dice-size: min(62cqh, 58cqw, clamp(5.25rem, 20vmin, 7.25rem));
+
+      --ui-chrome-side-inset: clamp(0.8rem, 2.6vw, 3rem);
+      --ui-chrome-bottom-inset: clamp(0.75rem, 2.4vmin, 1.35rem);
+      --ui-phase-width: clamp(3rem, 6.3vmin, 4.7rem);
+      --ui-rhum-top: clamp(3.9rem, 11.5vmin, 6.3rem);
+      --ui-resource-width: clamp(2rem, 4.6vmin, 3.05rem);
+      --ui-resource-gap: clamp(0.22rem, 0.9vmin, 0.5rem);
+      --ui-hand-stack-width: clamp(3.45rem, 7.5vmin, 5.4rem);
+      --ui-hand-stack-height: clamp(4.85rem, 10.6vmin, 7.65rem);
+      --ui-hand-overlay-gap: clamp(0.55rem, 1.4vmin, 1rem);
+      --ui-hand-overlay-padding: clamp(0.6rem, 1.6vmin, 1.15rem);
+    }
+  }
+
+  @media (min-width: 1024px) and (min-height: 620px) {
+    :root {
+      --ui-grid-gap: clamp(0.65rem, 1.2vmin, 0.9rem);
+      --ui-grid-padding: clamp(0.85rem, 1.6vmin, 1.15rem);
+
+      --ui-button-font-size: clamp(1.05rem, 1.8vmin, 1.25rem);
+      --ui-button-padding-x: clamp(0.95rem, 1.45vmin, 1.25rem);
+      --ui-button-padding-y: clamp(0.55rem, 1.05vmin, 0.8rem);
+      --ui-button-scoop: 2rem;
+      --ui-button-rivet-size: 0.75rem;
+
+      --ui-parchment-end-width: clamp(3.1rem, 5.4vmin, 4rem);
+      --ui-parchment-content-pad: clamp(0.75rem, 1.8vmin, 1rem);
+      --ui-parchment-text-bg: clamp(3.5rem, 8.8vmin, 6rem);
+      --ui-parchment-text-fill: clamp(1.05rem, 1.8vmin, 1.25rem);
+
+      --ui-message-title-size: clamp(1.4rem, 4.7vmin, 4rem);
+      --ui-message-body-size: clamp(1.15rem, 2.2vmin, 1.55rem);
+      --ui-message-caption-size: clamp(0.96rem, 1.75vmin, 1.24rem);
+      --ui-full-message-title-size: clamp(3.45rem, 12.5vmin, 12rem);
+      --ui-choice-card-gap: clamp(0.45rem, 1.25vmin, 0.9rem);
+      --ui-dice-size: min(60cqh, 60cqw, clamp(5.5rem, 16vmin, 8rem));
+
+      --ui-chrome-side-inset: clamp(1rem, 3vw, 4.75rem);
+      --ui-chrome-bottom-inset: clamp(1rem, 3vmin, 2rem);
+      --ui-phase-width: clamp(3.2rem, 6.6vmin, 5.4rem);
+      --ui-rhum-top: clamp(4.5rem, 12vmin, 7.5rem);
+      --ui-resource-width: clamp(2.1rem, 4.8vmin, 3.35rem);
+      --ui-resource-gap: clamp(0.25rem, 1vmin, 0.55rem);
+      --ui-hand-stack-width: clamp(3.65rem, 7.7vmin, 6rem);
+      --ui-hand-stack-height: clamp(5.1rem, 10.8vmin, 8.45rem);
+      --ui-hand-overlay-gap: clamp(0.75rem, 1.8vmin, 1.4rem);
+      --ui-hand-overlay-padding: clamp(0.75rem, 2vmin, 1.5rem);
+    }
+  }
+
   html,
   body {
     @apply m-0 overflow-hidden bg-slate-900 p-0 font-body text-white;
+    overscroll-behavior: none;
+    touch-action: none;
   }
 
   html,
   body,
   #app {
+    height: 100vh;
+    min-height: 100vh;
+    height: 100svh;
+    min-height: 100svh;
     height: 100dvh;
     min-height: 100dvh;
   }
@@ -33,11 +233,6 @@ canvas {
   display: block;
   width: 100%;
   height: 100%;
-}
-
-button {
-  /* border-radius: 5px; */
-  corner-shape: scoop;
 }
 
 .animate-spin-slow {

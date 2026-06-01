@@ -142,7 +142,7 @@ export class Player {
     ];
 
     arrows.forEach((arrow) => {
-      textureLoader.load(`images/arrow-${arrow.name}.png`, (texture) => {
+      textureLoader.load(`images/arrow-${arrow.name}.webp`, (texture) => {
         const geometry = new THREE.PlaneGeometry(0.5, 0.5);
         const material = new THREE.MeshBasicMaterial({
           map: texture,
@@ -373,7 +373,7 @@ export class Player {
   }
 
   private getBlockedArrowDirection(): string | null {
-    if (gameState.turnCount < 2 || gameState.userPositionHistory.length < 2) {
+    if (gameState.userPositionHistory.length < 2) {
       return null;
     }
 
