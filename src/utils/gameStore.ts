@@ -40,6 +40,8 @@ interface StoreInterface {
   entitiesVisible: boolean;
   focusedView: boolean;
   displayArrows: boolean;
+  displayCannons: boolean;
+  displayBottle: boolean;
   arrowClicked: string | null;
   boardTiles: BoardTileSnapshot[];
   exhaustedIslandPositions: BoardPositionSnapshot[];
@@ -116,6 +118,8 @@ export const gameState = reactive({
   userPositionHistory: [new THREE.Vector2(0, 0)],
   entitiesVisible: false,
   displayArrows: false,
+  displayBottle: false,
+  displayCannons: false,
   arrowClicked: null,
   boardTiles: [],
   exhaustedIslandPositions: [],
