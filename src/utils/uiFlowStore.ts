@@ -43,6 +43,7 @@ export type UIScreen =
         initialValue: number;
         minValue?: number;
         maxValue?: number;
+        primaryButtonLabel?: string;
       } & ScreenChromeProps;
     }
   | {
@@ -92,6 +93,8 @@ export type UIScreen =
           rollDuration?: number;
           throwDice?: boolean;
           resultValue?: number;
+          zeroResultButtonLabel?: string;
+          movingResultButtonLabel?: string;
           onRollComplete?: (value: number) => void;
         };
     };

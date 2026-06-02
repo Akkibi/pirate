@@ -40,11 +40,11 @@
     ]"
   >
     <GameButton
-      :label="primaryButtonLabel"
+      :label="resolvedPrimaryButtonLabel"
       :on-click="onPrimaryButtonClick"
       :revealed="buttonsVisible"
     >
-      <slot name="primary">{{ primaryButtonLabel }}</slot>
+      <slot name="primary">{{ resolvedPrimaryButtonLabel }}</slot>
     </GameButton>
   </div>
 
@@ -118,6 +118,8 @@ const props = withDefaults(
     rollDuration?: number;
     throwDice?: boolean;
     resultValue?: number;
+    zeroResultButtonLabel?: string;
+    movingResultButtonLabel?: string;
     onRollComplete?: ((value: number) => void | Promise<void>) | undefined;
     sideChromeLayout?: boolean;
   }>(),
@@ -131,6 +133,8 @@ const props = withDefaults(
     showUndo: false,
     throwDice: true,
     resultValue: undefined,
+    zeroResultButtonLabel: undefined,
+    movingResultButtonLabel: undefined,
     undoLabel: 'Undo',
     onUndoClick: undefined,
     rollDuration: 1200,
@@ -145,7 +149,11 @@ const shouldShowParchment = computed(
   () => props.showParchment && (Boolean(props.message) || Boolean(slots.message))
 );
 const hasPrimaryButton = computed(
-  () => Boolean(props.primaryButtonLabel) || Boolean(slots.primary)
+  () =>
+    Boolean(props.primaryButtonLabel) ||
+    Boolean(props.zeroResultButtonLabel) ||
+    Boolean(props.movingResultButtonLabel) ||
+    Boolean(slots.primary)
 );
 const hasSecondaryButton = computed(
   () => Boolean(props.secondaryButtonLabel) || Boolean(slots.secondary)
@@ -199,6 +207,23 @@ const diceStyle = computed(() => ({
   transform: `translate3d(0, ${translateY.value}, ${translateZ.value}) rotateX(${rotationX.value}deg) rotateY(${rotationY.value}deg)`,
   transitionDuration: `${props.rollDuration}ms`,
 }));
+const resolvedPrimaryButtonLabel = computed(() => {
+  if (!buttonsVisible.value) {
+    return props.primaryButtonLabel;
+  }
+
+  const result = clampDiceValue(gameState.diceResult);
+
+  if (result === 0 && props.zeroResultButtonLabel) {
+    return props.zeroResultButtonLabel;
+  }
+
+  if (result > 0 && props.movingResultButtonLabel) {
+    return props.movingResultButtonLabel;
+  }
+
+  return props.primaryButtonLabel;
+});
 
 function clearRollTimer() {
   if (rollTimer !== null) {

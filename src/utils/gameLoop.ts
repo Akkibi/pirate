@@ -161,6 +161,7 @@ export class GameLoop {
       case 'parrot.observeSurroundings':
       case 'parrot.corsairLocation':
       case 'parrot.lookAroundTimer':
+      case 'parrot.exhaustedAfterObservation':
       case 'parrot.helpCrew':
         gameState.currentPhase = 'parrot';
         await this.parrotTurn(entry.checkpoint, entry.data);
@@ -266,14 +267,12 @@ export class GameLoop {
     if (startAt === 'intro.difficulty') {
       const difficulty = await this.showCheckpointScreen('intro.difficulty', {
         type: 'difficulty-setup',
-        content: {
-          title: "L'Arrachee doit charger sa cale",
-          body: 'Moins de rhum rend la partie plus difficile. 6 bouteilles sont conseillees pour une premiere partie.',
-        },
+        content: gameText.setup.difficulty,
         props: {
           initialValue: gameState.maxRhum,
           minValue: 3,
           maxValue: 9,
+          primaryButtonLabel: gameText.setup.difficulty.primaryButton,
         },
       });
 
@@ -293,8 +292,7 @@ export class GameLoop {
         type: 'full-message-button',
         content: {
           ...gameText.setup.boatPlacement,
-          title: `${gameText.setup.boatPlacement.title}
-          ${formatBoardCoordinate(boatStartPosition)}`,
+          title: `${gameText.setup.boatPlacement.title} ${formatBoardCoordinate(boatStartPosition)}`,
         },
         props: {
           primaryButtonLabel: gameText.setup.boatPlacement.primaryButton,
@@ -322,10 +320,7 @@ export class GameLoop {
 
     const result = await showScreen({
       type: 'top-message-lower-button-cards',
-      content: {
-        title: "L'equipage s'equipe",
-        body: 'Choisissez une carte a ajouter a votre main. Les autres seront defaussees.',
-      },
+      content: gameText.setup.initialCardChoice,
       props: {
         chrome: {
           phase: 'aurore',
@@ -390,30 +385,35 @@ export class GameLoop {
     const elapsedMs = Math.max(0, Date.now() - gameState.gameStartedAt);
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
     const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
-    const elapsedLabel = `${elapsedMinutes.toString().padStart(2, '0')}:${elapsedSeconds
+    const elapsedLabel = `${elapsedMinutes.toString().padStart(2, '0')}m${elapsedSeconds
       .toString()
-      .padStart(2, '0')}`;
+      .padStart(2, '0')}s`;
+    const rhumConsumedLabel = `${gameState.rhumConsumed} bouteille${
+      gameState.rhumConsumed > 1 ? 's' : ''
+    }`;
     const resultContent =
       gameState.gameResult === 'won'
         ? {
-            title: 'Le Capitaine a ete retrouve !',
-            body: `Felicitations ! Temps de jeu ${elapsedLabel}. Rhum consomme : ${gameState.rhumConsumed}.`,
+            title: gameText.gameOver.wonTitle,
+            body: `Le capitaine a été retrouvé ! Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
           }
         : gameState.gameResult === 'lost-corsair'
           ? {
-              title: 'Vous avez perdu.',
-              body: `L'equipage est capture par la fregate corsaire. Temps de jeu ${elapsedLabel}.`,
+              title: gameText.gameOver.lostTitle,
+              body: `Les corsaires vous capturent et vous exilent. Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
             }
           : {
-              title: 'Vous avez perdu.',
-              body: `L'equipage n'a plus de rhum et se revolte. Temps de jeu ${elapsedLabel}. Rhum consomme : ${gameState.rhumConsumed}.`,
+              title: gameText.gameOver.lostTitle,
+              body: `L’Équipage n’a plus de rhum et renonce à l’expédition. Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
             };
 
     await this.showCheckpointScreen('gameOver', {
       type: 'full-message-button',
       content: resultContent,
       props: {
-        primaryButtonLabel: gameText.gameOver.primaryButton,
+        primaryButtonLabel: gameText.gameOver.revealMapButton,
+        secondaryButtonLabel: gameText.gameOver.primaryButton,
+        primaryButtonOnClick: () => undefined,
       },
     });
 

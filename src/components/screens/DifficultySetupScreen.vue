@@ -1,6 +1,6 @@
 <template>
   <FullMessageButtonScreen
-    primary-button-label="Valider"
+    :primary-button-label="primaryButtonLabel"
     :on-primary-button-click="confirm"
     :side-chrome-layout="sideChromeLayout"
   >
@@ -36,14 +36,16 @@ const props = withDefaults(
     initialValue: number;
     minValue?: number;
     maxValue?: number;
+    primaryButtonLabel?: string;
     onConfirm?: (value: number) => void | Promise<void>;
     sideChromeLayout?: boolean;
   }>(),
   {
-    title: "L'Arraches doit charger sa cale",
-    body: 'Choisissez le nombre de bouteilles de rhum. 6 est conseille pour une premiere partie.',
+    title: 'L’Arrachée doit charger sa cale',
+    body: 'Choisis le niveau de difficulté. Moins de rhum rend la partie plus difficile. 6 bouteilles sont conseillées pour une première partie.',
     minValue: 3,
     maxValue: 9,
+    primaryButtonLabel: 'Remplir la cale',
     onConfirm: undefined,
     sideChromeLayout: false,
   }

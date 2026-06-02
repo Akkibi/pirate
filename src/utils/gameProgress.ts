@@ -18,6 +18,7 @@ export type GameCheckpoint =
   | 'parrot.observeSurroundings'
   | 'parrot.corsairLocation'
   | 'parrot.lookAroundTimer'
+  | 'parrot.exhaustedAfterObservation'
   | 'parrot.helpCrew'
   | 'crew.morningIntro'
   | 'crew.diceRoll'
@@ -37,6 +38,7 @@ export interface GameProgressData {
   resultValue?: number;
   remainingMoves?: number;
   remainingParrotActions?: number;
+  shouldShowObservationRest?: boolean;
   direction?: string;
   tileState?: BoardTileState;
 }

@@ -33,35 +33,39 @@
   </div>
 
   <div class="pointer-events-auto col-span-6 col-start-2 row-start-6 min-h-0">
-    <GameButton label="Start Game" :on-click="startGame" :disabled="!isLoaded" />
+    <GameButton
+      :label="gameText.landing.primaryButton"
+      :on-click="startGame"
+      :disabled="!isLoaded"
+    />
   </div>
 
   <div v-if="showResume" class="pointer-events-auto col-span-6 col-start-2 row-start-7 min-h-0">
-    <GameButton label="Resume" :on-click="resumeGame" :disabled="!isLoaded" />
+    <GameButton
+      :label="gameText.landing.resumeButton"
+      :on-click="resumeGame"
+      :disabled="!isLoaded"
+    />
   </div>
 
   <div
     :class="[
-      'pointer-events-auto col-span-3 col-start-2 min-h-0',
+      'pointer-events-auto col-span-6 col-start-2 min-h-0',
       showResume ? 'row-start-8' : 'row-start-7',
     ]"
   >
-    <GameButton label="Settings" :on-click="startGame" :disabled="!isLoaded" />
-  </div>
-
-  <div
-    :class="[
-      'pointer-events-auto col-span-3 col-start-5 min-h-0',
-      showResume ? 'row-start-8' : 'row-start-7',
-    ]"
-  >
-    <GameButton label="Tutorial" :on-click="startGame" :disabled="!isLoaded" />
+    <GameButton
+      :label="gameText.landing.secondaryButton"
+      :on-click="openSettings"
+      :disabled="!isLoaded"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameButton from './ui/GameButton.vue';
+import { gameText } from '../content/gameText';
 import { gameState } from '../utils/gameStore';
 
 withDefaults(
@@ -79,6 +83,7 @@ const emit = defineEmits<{
 }>();
 
 const isLoaded = computed(() => gameState.loadingProgress >= 100);
+const openSettings = () => undefined;
 
 function startGame() {
   emit('start');

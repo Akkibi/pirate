@@ -43,28 +43,28 @@ export const CAPTAIN_FINAL_SLOT_COUNT = 3;
 export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinition> = {
   'jeter-ancre': {
     id: 'jeter-ancre',
-    title: "Jeter l'ancre",
+    title: 'Jeter l’ancre',
     phase: 'morning',
     count: 2,
-    effect: 'Reduit de 1 le lancer de de.',
+    effect: 'Réduit de 1 le lancer de dé.',
     playable: true,
     imageSrc: '/images/cards/jeterlancre.webp',
   },
   'de-pipe': {
     id: 'de-pipe',
-    title: 'De pipe',
+    title: 'Dé pipé',
     phase: 'morning',
     count: 1,
-    effect: 'Relance le de du vent.',
+    effect: 'Relance le dé du vent.',
     playable: true,
     imageSrc: '/images/cards/depipe.webp',
   },
   envollee: {
     id: 'envollee',
-    title: "L'envolee",
+    title: 'L’envolée',
     phase: 'morning',
     count: 2,
-    effect: 'Augmente de 1 le lancer de de.',
+    effect: 'Augmente de 1 le lancer de dé.',
     playable: true,
     imageSrc: '/images/cards/lenvolee.webp',
   },
@@ -73,7 +73,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     title: 'Bombe artisanale',
     phase: 'afternoon',
     count: 2,
-    effect: 'Sacrifie 1 rhum pour eliminer definitivement un monstre ou un typhon.',
+    effect: 'Sacrifie 1 rhum pour éliminer définitivement un monstre ou un typhon.',
     playable: true,
     imageSrc: '/images/cards/bombeartisanale.webp',
   },
@@ -82,25 +82,25 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     title: 'Bateau en bouteille',
     phase: 'evening',
     count: 1,
-    effect: 'Equipe une protection qui absorbe le prochain monstre ou typhon.',
+    effect: 'Équipe une protection qui absorbe le prochain monstre ou typhon.',
     playable: true,
     imageSrc: '/images/cards/bateauenbouteille.webp',
   },
   'poudre-a-canon': {
     id: 'poudre-a-canon',
-    title: 'Poudre a canon',
+    title: 'Poudre à canon',
     phase: 'evening',
     count: 1,
-    effect: 'Equipe un tir qui eliminera le prochain monstre rencontre.',
+    effect: 'Équipe un tir qui éliminera le prochain monstre rencontré.',
     playable: true,
     imageSrc: '/images/cards/poudreacanon.webp',
   },
   cacahuete: {
     id: 'cacahuete',
-    title: 'Cacahuete',
+    title: 'Cacahuète',
     phase: 'evening',
     count: 6,
-    effect: 'Ajoute un jeton cacahuete a la reserve du Perroquet.',
+    effect: 'Ajoute un jeton cacahuète à la réserve du Perroquet.',
     playable: true,
     imageSrc: '/images/cards/cacahuete.webp',
   },
@@ -109,7 +109,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     title: 'Tequilaaaa!',
     phase: 'evening',
     count: 2,
-    effect: "Remplace la ration de rhum du soir. L'Equipage ne boit pas de rhum ce tour.",
+    effect: 'Remplace la ration de rhum du soir. L’Équipage ne boit pas de rhum ce tour.',
     playable: true,
     imageSrc: '/images/cards/tequila.webp',
   },
@@ -118,7 +118,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     title: 'Capitaine, mon capitaine !',
     phase: 'captain',
     count: 1,
-    effect: 'Le Capitaine est retrouve. Vous gagnez la partie.',
+    effect: 'Le Capitaine est retrouvé. Vous gagnez la partie.',
     playable: false,
   },
 };
@@ -139,11 +139,11 @@ export function getTreasureCardImageSrc(cardId: TreasureCardId): string | undefi
 export function getTreasurePhaseLabel(phase: TreasurePhase): string {
   switch (phase) {
     case 'morning':
-      return 'Matinee';
+      return 'Matinée';
     case 'afternoon':
-      return 'Apres-midi';
+      return 'Journée';
     case 'evening':
-      return 'Soiree';
+      return 'Soirée';
     case 'captain':
       return 'Capitaine';
   }

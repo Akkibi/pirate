@@ -17,6 +17,7 @@ export type ParrotCheckpoint =
   | 'parrot.observeSurroundings'
   | 'parrot.corsairLocation'
   | 'parrot.lookAroundTimer'
+  | 'parrot.exhaustedAfterObservation'
   | 'parrot.helpCrew';
 
 type ShowCheckpointScreen = (
@@ -43,6 +44,12 @@ const PARROT_CHROME: ScreenChrome = {
   showPeanuts: true,
 };
 
+const PASS_PHONE_TO_CREW_LABEL = 'Passer le téléphone à l’Équipage';
+
+function formatActionCount(count: number): string {
+  return `${count} action${count > 1 ? 's' : ''}`;
+}
+
 function formatCaseCount(count: number): string {
   return `${count} case${count > 1 ? 's' : ''}`;
 }
@@ -54,7 +61,7 @@ function formatCorsairPositionFromBoat(): string {
 
   if (deltaY !== 0) {
     relativeParts.push(
-      `${formatCaseCount(Math.abs(deltaY))} a ${deltaY > 0 ? 'droite' : 'gauche'}`
+      `${formatCaseCount(Math.abs(deltaY))} à ${deltaY > 0 ? 'droite' : 'gauche'}`
     );
   }
 
@@ -63,10 +70,10 @@ function formatCorsairPositionFromBoat(): string {
   }
 
   if (relativeParts.length === 0) {
-    return 'La fregate corsaire est sur la case du bateau.';
+    return 'La frégate corsaire est sur la case du bateau.';
   }
 
-  return `La fregate corsaire est a ${relativeParts.join(' et ')} du bateau.`;
+  return `La frégate corsaire est à ${relativeParts.join(' et ')} du bateau.`;
 }
 
 export async function runParrotTurn({
@@ -77,35 +84,62 @@ export async function runParrotTurn({
 }: RunParrotTurnOptions): Promise<void> {
   const isFirstTurn = gameState.turnCount === 1;
   let shouldWaitForMapReveal = false;
+  let shouldShowObservationRest = progressData?.shouldShowObservationRest ?? false;
   let remainingParrotActions = progressData?.remainingParrotActions ?? (isFirstTurn ? 2 : 1);
   let currentStep: ParrotCheckpoint | undefined = startAt;
 
   while (currentStep) {
     if (currentStep === 'parrot.dawnIntro') {
       playSound('parrot');
-      await showCheckpointScreen(
-        'parrot.dawnIntro',
-        {
-          type: 'full-message-button',
-          content: gameText.turn1.parrot.dawnIntro,
-          props: {
-            chrome: PARROT_CHROME,
-            primaryButtonLabel: 'Suivant',
-            showUndo: true,
-          },
-        },
-        {
-          remainingParrotActions,
-        }
-      );
 
       if (isFirstTurn) {
+        await showCheckpointScreen(
+          'parrot.dawnIntro',
+          {
+            type: 'full-message-button',
+            content: gameText.turn1.parrot.dawnIntro,
+            props: {
+              chrome: PARROT_CHROME,
+              primaryButtonLabel: gameText.turn1.parrot.dawnIntro.primaryButton,
+              showUndo: true,
+              undoLabel: gameText.turn1.parrot.dawnIntro.undoLabel,
+            },
+          },
+          {
+            remainingParrotActions,
+            shouldShowObservationRest,
+          }
+        );
+
         remainingParrotActions = 2;
         currentStep = 'parrot.observeSurroundings';
         continue;
       }
 
-      currentStep = gameState.peanutTokens > 0 ? 'parrot.foodChoice' : 'parrot.actionChoice';
+      if (gameState.peanutTokens > 0) {
+        currentStep = 'parrot.foodChoice';
+        continue;
+      }
+
+      await showCheckpointScreen(
+        'parrot.dawnIntro',
+        {
+          type: 'full-message-button',
+          content: gameText.turn2Plus.parrot.dawnIntro,
+          props: {
+            chrome: PARROT_CHROME,
+            primaryButtonLabel: gameText.turn2Plus.parrot.dawnIntro.primaryButton,
+            showUndo: true,
+            undoLabel: gameText.turn2Plus.parrot.dawnIntro.undoLabel,
+          },
+        },
+        {
+          remainingParrotActions,
+          shouldShowObservationRest,
+        }
+      );
+
+      currentStep = 'parrot.actionChoice';
 
       continue;
     }
@@ -116,18 +150,20 @@ export async function runParrotTurn({
         {
           type: 'full-message-button',
           content: {
-            title: "C'est l'aurore !",
-            body: `Veux-tu utiliser une cacahuete ? Reserve : ${gameState.peanutTokens}.`,
+            title: gameText.turn2Plus.parrot.dawnWithFoodCheck.title,
+            body: `${gameText.turn2Plus.parrot.dawnWithFoodCheck.body} Tu en possèdes ${gameState.peanutTokens}.`,
           },
           props: {
             chrome: PARROT_CHROME,
-            primaryButtonLabel: 'Oui',
-            secondaryButtonLabel: 'Non',
+            primaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.primaryButton,
+            secondaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.secondaryButton,
             showUndo: true,
+            undoLabel: gameText.turn1.parrot.dawnIntro.undoLabel,
           },
         },
         {
           remainingParrotActions,
+          shouldShowObservationRest,
         }
       );
 
@@ -150,35 +186,34 @@ export async function runParrotTurn({
         {
           type: 'top-message-lower-button-cards',
           content: {
-            title: "C'est l'aurore !",
-            body: `Tu as droit a ${remainingParrotActions} action${
-              remainingParrotActions > 1 ? 's' : ''
-            }.`,
+            title: gameText.turn2Plus.parrot.dawnChoice.title,
+            body: `Tu peux faire ${formatActionCount(remainingParrotActions)} à ce tour.`,
           },
           props: {
             chrome: PARROT_CHROME,
             showUndo: true,
+            undoLabel: gameText.turn2Plus.parrot.dawnChoice.undoLabel,
             cards: [
               {
                 id: 'observe',
-                title: 'Observer les alentours',
-                caption: 'Regarde les 12 cases proches du bateau pendant 5 secondes.',
+                title: gameText.turn2Plus.parrot.dawnChoice.cards[0].title,
+                caption: gameText.turn2Plus.parrot.dawnChoice.cards[0].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_observerlesalentours.webp',
                 imageAlt: 'Observer les alentours',
               },
               {
                 id: 'corsair',
-                title: 'Reperer la fregate corsaire',
-                caption: 'Affiche la case ou se situe actuellement la fregate.',
+                title: gameText.turn2Plus.parrot.dawnChoice.cards[1].title,
+                caption: gameText.turn2Plus.parrot.dawnChoice.cards[1].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_repererlescorsaires.webp',
-                imageAlt: 'Reperer les corsaires',
+                imageAlt: 'Repérer les corsaires',
               },
               {
                 id: 'share',
-                title: "Partager a l'Equipage",
-                caption: 'Utilise les tuiles et pions physiques pour transmettre des indices.',
+                title: gameText.turn2Plus.parrot.dawnChoice.cards[2].title,
+                caption: gameText.turn2Plus.parrot.dawnChoice.cards[2].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_partagerdesinformations.webp',
                 imageAlt: 'Partager des informations',
@@ -194,6 +229,7 @@ export async function runParrotTurn({
       if (actionChoice.action === 'card' && actionChoice.cardId === 'observe') {
         gameState.entitiesVisible = true;
         shouldWaitForMapReveal = true;
+        shouldShowObservationRest = true;
         remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
         currentStep = 'parrot.lookAroundTimer';
       } else if (actionChoice.action === 'card' && actionChoice.cardId === 'corsair') {
@@ -210,6 +246,7 @@ export async function runParrotTurn({
     if (currentStep === 'parrot.observeSurroundings') {
       gameState.entitiesVisible = true;
       shouldWaitForMapReveal = true;
+      shouldShowObservationRest = false;
       remainingParrotActions = Math.max(remainingParrotActions - 1, 0);
       currentStep = 'parrot.lookAroundTimer';
 
@@ -238,14 +275,42 @@ export async function runParrotTurn({
         },
         {
           remainingParrotActions,
+          shouldShowObservationRest,
         }
       );
 
       if (isFirstTurn) {
         currentStep = 'parrot.helpCrew';
+      } else if (shouldShowObservationRest) {
+        shouldShowObservationRest = false;
+        currentStep = 'parrot.exhaustedAfterObservation';
       } else {
         currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
       }
+
+      continue;
+    }
+
+    if (currentStep === 'parrot.exhaustedAfterObservation') {
+      await showCheckpointScreen(
+        'parrot.exhaustedAfterObservation',
+        {
+          type: 'full-message-button',
+          content: gameText.turn2Plus.parrot.exhaustedAfterObservation,
+          props: {
+            chrome: PARROT_CHROME,
+            primaryButtonLabel:
+              remainingParrotActions > 0
+                ? gameText.turn2Plus.parrot.exhaustedAfterObservation.continueButton
+                : gameText.turn2Plus.parrot.exhaustedAfterObservation.primaryButton,
+          },
+        },
+        {
+          remainingParrotActions,
+        }
+      );
+
+      currentStep = remainingParrotActions > 0 ? 'parrot.actionChoice' : undefined;
 
       continue;
     }
@@ -261,14 +326,16 @@ export async function runParrotTurn({
           {
             type: 'top-message-lower-button',
             content: {
-              title: 'Bateau corsaire repere',
-              body: formatCorsairPositionFromBoat(),
-              caption: `Corsaire : ${formatBoardCoordinate(gameState.corsairPosition)}. Bateau : ${formatBoardCoordinate(gameState.userPosition)}.`,
+              title: `${gameText.turn2Plus.parrot.corsairLocation.title} ${formatBoardCoordinate(gameState.corsairPosition)}`,
+              body:
+                remainingParrotActions > 0
+                  ? gameText.turn2Plus.parrot.corsairLocation.remainingActionsBody
+                  : gameText.turn2Plus.parrot.corsairLocation.lastActionBody,
+              caption: formatCorsairPositionFromBoat(),
             },
             props: {
               chrome: PARROT_CHROME,
-              primaryButtonLabel:
-                remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
+              primaryButtonLabel: remainingParrotActions > 0 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
             },
           },
           {
@@ -294,12 +361,12 @@ export async function runParrotTurn({
           type: 'full-message-button',
           content: {
             title: gameText.turn1.parrot.helpCrew.title,
-            body: 'Place au maximum 1 monstre + 1 ile + 1 typhon, ou 2 elements identiques, ou deplace 1 element, ou echange 2 elements. Tu peux aussi indiquer la derniere position connue de la fregate avec sa figurine.',
+            body: gameText.turn1.parrot.helpCrew.body,
+            caption: gameText.turn1.parrot.helpCrew.caption,
           },
           props: {
             chrome: PARROT_CHROME,
-            primaryButtonLabel:
-              remainingParrotActions > 0 ? 'Suivant' : "Passer le telephone a l'Equipage",
+            primaryButtonLabel: remainingParrotActions > 0 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
           },
         },
         {

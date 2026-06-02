@@ -27,6 +27,7 @@ import {
 } from './uiFlowStore';
 import {
   getTreasureCardDefinition,
+  getTreasurePhaseLabel,
   toTreasureCardView,
   type TreasureCardInstance,
   type TreasurePhase,
@@ -117,8 +118,20 @@ function getAdjustedDiceResult(step: 1 | -1): number {
   return Math.min(3, nextValue);
 }
 
+function formatMoveCount(count: number): string {
+  return `${count} déplacement${Math.abs(count) > 1 ? 's' : ''}`;
+}
+
+function formatRhumBottleCount(count: number): string {
+  return `${count} bouteille${Math.abs(count) > 1 ? 's' : ''} de rhum`;
+}
+
 function getCrewText() {
   return gameState.turnCount === 1 ? gameText.turn1.crew : gameText.turn2Plus.crew;
+}
+
+function getTreasurePhaseCardTitle(phase: TreasurePhase): string {
+  return `${gameText.cards.usePhaseTitlePrefix} ${getTreasurePhaseLabel(phase)}`;
 }
 
 function isCrewMovementCheckpoint(
@@ -218,11 +231,11 @@ function getTreasureCardDisabledReason(
   }
 
   if (gameState.usedTreasureThisTurn) {
-    return 'Deja joue ce tour';
+    return 'Déjà jouée ce tour';
   }
 
   if (definition.phase !== phase) {
-    return `Jouable en ${definition.phase}`;
+    return `Jouable en ${getTreasurePhaseLabel(definition.phase)}`;
   }
 
   if (
@@ -230,7 +243,7 @@ function getTreasureCardDisabledReason(
     context?.tileState !== 'monster' &&
     context?.tileState !== 'typhon'
   ) {
-    return 'Pas de danger a eliminer';
+    return 'Pas de danger à éliminer';
   }
 
   if (card.cardId === 'bombe-artisanale' && gameState.currentRhum <= 0) {
@@ -287,8 +300,8 @@ async function chooseTreasureCardForPhase(
   const result = await showScreen({
     type: 'top-message-lower-button-cards',
     content: {
-      title: context?.title ?? 'Cartes tresor',
-      body: context?.body ?? 'Choisis une carte a utiliser.',
+      title: context?.title ?? getTreasurePhaseCardTitle(phase),
+      body: context?.body ?? gameText.cards.usePhaseBody,
     },
     props: {
       chrome: getChromeForTreasurePhase(phase),
@@ -352,6 +365,44 @@ function checkRhumLoss(): boolean {
   return true;
 }
 
+function getEquippedDefenseRevealBody(tileState: BoardTileState): string | undefined {
+  if (tileState === 'typhon' && gameState.bottleTokenEquipped) {
+    return gameText.reveal.typhoon.bottleBody;
+  }
+
+  if (tileState !== 'monster') {
+    return undefined;
+  }
+
+  const equippedBodies: string[] = [];
+
+  if (gameState.bottleTokenEquipped) {
+    equippedBodies.push(gameText.reveal.monster.bottleBody);
+  }
+
+  if (gameState.cannonTokenEquipped) {
+    equippedBodies.push(gameText.reveal.monster.cannonBody);
+  }
+
+  return equippedBodies.length > 0 ? equippedBodies.join(' ') : undefined;
+}
+
+function getEncounterTitle(tileState: BoardTileState): string {
+  return tileState === 'monster' ? gameText.reveal.monster.title : gameText.reveal.typhoon.title;
+}
+
+function getEncounterBody(tileState: BoardTileState, hasAfternoonCard: boolean): string {
+  if (tileState === 'monster') {
+    return hasAfternoonCard
+      ? gameText.reveal.monster.cardBody
+      : gameText.reveal.monster.sufferOnlyBody;
+  }
+
+  return hasAfternoonCard
+    ? gameText.reveal.typhoon.cardBody
+    : gameText.reveal.typhoon.sufferOnlyBody;
+}
+
 async function resolveEquippedDefense(
   tileState: BoardTileState,
   remainingMoves: number,
@@ -361,8 +412,8 @@ async function resolveEquippedDefense(
     const equipmentChoice = await showScreen({
       type: 'top-message-lower-button-cards',
       content: {
-        title: 'Quel equipement utiliser ?',
-        body: 'Les deux jetons peuvent reagir a ce monstre.',
+        title: 'Quel équipement utiliser ?',
+        body: 'Les deux jetons peuvent réagir à ce monstre.',
       },
       props: {
         chrome: AFTERNOON_CHROME,
@@ -374,8 +425,8 @@ async function resolveEquippedDefense(
           },
           {
             id: 'cannon',
-            title: 'Poudre a canon',
-            caption: 'Elimine le monstre definitivement.',
+            title: 'Poudre à canon',
+            caption: 'Élimine le monstre définitivement.',
           },
         ],
       },
@@ -388,8 +439,8 @@ async function resolveEquippedDefense(
       await showScreen({
         type: 'full-message-button',
         content: {
-          title: 'Poudre a canon !',
-          body: 'Le monstre est elimine. Aucun rhum perdu.',
+          title: 'Poudre à canon !',
+          body: 'Le monstre est éliminé. Aucun rhum n’est perdu.',
         },
         props: {
           chrome: AFTERNOON_CHROME,
@@ -403,7 +454,7 @@ async function resolveEquippedDefense(
         type: 'full-message-button',
         content: {
           title: 'Bateau en bouteille !',
-          body: 'Le danger est absorbe. Aucun rhum perdu.',
+          body: 'Le danger est absorbé. Aucun rhum n’est perdu.',
         },
         props: {
           chrome: AFTERNOON_CHROME,
@@ -425,7 +476,7 @@ async function resolveEquippedDefense(
       type: 'full-message-button',
       content: {
         title: 'Bateau en bouteille !',
-        body: 'Le danger est absorbe. Aucun rhum perdu.',
+        body: 'Le danger est absorbé. Aucun rhum n’est perdu.',
       },
       props: {
         chrome: AFTERNOON_CHROME,
@@ -446,8 +497,8 @@ async function resolveEquippedDefense(
     await showScreen({
       type: 'full-message-button',
       content: {
-        title: 'Poudre a canon !',
-        body: 'Le monstre est elimine. Aucun rhum perdu.',
+        title: 'Poudre à canon !',
+        body: 'Le monstre est éliminé. Aucun rhum n’est perdu.',
       },
       props: {
         chrome: AFTERNOON_CHROME,
@@ -486,7 +537,9 @@ async function diceCardsOptions(
           chrome,
           throwDice: options?.throwDice ?? true,
           resultValue: options?.resultValue,
-          primaryButtonLabel: crewText.afterRoll.primaryButton,
+          primaryButtonLabel: crewText.afterRoll.noMovementButton,
+          zeroResultButtonLabel: crewText.afterRoll.noMovementButton,
+          movingResultButtonLabel: crewText.afterRoll.moveButton,
           secondaryButtonLabel: undefined,
         },
       },
@@ -504,8 +557,8 @@ async function diceCardsOptions(
   const selectedCard = await chooseTreasureCardForPhase(
     'morning',
     {
-      title: 'Carte de matinee',
-      body: 'Tu peux jouer une seule carte tresor ce tour.',
+      title: getTreasurePhaseCardTitle('morning'),
+      body: gameText.cards.usePhaseBody,
     },
     {
       allowManualChoice: options?.resumeFrom === 'crew.cardChoice',
@@ -558,7 +611,7 @@ async function waitForCrewDirectionSelection(
     type: 'top-message-lower-button',
     content: {
       ...crewText.afternoonIntro,
-      body: `T'as encore ${remainingMoves} mouvements`,
+      body: `${crewText.afternoonIntro.body} Tu as encore ${formatMoveCount(remainingMoves)}.`,
     },
     props: {
       chrome: AFTERNOON_CHROME,
@@ -620,8 +673,8 @@ async function handleCrewTileReveal(
         {
           type: 'top-message-lower-button',
           content: {
-            title: 'Ile deja exploree',
-            body: 'La cale et les tresors ont deja ete recuperes ici.',
+            title: 'Île déjà explorée',
+            body: 'La cale et les trésors ont déjà été récupérés ici.',
           },
           props: {
             chrome: AFTERNOON_CHROME,
@@ -649,8 +702,8 @@ async function handleCrewTileReveal(
       {
         type: 'top-message-lower-button',
         content: {
-          title: "C'est une ile ! Capitaine ?",
-          body: `Tu recuperes ${gainedRhum} rhum. Choisis une carte tresor a garder.`,
+          title: gameText.reveal.island.title,
+          body: `Tu recharges ${formatRhumBottleCount(gainedRhum)} en pillant l’île.`,
         },
         props: {
           chrome: AFTERNOON_CHROME,
@@ -682,7 +735,7 @@ async function handleCrewTileReveal(
       await showScreen({
         type: 'full-message-button',
         content: {
-          title: 'Tresor recupere',
+          title: 'Trésor récupéré',
           body: `${getTreasureCardDefinition(drawnCards[0]!.cardId).title} rejoint votre main.`,
         },
         props: {
@@ -693,10 +746,7 @@ async function handleCrewTileReveal(
     } else if (drawnCards.length > 1) {
       const choice = await showScreen({
         type: 'top-message-lower-button-cards',
-        content: {
-          title: 'Gardes une carte !',
-          body: 'Votre capacite de transport est limitee. Une seule carte rejoint la main.',
-        },
+        content: gameText.reveal.lootChoice,
         props: {
           chrome: AFTERNOON_CHROME,
           cards: drawnCards.map((card) => {
@@ -759,30 +809,32 @@ async function handleCrewTileReveal(
     };
   }
 
-  const equippedDefenseResult = await resolveEquippedDefense(tileState, remainingMoves, endTurn);
-
-  if (equippedDefenseResult) {
-    return equippedDefenseResult;
-  }
-
   if (startAt === 'crew.revealEncounter') {
     const hasAfternoonCard = hasUsableTreasureCards('afternoon', { tileState });
+    const equippedDefenseRevealBody = getEquippedDefenseRevealBody(tileState);
     playSound(tileState === 'typhon' ? 'typhon' : 'monster');
     const encounterChoice = await showCheckpointScreen(
       'crew.revealEncounter',
       {
         type: 'top-message-lower-button',
         content: {
-          ...gameText.reveal.encounterGeneric,
-          title: gameText.reveal.encounterGeneric.title.replace(
-            'XX',
-            getTileRevealLabel(tileState)
-          ),
-          body: undefined,
+          title: getEncounterTitle(tileState),
+          body: equippedDefenseRevealBody ?? getEncounterBody(tileState, hasAfternoonCard),
         },
         props: {
-          chrome: hasAfternoonCard ? { ...AFTERNOON_CHROME, canUseCards: true } : AFTERNOON_CHROME,
-          primaryButtonLabel: 'Suivant',
+          chrome:
+            hasAfternoonCard && !equippedDefenseRevealBody
+              ? { ...AFTERNOON_CHROME, canUseCards: true }
+              : AFTERNOON_CHROME,
+          primaryButtonLabel: equippedDefenseRevealBody
+            ? 'Suivant'
+            : hasAfternoonCard
+              ? gameText.reveal.encounterGeneric.primaryButton
+              : gameText.reveal.encounterGeneric.secondaryButton,
+          secondaryButtonLabel:
+            !equippedDefenseRevealBody && hasAfternoonCard
+              ? gameText.reveal.encounterGeneric.secondaryButton
+              : undefined,
         },
       },
       {
@@ -791,20 +843,29 @@ async function handleCrewTileReveal(
       }
     );
 
-    if (
-      encounterChoice.action === 'primary' &&
-      hasAfternoonCard &&
-      hasRequestedTreasureCardSelection()
-    ) {
+    if (equippedDefenseRevealBody) {
+      const equippedDefenseResult = await resolveEquippedDefense(
+        tileState,
+        remainingMoves,
+        endTurn
+      );
+
+      if (equippedDefenseResult) {
+        return equippedDefenseResult;
+      }
+    }
+
+    if (encounterChoice.action === 'primary' && hasAfternoonCard) {
+      const hadRequestedCard = hasRequestedTreasureCardSelection();
       const selectedCard = await chooseTreasureCardForPhase(
         'afternoon',
         {
-          title: 'Carte de journee',
-          body: 'La Bombe artisanale peut eliminer le danger sur cette case.',
+          title: getTreasurePhaseCardTitle('afternoon'),
+          body: gameText.cards.usePhaseBody,
           tileState,
         },
         {
-          allowManualChoice: false,
+          allowManualChoice: !hadRequestedCard,
         }
       );
 
@@ -817,8 +878,8 @@ async function handleCrewTileReveal(
         await showScreen({
           type: 'full-message-button',
           content: {
-            title: 'Bombe artisanale !',
-            body: 'Le danger est elimine definitivement. Vous videz 1 rhum.',
+            title: gameText.reveal.bomb.title,
+            body: `Tu élimines définitivement le ${getTileRevealLabel(tileState)} en sacrifiant 1 bouteille de rhum. Retirez-le du plateau.`,
           },
           props: {
             chrome: AFTERNOON_CHROME,
@@ -850,8 +911,14 @@ async function handleCrewTileReveal(
     {
       type: 'top-message-lower-button',
       content: {
-        title: tileState === 'monster' ? 'C’est un monstre !' : 'C’est un typhon !',
-        body: `Tu perds ${rhumLoss} rhum.`,
+        title:
+          tileState === 'monster'
+            ? gameText.reveal.monster.sufferTitle
+            : gameText.reveal.typhoon.sufferTitle,
+        body:
+          tileState === 'monster'
+            ? gameText.reveal.monster.sufferBody
+            : gameText.reveal.typhoon.sufferBody,
       },
       props: {
         chrome: AFTERNOON_CHROME,
@@ -934,12 +1001,12 @@ async function runCrewMovementPhase(
         type: 'top-message-lower-button',
         content: {
           ...getCrewText().directionConfirm,
-          body: `T'as encore ${remainingMoves} mouvements`,
+          body: `Tu as encore ${formatMoveCount(remainingMoves)}.`,
         },
         props: {
           chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: 'Valider',
-          secondaryButtonLabel: 'Annuler',
+          primaryButtonLabel: getCrewText().directionConfirm.primaryButton,
+          secondaryButtonLabel: getCrewText().directionConfirm.secondaryButton,
           primaryButtonOnClick: () => {
             moveCrew(direction);
             resolveScreen({ action: 'primary' });
@@ -979,37 +1046,43 @@ async function runCrewMovementPhase(
 }
 
 async function maybePlayEveningTreasureCard(): Promise<void> {
-  if (!hasUsableTreasureCards('evening')) {
-    return;
-  }
-
+  const hasEveningCard = hasUsableTreasureCards('evening');
+  const promptText = hasEveningCard
+    ? gameText.evening.promptWithCard
+    : gameText.evening.promptWithoutCard;
   const prompt = await showScreen({
     type: 'top-message-lower-button',
     content: {
-      title: 'La nuit tombe !',
-      body: 'La tournee de rhum approche.',
+      title: promptText.title,
+      body: promptText.body,
     },
     props: {
-      chrome: {
-        ...EVENING_CHROME,
-        canUseCards: true,
-      },
-      primaryButtonLabel: 'Boire du rhum',
+      chrome: hasEveningCard
+        ? {
+            ...EVENING_CHROME,
+            canUseCards: true,
+          }
+        : EVENING_CHROME,
+      primaryButtonLabel: promptText.primaryButton,
+      secondaryButtonLabel: hasEveningCard
+        ? gameText.evening.promptWithCard.secondaryButton
+        : undefined,
     },
   });
 
-  if (prompt.action !== 'primary' || !hasRequestedTreasureCardSelection()) {
+  if (!hasEveningCard || prompt.action !== 'primary') {
     return;
   }
 
+  const hadRequestedCard = hasRequestedTreasureCardSelection();
   const selectedCard = await chooseTreasureCardForPhase(
     'evening',
     {
-      title: 'Carte de soiree',
-      body: 'Tu peux jouer une seule carte tresor ce tour.',
+      title: getTreasurePhaseCardTitle('evening'),
+      body: gameText.cards.usePhaseBody,
     },
     {
-      allowManualChoice: false,
+      allowManualChoice: !hadRequestedCard,
     }
   );
 
@@ -1112,15 +1185,12 @@ export async function runCrewTurn({
 
     await showCheckpointScreen('crew.nightFalls', {
       type: 'top-message-lower-button',
-      content: {
-        ...crewText.nightFalls,
-        body: gameState.tequilaTonight
-          ? 'TEQUILAAAA ! Pas de rhum consomme ce soir.'
-          : `TOURNEE DE RHUM ! Il reste ${gameState.currentRhum} rhum.`,
-      },
+      content: gameState.tequilaTonight ? gameText.evening.tequila : gameText.evening.rhumRound,
       props: {
         chrome: EVENING_CHROME,
-        secondaryButtonLabel: 'Suivant',
+        primaryButtonLabel: gameState.tequilaTonight
+          ? gameText.evening.tequila.primaryButton
+          : gameText.evening.rhumRound.primaryButton,
       },
     });
 
