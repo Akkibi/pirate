@@ -14,13 +14,13 @@ import {
   float,
 } from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
-import { gameState, formatBoardCoordinate } from '../utils/gameStore';
+import { gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
 import { watch } from 'vue';
 import gsap from 'gsap';
-import { cameraPositions } from './camera';
 import { gameEvents } from '../events/gameEvents';
 import { ParticleSystemManager } from './particleSystemManager';
+import { ArrowManager } from './arrowManager';
 
 const _teal = new THREE.Color(0x008c74);
 const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
@@ -31,19 +31,10 @@ export class Player {
   private playerGroup: THREE.Group;
   private boatGroup: THREE.Group;
   private birdGroup: THREE.Group;
-  private arrowGroup: THREE.Group;
-  private arrowMeshes: Map<string, THREE.Mesh> = new Map();
-  private arrowOverlays: Map<string, HTMLElement> = new Map();
+  private arrowManager: ArrowManager;
   private cannonsMod: THREE.Object3D | null = null;
   private bottleMod: THREE.Object3D | null = null;
   private sceneManager: SceneManager;
-
-  private readonly arrowOffsets: Record<string, { x: number; y: number }> = {
-    left: { x: 0, y: -1 },
-    right: { x: 0, y: 1 },
-    down: { x: -1, y: 0 },
-    up: { x: 1, y: 0 },
-  };
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -51,8 +42,9 @@ export class Player {
     this.boatGroup = new THREE.Group();
     this.birdGroup = new THREE.Group();
 
-    this.arrowGroup = new THREE.Group();
-    this.playerGroup.add(this.arrowGroup);
+    const arrowGroup = new THREE.Group();
+    this.playerGroup.add(arrowGroup);
+    this.arrowManager = new ArrowManager(sceneManager, arrowGroup);
 
     this.playerGroup.add(this.boatGroup, this.birdGroup);
     this.position = new THREE.Vector2();
@@ -123,47 +115,12 @@ export class Player {
     this.birdGroup.scale.multiplyScalar(0.5);
     this.playerGroup.add(this.birdGroup);
 
-    this.loadArrowPlanes();
+    this.arrowManager.load();
     this.initWatchers();
 
     this.playerGroup.position.x = gameState.userPosition.x;
     this.playerGroup.position.z = gameState.userPosition.y;
     // set to random int position between 0 and 5 and 0 and 7
-  }
-
-  private loadArrowPlanes(): void {
-    const textureLoader = new THREE.TextureLoader();
-
-    const arrows = [
-      { name: 'left', position: new THREE.Vector3(0, 0, -0.75) },
-      { name: 'right', position: new THREE.Vector3(0, 0, 0.75) },
-      { name: 'down', position: new THREE.Vector3(-0.75, 0, 0) },
-      { name: 'up', position: new THREE.Vector3(0.75, 0, 0) },
-    ];
-
-    arrows.forEach((arrow) => {
-      textureLoader.load(`images/arrow-${arrow.name}.webp`, (texture) => {
-        const geometry = new THREE.PlaneGeometry(0.5, 0.5);
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          color: '#ffffff',
-          transparent: true,
-          side: THREE.DoubleSide,
-          depthTest: false,
-          depthWrite: false,
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.renderOrder = 999;
-        mesh.position.copy(arrow.position.clone().add(new THREE.Vector3(0, 0.4, 0)));
-        mesh.lookAt(cameraPositions.gameplay);
-        mesh.visible = gameState.displayArrows;
-
-        this.arrowMeshes.set(arrow.name, mesh);
-        this.arrowGroup.add(mesh);
-        this.createArrowOverlay(arrow.name);
-        this.updateArrowVisibility(gameState.displayArrows);
-      });
-    });
   }
 
   private initWatchers(): void {
@@ -182,7 +139,7 @@ export class Player {
     watch(
       () => gameState.displayArrows,
       (isDisplayed) => {
-        this.updateArrowVisibility(isDisplayed);
+        this.arrowManager.updateVisibility(isDisplayed, this.position);
       }
     );
     watch(
@@ -208,7 +165,7 @@ export class Player {
       () => gameState.userPositionHistory.length,
       () => {
         if (gameState.displayArrows) {
-          this.updateArrowVisibility(true);
+          this.arrowManager.updateVisibility(true, this.position);
         }
       }
     );
@@ -217,6 +174,7 @@ export class Player {
       (newPosition) => {
         this.setPosition(newPosition);
         this.updatePositionShift();
+        this.arrowManager.updateVisibility(gameState.displayArrows, this.position);
       },
       { deep: true }
     );
@@ -319,114 +277,6 @@ export class Player {
     }
   }
 
-  private createArrowOverlay(arrowName: string): void {
-    const overlay = document.createElement('div');
-    overlay.className = [
-      'absolute',
-      'pointer-events-none',
-      '-translate-x-1/2',
-      '-translate-y-1/2',
-      'font-black',
-      'font-title',
-      'text-[5vh]',
-      'text-amber-950',
-      '[-webkit-text-stroke:3px_#fbbf24]',
-      '[paint-order:stroke_fill]',
-      'hidden',
-    ].join(' ');
-    const canvas = this.sceneManager.getRenderer().domElement;
-    canvas.parentElement?.appendChild(overlay);
-    this.arrowOverlays.set(arrowName, overlay);
-  }
-
-  private projectArrowToScreen(mesh: THREE.Mesh): { x: number; y: number } {
-    const worldPos = new THREE.Vector3();
-    mesh.getWorldPosition(worldPos);
-    const camera = this.sceneManager.camera.getNative();
-    const canvas = this.sceneManager.getRenderer().domElement;
-    worldPos.project(camera);
-    const x = (worldPos.x + 1) * 0.5 * canvas.clientWidth;
-    const y = -(worldPos.y - 1) * 0.5 * canvas.clientHeight;
-    return { x, y };
-  }
-
-  private getArrowTargetLabel(arrowName: string): string {
-    const offset = this.arrowOffsets[arrowName];
-    if (!offset) return '';
-    const target = {
-      x: gameState.userPosition.x + offset.x,
-      y: gameState.userPosition.y + offset.y,
-    };
-    return formatBoardCoordinate(target);
-  }
-
-  private resetArrowHighlight(): void {
-    for (const mesh of this.arrowMeshes.values()) {
-      const material = mesh.material;
-
-      if (!(material instanceof THREE.MeshBasicMaterial)) {
-        continue;
-      }
-
-      material.color.set('#ffffff');
-    }
-  }
-
-  private getBlockedArrowDirection(): string | null {
-    if (gameState.userPositionHistory.length < 2) {
-      return null;
-    }
-
-    const previousPosition =
-      gameState.userPositionHistory[gameState.userPositionHistory.length - 2];
-
-    if (!previousPosition) {
-      return null;
-    }
-
-    const deltaX = previousPosition.x - gameState.userPosition.x;
-    const deltaY = previousPosition.y - gameState.userPosition.y;
-
-    if (deltaX === 1 && deltaY === 0) {
-      return 'up';
-    }
-    if (deltaX === -1 && deltaY === 0) {
-      return 'down';
-    }
-    if (deltaX === 0 && deltaY === 1) {
-      return 'right';
-    }
-    if (deltaX === 0 && deltaY === -1) {
-      return 'left';
-    }
-
-    return null;
-  }
-
-  private updateArrowVisibility(isDisplayed: boolean): void {
-    this.resetArrowHighlight();
-    gameState.arrowClicked = null;
-
-    const blockedArrowDirection = this.getBlockedArrowDirection();
-
-    for (const [name, mesh] of this.arrowMeshes) {
-      // do not display arrows when the boat is on borders
-      const onBorder =
-        (name === 'left' && this.position.y === 0) ||
-        (name === 'right' && this.position.y === 6) ||
-        (name === 'down' && this.position.x === 0) ||
-        (name === 'up' && this.position.x === 4);
-
-      const visible = !onBorder && isDisplayed && name !== blockedArrowDirection;
-      mesh.visible = visible;
-      const overlay = this.arrowOverlays.get(name);
-      if (overlay) {
-        overlay.classList.toggle('hidden', !visible);
-        if (visible) overlay.textContent = this.getArrowTargetLabel(name);
-      }
-    }
-  }
-
   private setPhase(phase: PhaseType): void {
     // Implement phase-specific camera settings here
     console.log(phase);
@@ -451,18 +301,6 @@ export class Player {
     });
   }
 
-  private updateArrowHighlight(selectedArrowName: string): void {
-    for (const [name, mesh] of this.arrowMeshes) {
-      const material = mesh.material;
-
-      if (!(material instanceof THREE.MeshBasicMaterial)) {
-        continue;
-      }
-
-      material.color.set(name === selectedArrowName ? '#22c55e' : '#ffffff');
-    }
-  }
-
   public update(time: number) {
     this.boatGroup.rotation.y += 0.001;
     this.boatGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
@@ -473,13 +311,9 @@ export class Player {
     this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;
 
     if (gameState.displayArrows) {
-      for (const [name, mesh] of this.arrowMeshes) {
-        const overlay = this.arrowOverlays.get(name);
-        if (!overlay || !mesh.visible) continue;
-        const { x, y } = this.projectArrowToScreen(mesh);
-        overlay.style.left = `${x}px`;
-        overlay.style.top = `${y}px`;
-      }
+      const camera = this.sceneManager.camera.getNative();
+      const canvas = this.sceneManager.getRenderer().domElement;
+      this.arrowManager.updateOverlayPositions(camera, canvas);
     }
   }
 
@@ -488,35 +322,27 @@ export class Player {
   }
 
   public destroy(): void {
-    this.arrowGroup.removeFromParent();
     this.boatGroup.removeFromParent();
     this.birdGroup.removeFromParent();
     this.playerGroup.removeFromParent();
     this.playerGroup.clear();
-    this.arrowMeshes.clear();
-    for (const overlay of this.arrowOverlays.values()) {
-      overlay.remove();
-    }
-    this.arrowOverlays.clear();
+    this.arrowManager.destroy();
   }
 
   public handleArrowClick(mousePosition: THREE.Vector2, camera: THREE.Camera): void {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mousePosition, camera);
 
-    const intersects = raycaster.intersectObjects(this.arrowGroup.children);
+    const arrowMeshes = this.arrowManager.getMeshes();
+    const intersects = raycaster.intersectObjects([...arrowMeshes.values()]);
 
     if (intersects.length > 0) {
       const clickedMesh = intersects[0]?.object as THREE.Mesh;
-
-      // Only register click if mesh is visible
       if (!clickedMesh.visible) return;
 
-      // Find the arrow name
-      for (const [name, mesh] of this.arrowMeshes) {
+      for (const [name, mesh] of arrowMeshes) {
         if (mesh === clickedMesh) {
-          this.updateArrowHighlight(name);
-          console.log(`Arrow clicked: ${name}`);
+          this.arrowManager.highlight(name);
           gameEvents.emit('crew:arrow_click', { direction: name });
           gameState.arrowClicked = name;
           break;
