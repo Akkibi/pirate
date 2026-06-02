@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { gameState, formatBoardCoordinate } from '../utils/gameStore';
+import { gameState, formatBoardCoordinate, getNextBoardPosition } from '../utils/gameStore';
 import { cameraPositions } from './camera';
 import type { SceneManager } from './sceneManager';
 
@@ -9,13 +9,6 @@ const ARROW_DEFINITIONS = [
   { name: 'down', position: new THREE.Vector3(-0.75, 0, 0) },
   { name: 'up', position: new THREE.Vector3(0.75, 0, 0) },
 ] as const;
-
-const ARROW_OFFSETS: Record<string, { x: number; y: number }> = {
-  left: { x: 0, y: -1 },
-  right: { x: 0, y: 1 },
-  down: { x: -1, y: 0 },
-  up: { x: 1, y: 0 },
-};
 
 export class ArrowManager {
   private arrowGroup: THREE.Group;
@@ -63,6 +56,7 @@ export class ArrowManager {
         this.arrowMeshes.set(arrow.name, mesh);
         this.arrowGroup.add(mesh);
         this.createOverlay(arrow.name);
+        this.updateVisibility(gameState.displayArrows, gameState.userPosition);
         checkDone();
       });
 
@@ -95,12 +89,8 @@ export class ArrowManager {
   }
 
   private getArrowTargetLabel(arrowName: string): string {
-    const offset = ARROW_OFFSETS[arrowName];
-    if (!offset) return '';
-    const target = {
-      x: gameState.userPosition.x + offset.x,
-      y: gameState.userPosition.y + offset.y,
-    };
+    const target = getNextBoardPosition(gameState.userPosition, arrowName);
+    if (!target) return '';
     return formatBoardCoordinate(target);
   }
 
@@ -130,7 +120,7 @@ export class ArrowManager {
   }
 
   getBlockedDirection(position: THREE.Vector2): string | null {
-    if (gameState.turnCount < 2 || gameState.userPositionHistory.length < 2) {
+    if (gameState.userPositionHistory.length < 2) {
       return null;
     }
 
@@ -156,13 +146,8 @@ export class ArrowManager {
     const blockedDirection = this.getBlockedDirection(position);
 
     for (const [name, mesh] of this.arrowMeshes) {
-      const onBorder =
-        (name === 'left' && position.y === 0) ||
-        (name === 'right' && position.y === 6) ||
-        (name === 'down' && position.x === 0) ||
-        (name === 'up' && position.x === 4);
-
-      const visible = !onBorder && isDisplayed && name !== blockedDirection;
+      const nextPosition = getNextBoardPosition(position, name);
+      const visible = nextPosition !== null && isDisplayed && name !== blockedDirection;
       mesh.visible = visible;
       const overlay = this.arrowOverlays.get(name);
       if (overlay) {

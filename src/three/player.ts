@@ -14,7 +14,7 @@ import {
   float,
 } from 'three/tsl';
 import type { PhaseType } from '../utils/gameStore';
-import { gameState } from '../utils/gameStore';
+import { clampBoardPosition, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
 import { watch } from 'vue';
 import gsap from 'gsap';
@@ -283,13 +283,17 @@ export class Player {
   }
 
   public setPosition(position: THREE.Vector2): void {
-    this.position.copy(position);
+    const clampedPosition = clampBoardPosition(position);
 
-    // limit position
-    const maxX = 5;
-    const maxZ = 7;
-    this.position.x = Math.max(0, Math.min(maxX, this.position.x));
-    this.position.y = Math.max(0, Math.min(maxZ, this.position.y));
+    if (
+      position === gameState.userPosition &&
+      (position.x !== clampedPosition.x || position.y !== clampedPosition.y)
+    ) {
+      gameState.userPosition.set(clampedPosition.x, clampedPosition.y);
+      return;
+    }
+
+    this.position.set(clampedPosition.x, clampedPosition.y);
 
     gsap.to(this.playerGroup.position, {
       x: this.position.x,
