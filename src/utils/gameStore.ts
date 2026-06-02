@@ -5,6 +5,7 @@ import type { TreasureCardInstance } from './treasureCards';
 export type PhaseType = 'crew' | 'parrot';
 export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island' | 'corsair';
 export type GameResult = 'won' | 'lost-rhum' | 'lost-corsair' | null;
+export type BoardDirection = 'left' | 'right' | 'up' | 'down';
 export const BOARD_TILE_COUNT_X = 5;
 export const BOARD_TILE_COUNT_Y = 7;
 
@@ -19,6 +20,13 @@ export interface BoardPositionSnapshot {
   x: number;
   y: number;
 }
+
+const BOARD_DIRECTION_DELTAS: Record<BoardDirection, BoardPositionSnapshot> = {
+  left: { x: 0, y: -1 },
+  right: { x: 0, y: 1 },
+  up: { x: 1, y: 0 },
+  down: { x: -1, y: 0 },
+};
 
 interface StoreInterface {
   currentPhase: PhaseType;
@@ -237,14 +245,19 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.rhumConsumed = snapshot.rhumConsumed ?? 0;
   gameState.diceResult = snapshot.diceResult;
   gameState.lastNaturalDiceResult = snapshot.lastNaturalDiceResult ?? null;
-  gameState.userPosition.set(snapshot.userPosition.x, snapshot.userPosition.y);
-  gameState.corsairPosition.set(snapshot.corsairPosition?.x ?? 0, snapshot.corsairPosition?.y ?? 0);
+  const userPosition = clampBoardPosition(snapshot.userPosition);
+  const corsairPosition = clampBoardPosition(snapshot.corsairPosition ?? { x: 0, y: 0 });
+  gameState.userPosition.set(userPosition.x, userPosition.y);
+  gameState.corsairPosition.set(corsairPosition.x, corsairPosition.y);
   gameState.cameraFocusPosition = null;
   gameState.displayCorsair = false;
   gameState.userPositionHistory.splice(
     0,
     gameState.userPositionHistory.length,
-    ...snapshot.userPositionHistory.map((position) => new THREE.Vector2(position.x, position.y))
+    ...snapshot.userPositionHistory.map((position) => {
+      const clampedPosition = clampBoardPosition(position);
+      return new THREE.Vector2(clampedPosition.x, clampedPosition.y);
+    })
   );
   gameState.entitiesVisible = snapshot.entitiesVisible;
   gameState.boardTiles.splice(
@@ -300,11 +313,57 @@ export function isSameBoardPosition(
   return first.x === second.x && first.y === second.y;
 }
 
-function clampBoardPosition(position: Pick<THREE.Vector2, 'x' | 'y'>): BoardPositionSnapshot {
+export function clampBoardPosition(
+  position: Pick<THREE.Vector2, 'x' | 'y'>
+): BoardPositionSnapshot {
   return {
     x: Math.max(0, Math.min(BOARD_TILE_COUNT_X - 1, Math.round(position.x))),
     y: Math.max(0, Math.min(BOARD_TILE_COUNT_Y - 1, Math.round(position.y))),
   };
+}
+
+export function isBoardDirection(direction: string): direction is BoardDirection {
+  return Object.prototype.hasOwnProperty.call(BOARD_DIRECTION_DELTAS, direction);
+}
+
+export function getNextBoardPosition(
+  position: Pick<THREE.Vector2, 'x' | 'y'>,
+  direction: string
+): BoardPositionSnapshot | null {
+  if (!isBoardDirection(direction)) {
+    return null;
+  }
+
+  const clampedPosition = clampBoardPosition(position);
+  const delta = BOARD_DIRECTION_DELTAS[direction];
+  const nextPosition = {
+    x: clampedPosition.x + delta.x,
+    y: clampedPosition.y + delta.y,
+  };
+
+  if (
+    nextPosition.x < 0 ||
+    nextPosition.x >= BOARD_TILE_COUNT_X ||
+    nextPosition.y < 0 ||
+    nextPosition.y >= BOARD_TILE_COUNT_Y
+  ) {
+    return null;
+  }
+
+  return nextPosition;
+}
+
+export function moveUserPosition(direction: string): boolean {
+  const nextPosition = getNextBoardPosition(gameState.userPosition, direction);
+
+  if (!nextPosition) {
+    const clampedPosition = clampBoardPosition(gameState.userPosition);
+    gameState.userPosition.set(clampedPosition.x, clampedPosition.y);
+    return false;
+  }
+
+  gameState.userPosition.set(nextPosition.x, nextPosition.y);
+  return true;
 }
 
 function getAdjacentBoardPositions(

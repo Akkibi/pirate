@@ -12,6 +12,7 @@ import {
   isIslandExhausted,
   markIslandExhausted,
   moveCorsairOneStep,
+  moveUserPosition,
   removeTreasureCardFromHand,
   setBoardTileStateAtPosition,
   spendRhum,
@@ -938,21 +939,8 @@ async function handleCrewTileReveal(
   };
 }
 
-function moveCrew(direction: string): void {
-  switch (direction) {
-    case 'left':
-      gameState.userPosition.y -= 1;
-      break;
-    case 'right':
-      gameState.userPosition.y += 1;
-      break;
-    case 'up':
-      gameState.userPosition.x += 1;
-      break;
-    case 'down':
-      gameState.userPosition.x -= 1;
-      break;
-  }
+function moveCrew(direction: string): boolean {
+  return moveUserPosition(direction);
 }
 
 async function runCrewMovementPhase(
@@ -1008,8 +996,9 @@ async function runCrewMovementPhase(
           primaryButtonLabel: getCrewText().directionConfirm.primaryButton,
           secondaryButtonLabel: getCrewText().directionConfirm.secondaryButton,
           primaryButtonOnClick: () => {
-            moveCrew(direction);
-            resolveScreen({ action: 'primary' });
+            if (moveCrew(direction)) {
+              resolveScreen({ action: 'primary' });
+            }
           },
         },
       },

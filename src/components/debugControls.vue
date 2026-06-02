@@ -131,41 +131,18 @@
 </template>
 
 <script setup lang="ts">
-import { gameState } from '../utils/gameStore';
+import { gameState, getNextBoardPosition, moveUserPosition } from '../utils/gameStore';
 import { gameEvents } from '../events/gameEvents';
 
 const moveCorsair = (direction: string) => {
-  switch (direction) {
-    case 'left':
-      gameState.corsairPosition.y -= 1;
-      break;
-    case 'right':
-      gameState.corsairPosition.y += 1;
-      break;
-    case 'up':
-      gameState.corsairPosition.x += 1;
-      break;
-    case 'down':
-      gameState.corsairPosition.x -= 1;
-      break;
+  const nextPosition = getNextBoardPosition(gameState.corsairPosition, direction);
+  if (nextPosition) {
+    gameState.corsairPosition.set(nextPosition.x, nextPosition.y);
   }
 };
 
 const movePlayer = (direction: string) => {
-  switch (direction) {
-    case 'left':
-      gameState.userPosition.y -= 1;
-      break;
-    case 'right':
-      gameState.userPosition.y += 1;
-      break;
-    case 'up':
-      gameState.userPosition.x += 1;
-      break;
-    case 'down':
-      gameState.userPosition.x -= 1;
-      break;
-  }
+  moveUserPosition(direction);
 };
 
 const toggleEntityVisibility = () => {
