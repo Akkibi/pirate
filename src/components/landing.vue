@@ -1,6 +1,6 @@
 <template>
   <div class="col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4">
-    <div class="landing-logo" aria-label="Captain!">
+    <div class="landing-logo z-10" aria-label="Captain!">
       <div class="landing-logo__artwork">
         <img
           class="landing-logo__base"
@@ -13,6 +13,10 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="absolute inset-0 z-0 opacity-20">
+    <Silk />
   </div>
 
   <div
@@ -65,6 +69,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameButton from './ui/GameButton.vue';
+import Silk from './Silk.vue';
 import { gameText } from '../content/gameText';
 import { gameState } from '../utils/gameStore';
 
