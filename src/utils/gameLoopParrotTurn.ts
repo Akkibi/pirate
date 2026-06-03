@@ -255,8 +255,8 @@ export async function runParrotTurn({
 
     if (currentStep === 'parrot.lookAroundTimer') {
       if (shouldWaitForMapReveal) {
+        playSound('parrotSurroundings');
         await waitForEvent('parrot:map_revealed');
-        playSound('corsair');
         shouldWaitForMapReveal = false;
       }
 
@@ -335,7 +335,7 @@ export async function runParrotTurn({
             },
             props: {
               chrome: PARROT_CHROME,
-              primaryButtonLabel: remainingParrotActions > 0 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
+              primaryButtonLabel: remainingParrotActions > 1 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
             },
           },
           {
@@ -366,7 +366,7 @@ export async function runParrotTurn({
           },
           props: {
             chrome: PARROT_CHROME,
-            primaryButtonLabel: remainingParrotActions > 0 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
+            primaryButtonLabel: remainingParrotActions > 1 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
           },
         },
         {

@@ -11,6 +11,7 @@ import {
   type PhaseType,
   ensureCorsairAwayFromBoat,
   gameState,
+  randomizeCorsairAwayFromBoat,
   setBoardTiles,
 } from '../utils/gameStore';
 import { watch } from 'vue';
@@ -227,19 +228,25 @@ export class MapManager {
   }
 
   public generateMap(): void {
-    const startPosition = new THREE.Vector2(
-      Math.round(Math.random() * 4),
-      Math.round(Math.random() * 6)
-    );
-    gameState.userPositionHistory.splice(0, gameState.userPositionHistory.length);
-    gameState.userPosition = startPosition;
-    ensureCorsairAwayFromBoat();
+    const hasSavedBoard = gameState.boardTiles.length > 0;
+
+    if (!hasSavedBoard) {
+      const startPosition = new THREE.Vector2(
+        Math.round(Math.random() * 4),
+        Math.round(Math.random() * 6)
+      );
+
+      gameState.userPositionHistory.splice(0, gameState.userPositionHistory.length);
+      gameState.userPosition = startPosition;
+      randomizeCorsairAwayFromBoat();
+    } else {
+      ensureCorsairAwayFromBoat();
+    }
 
     // generate board tiles
-    const boardTiles =
-      gameState.boardTiles.length > 0 ? gameState.boardTiles : this.createBoardTiles();
+    const boardTiles = hasSavedBoard ? gameState.boardTiles : this.createBoardTiles();
 
-    if (gameState.boardTiles.length === 0) {
+    if (!hasSavedBoard) {
       setBoardTiles(boardTiles);
     }
 

@@ -123,7 +123,7 @@ function handleCardClick(card: ChoiceCard) {
     return;
   }
 
-  playSound(isActionCard(card) ? 'uiClick' : 'cards');
+  playSound(isActionCard(card) ? 'parchmentSmall' : 'cards');
   selectedCardKey.value = getCardKey(card);
   resolvingSelection.value = true;
 
@@ -144,10 +144,10 @@ function clearRevealSoundTimers() {
 function playRevealSoundsForCards() {
   clearRevealSoundTimers();
 
-  props.cards.forEach((_, index) => {
+  props.cards.forEach((card, index) => {
     const timer = window.setTimeout(
       () => {
-        playSound('cards', { volume: 0.32 });
+        playSound(isActionCard(card) ? 'parchmentSmall' : 'cards', { volume: 0.32 });
       },
       Math.min(index, 3) * 110
     );
@@ -189,10 +189,10 @@ function cardStyles(index: number, card: ChoiceCard): CSSProperties {
     opacity: props.revealed ? (isDimmed ? '0.22' : '1') : '0',
     transform: getCardTransform(isAction, isSelected, actionRotation),
     pointerEvents: props.revealed && !resolvingSelection.value ? 'auto' : 'none',
-    transitionDelay: isSelected || isAction ? '0ms' : `${staggerIndex * 110}ms`,
-    transitionDuration: isSelected ? `${getSelectionDelay(card)}ms` : isAction ? '220ms' : '480ms',
+    transitionDelay: isSelected ? '0ms' : `${staggerIndex * 110}ms`,
+    transitionDuration: isSelected ? `${getSelectionDelay(card)}ms` : isAction ? '460ms' : '480ms',
     transitionProperty: 'transform, opacity, filter',
-    transitionTimingFunction: isAction ? 'ease-out' : 'cubic-bezier(0.22, 1, 0.36, 1)',
+    transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
     '--choice-card-flip-delay': isAction ? '0ms' : `${staggerIndex * 110 + 420}ms`,
   };
 }
@@ -209,7 +209,7 @@ function getCardTransform(isAction: boolean, isSelected: boolean, actionRotation
   }
 
   return isAction
-    ? `translate3d(0, 0, 0) rotate(${actionRotation}deg) scale(0.98)`
+    ? `translate3d(0, 2.4rem, 0) rotate(${actionRotation}deg) scale(0.94)`
     : 'translate3d(0, 2rem, 0)';
 }
 

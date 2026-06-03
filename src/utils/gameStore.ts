@@ -296,6 +296,8 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.usedTreasureThisTurn = snapshot.usedTreasureThisTurn ?? false;
   gameState.bottleTokenEquipped = snapshot.bottleTokenEquipped ?? false;
   gameState.cannonTokenEquipped = snapshot.cannonTokenEquipped ?? false;
+  gameState.displayBottle = gameState.bottleTokenEquipped;
+  gameState.displayCannons = gameState.cannonTokenEquipped;
   gameState.peanutTokens = snapshot.peanutTokens ?? 0;
   gameState.tequilaTonight = snapshot.tequilaTonight ?? false;
   gameState.gameResult = snapshot.gameResult ?? null;
@@ -388,6 +390,33 @@ function getAdjacentBoardPositions(
 
 function pickRandomBoardPosition(positions: BoardPositionSnapshot[]): BoardPositionSnapshot | null {
   return positions[Math.floor(Math.random() * positions.length)] ?? null;
+}
+
+function getAllBoardPositions(): BoardPositionSnapshot[] {
+  const positions: BoardPositionSnapshot[] = [];
+
+  for (let x = 0; x < BOARD_TILE_COUNT_X; x++) {
+    for (let y = 0; y < BOARD_TILE_COUNT_Y; y++) {
+      positions.push({ x, y });
+    }
+  }
+
+  return positions;
+}
+
+export function randomizeCorsairAwayFromBoat(): void {
+  const nextPosition = pickRandomBoardPosition(
+    getAllBoardPositions().filter(
+      (position) => !isSameBoardPosition(position, gameState.userPosition)
+    )
+  );
+
+  if (!nextPosition) {
+    ensureCorsairAwayFromBoat();
+    return;
+  }
+
+  gameState.corsairPosition.set(nextPosition.x, nextPosition.y);
 }
 
 export function ensureCorsairAwayFromBoat(): void {

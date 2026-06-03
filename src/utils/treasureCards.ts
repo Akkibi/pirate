@@ -120,6 +120,7 @@ export const treasureCardDefinitions: Record<TreasureCardId, TreasureCardDefinit
     count: 1,
     effect: 'Le Capitaine est retrouvé. Vous gagnez la partie.',
     playable: false,
+    imageSrc: '/images/cards/capitaine.webp',
   },
 };
 

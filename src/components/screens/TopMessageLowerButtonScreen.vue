@@ -132,7 +132,7 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => hasPrimaryButton.value && hasSecondaryButton.value
+  () => hasPrimaryButton.value && hasSecondaryButton.value && shouldShowUndo.value
 );
 const buttonRowCount = computed(() => {
   if (normalButtonCount.value === 0) {

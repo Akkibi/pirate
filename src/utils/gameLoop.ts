@@ -391,20 +391,33 @@ export class GameLoop {
     const rhumConsumedLabel = `${gameState.rhumConsumed} bouteille${
       gameState.rhumConsumed > 1 ? 's' : ''
     }`;
+    const resultStats = [
+      {
+        label: 'Temps écoulé',
+        value: elapsedLabel,
+      },
+      {
+        label: 'Rhum consommé',
+        value: rhumConsumedLabel,
+      },
+    ];
     const resultContent =
       gameState.gameResult === 'won'
         ? {
             title: gameText.gameOver.wonTitle,
-            body: `Le capitaine a été retrouvé ! Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
+            body: 'Le capitaine a été retrouvé !',
+            stats: resultStats,
           }
         : gameState.gameResult === 'lost-corsair'
           ? {
               title: gameText.gameOver.lostTitle,
-              body: `Les corsaires vous capturent et vous exilent. Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
+              body: 'Les corsaires vous capturent et vous exilent.',
+              stats: resultStats,
             }
           : {
               title: gameText.gameOver.lostTitle,
-              body: `L’Équipage n’a plus de rhum et renonce à l’expédition. Temps de jeu : ${elapsedLabel}. Rhum consommé : ${rhumConsumedLabel}.`,
+              body: 'L’Équipage n’a plus de rhum et renonce à l’expédition.',
+              stats: resultStats,
             };
 
     await this.showCheckpointScreen('gameOver', {
