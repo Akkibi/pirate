@@ -25,8 +25,8 @@ import {
   clearRequestedTreasureCardSelection,
   requestTreasureCardSelection,
 } from './utils/treasureCardSelection';
+import { gameState } from './utils/gameStore';
 import { playSound, startBackgroundMusic } from './utils/soundManager';
-import Silk from './components/Silk.vue';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -195,6 +195,7 @@ function resumeGame() {
 function toggleUI() {
   playSound('uiClick');
   UIShown.value = !UIShown.value;
+  gameState.debugMode = !UIShown.value;
 }
 
 function handleChromeCardUse(cardInstanceId: string | number) {
@@ -227,33 +228,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
 <template>
   <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
-    <template v-if="!started">
-      <div class="absolute inset-0">
-        <Silk />
-
-        <!-- <div
-          class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
-        ></div> -->
-        <!-- <div
-          class="absolute -top-2 -left-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
-        ></div>
-        <div
-          class="absolute -top-2 rotate-90 -right-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
-        ></div>
-
-        <div
-          class="absolute -bottom-2 -rotate-90 -left-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
-        ></div>
-        <div
-          class="absolute -bottom-2 rotate-180 -right-2 w-30 h-30 bg-[url('/images/screen-border.webp')] bg-cover bg-center"
-        ></div> -->
-        <!-- <div
-          class="absolute inset-0 bg-[url('/images/boundstexture.webp')] bg-center bg-cover mix-blend-multiply"
-        ></div> -->
-      </div>
-    </template>
-
-    <Canvas v-else />
+    <Canvas />
 
     <ScreenGrid overlay class="z-20">
       <div

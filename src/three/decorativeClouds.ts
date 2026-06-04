@@ -10,7 +10,6 @@ export class DecorativeClouds {
 
   constructor() {
     this.cloudGroup = new THREE.Group();
-
     const cloud = modelLoader.get('./models/clouds.glb').scene.clone();
     cloud.position.add(new THREE.Vector3(0.5, 0, 0.5));
     this.cloudGroup.add(cloud);

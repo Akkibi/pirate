@@ -64,6 +64,8 @@ interface StoreInterface {
   gameResult: GameResult;
   gameStartedAt: number;
   loadingProgress: number;
+  gameStarted: boolean;
+  debugMode: boolean;
 }
 
 export interface GameStateSnapshot {
@@ -142,6 +144,8 @@ export const gameState = reactive({
   gameResult: null,
   gameStartedAt: Date.now(),
   loadingProgress: 0,
+  gameStarted: false,
+  debugMode: false,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
@@ -548,6 +552,15 @@ export function isIslandExhausted(position: Pick<THREE.Vector2, 'x' | 'y'>): boo
 export function formatBoardCoordinate(position: Pick<THREE.Vector2, 'x' | 'y'>): string {
   return `${'ABCDEFG'[6 - position.y] ?? '?'}${position.x + 1}`;
 }
+
+export const renderStats = reactive({
+  fps: 0,
+  frameTime: 0,
+  drawCalls: 0,
+  triangles: 0,
+  geometries: 0,
+  textures: 0,
+});
 
 export function getBoardTileStateAtPosition(
   position: Pick<THREE.Vector2, 'x' | 'y'>

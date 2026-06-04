@@ -3,7 +3,6 @@ import type { PhaseType } from '../utils/gameStore';
 import { gameState } from '../utils/gameStore';
 import { watch } from 'vue';
 import gsap from 'gsap';
-import { DecorativeClouds } from './decorativeClouds';
 
 export const cameraPositions = {
   focused: new THREE.Vector3(-10, 3.5, 0),
@@ -19,16 +18,12 @@ export class Camera {
   private globalPosition: THREE.Vector2;
   private targetPosition: THREE.Vector2;
   private phase: PhaseType;
-  private clouds: DecorativeClouds;
 
   constructor(scene: THREE.Scene, width: number, height: number) {
     this.cameraGroup = new THREE.Group();
     this.cameraGroup.position.add(new THREE.Vector3(-0, 0, 2.5));
     this.cameraPositionGroup = new THREE.Group();
     this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
-
-    this.clouds = new DecorativeClouds();
-    scene.add(this.clouds.cloudGroup);
 
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.globalPosition = new THREE.Vector2().copy(gameState.userPosition);

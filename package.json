@@ -16,13 +16,15 @@
   "dependencies": {
     "gsap": "^3.14.2",
     "mitt": "^3.0.1",
-"vue": "^3.5.25",
+    "stats.js": "^0.17.0",
+    "vue": "^3.5.25",
     "vue-eslint-parser": "^10.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^24.10.1",
+    "@types/stats.js": "^0.17.4",
     "@types/three": "^0.182.0",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/tsconfig": "^0.8.1",

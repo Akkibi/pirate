@@ -65,7 +65,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameButton from './ui/GameButton.vue';
-import Silk from './Silk.vue';
 import { gameText } from '../content/gameText';
 import { gameState } from '../utils/gameStore';
 
@@ -88,10 +87,12 @@ const openSettings = () => undefined;
 
 function startGame() {
   emit('start');
+  gameState.gameStarted = true;
 }
 
 function resumeGame() {
   emit('resume');
+  gameState.gameStarted = true;
 }
 </script>
 
