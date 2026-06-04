@@ -38,6 +38,7 @@ export class SceneManager {
     this.camera.setPosition(gameState.userPosition);
     // Initialize renderer
     this.renderer = new THREE.WebGPURenderer({
+      antialias: true,
       canvas: this.canvas,
       forceWebGL: false,
     });
@@ -92,7 +93,7 @@ export class SceneManager {
     const timeSeconds = time * 1000;
     this.renderer.render(this.scene, this.camera.getNative());
     this.seaSky.update(timeSeconds);
-    this.player.update(timeSeconds);
+    this.player.update(timeSeconds, deltaTime);
     this.corsair.update(timeSeconds);
     this.camera.update(timeSeconds);
     this.particleSystemManager.update(deltaTime);

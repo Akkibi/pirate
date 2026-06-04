@@ -66,7 +66,7 @@ onMounted(() => {
   const canvas = canvasRef.value!;
   const parent = canvas.parentElement!;
 
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
 
