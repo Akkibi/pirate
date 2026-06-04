@@ -15,10 +15,6 @@
     </div>
   </div>
 
-  <div class="absolute inset-0 z-0 opacity-20">
-    <Silk />
-  </div>
-
   <div
     :class="[
       'col-span-6 col-start-2 row-start-5 flex flex-col justify-end gap-1 px-1',

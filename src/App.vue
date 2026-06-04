@@ -26,6 +26,7 @@ import {
   requestTreasureCardSelection,
 } from './utils/treasureCardSelection';
 import { playSound, startBackgroundMusic } from './utils/soundManager';
+import Silk from './components/Silk.vue';
 
 const started = ref(false);
 const UIShown = ref(true);
@@ -228,7 +229,8 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
     <template v-if="!started">
       <div class="absolute inset-0">
-        <img class="h-full w-full object-cover opacity-90" src="/images/bg.webp" alt="background" />
+        <Silk />
+
         <!-- <div
           class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,10,7,0.25)_0%,rgba(17,10,7,0.55)_45%,rgba(17,10,7,0.92)_100%)]"
         ></div> -->

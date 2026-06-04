@@ -23,7 +23,7 @@ export class Camera {
 
   constructor(scene: THREE.Scene, width: number, height: number) {
     this.cameraGroup = new THREE.Group();
-    this.cameraGroup.position.add(new THREE.Vector3(50, 0, 2.5));
+    this.cameraGroup.position.add(new THREE.Vector3(-0, 0, 2.5));
     this.cameraPositionGroup = new THREE.Group();
     this.camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
 
@@ -41,6 +41,12 @@ export class Camera {
     this.cameraPositionGroup.add(this.camera);
     this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
+
+    gsap.fromTo(
+      this.camera.position,
+      { x: -50, y: 0, z: 2.5 },
+      { x: 0, y: 0, z: 0, duration: 2, ease: 'expo.out' }
+    );
 
     this.cameraPositionGroup.position.copy(cameraPositions.focused);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));

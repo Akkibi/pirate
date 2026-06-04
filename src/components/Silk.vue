@@ -11,11 +11,13 @@ const props = withDefaults(
     speed?: number;
     scale?: number;
     rotation?: number;
+    displace?: number;
   }>(),
   {
     speed: 5,
     scale: 1,
     rotation: 0,
+    displace: 0.05,
   }
 );
 
@@ -33,17 +35,19 @@ uniform float uTime;
 uniform float uSpeed;
 uniform float uScale;
 uniform float uRotation;
+uniform sampler2D uTexture;
+uniform float uDisplace;
 
 vec2 rotateUvs(vec2 uv, float angle) {
   float c = cos(angle);
   float s = sin(angle);
-  mat2  rot = mat2(c, -s, s, c);
+  mat2 rot = mat2(c, -s, s, c);
   return rot * uv;
 }
 
 void main() {
-  vec2  uv      = rotateUvs(vUv * uScale, uRotation);
-  vec2  tex     = uv * uScale;
+  vec2 uv     = rotateUvs(vUv * uScale, uRotation);
+  vec2 tex    = uv * uScale;
   float tOffset = uSpeed * uTime;
 
   tex.y += 0.03 * sin(8.0 * tex.x - tOffset);
@@ -54,7 +58,13 @@ void main() {
                      0.02 * tOffset) +
              sin(20.0 * (tex.x + tex.y - 0.1 * tOffset)));
 
-  gl_FragColor = vec4(1.0, 1.0, 1.0, pattern);
+  // Displace image by the silk pattern (centered at 0.6 so it goes both ways)
+  vec2 imgUv = vUv;
+  imgUv.x += (pattern - 0.6) * uDisplace * 0.25;
+  imgUv.y += (pattern - 0.6) * uDisplace * 0.25;
+
+  vec4 img = texture2D(uTexture, imgUv);
+  gl_FragColor = vec4(mix(img.rgb, vec3(0.0), pattern * 0.35), 1.0);
 }
 `;
 
@@ -74,12 +84,17 @@ onMounted(() => {
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
   camera.position.z = 1;
 
-  // Typed reference avoids noUncheckedIndexedAccess errors from string-indexed uniforms
+  const texture = new THREE.TextureLoader().load('/images/bg.webp');
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+
   const uniforms = {
     uTime: { value: 0 },
     uSpeed: { value: props.speed },
     uScale: { value: props.scale },
     uRotation: { value: props.rotation },
+    uTexture: { value: texture },
+    uDisplace: { value: props.displace },
   };
 
   const material = new THREE.ShaderMaterial({
@@ -117,6 +132,12 @@ onMounted(() => {
       uniforms.uRotation.value = v;
     }
   );
+  watch(
+    () => props.displace,
+    (v) => {
+      uniforms.uDisplace.value = v;
+    }
+  );
 
   let lastTime = Date.now();
   const animate = () => {
@@ -134,6 +155,7 @@ onMounted(() => {
     window.removeEventListener('resize', resize);
     geometry.dispose();
     material.dispose();
+    texture.dispose();
     renderer!.dispose();
   });
 });
