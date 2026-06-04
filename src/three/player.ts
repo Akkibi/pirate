@@ -36,12 +36,14 @@ export class Player {
   private cannonsMod: THREE.Object3D | null = null;
   private bottleMod: THREE.Object3D | null = null;
   private sceneManager: SceneManager;
+  private animationTime: number;
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
     this.playerGroup = new THREE.Group();
     this.boatGroup = new THREE.Group();
     this.birdGroup = new THREE.Group();
+    this.animationTime = 0;
 
     const arrowGroup = new THREE.Group();
     this.playerGroup.add(arrowGroup);
@@ -274,7 +276,14 @@ export class Player {
           { z: 0 },
           { duration: 0.2, ease: 'expo.out', delay: 0.25, z: Math.PI * 0.5 }
         )
-        .to(this.boatGroup.rotation, { duration: 2, ease: 'elastic.out(1, 0.3)', z: 0 });
+        .to(this.boatGroup.rotation, {
+          duration: 2,
+          ease: 'elastic.out(1, 0.3)',
+          z: 0,
+          onComplete: () => {
+            this.animationTime = 0;
+          },
+        });
     }
   }
 
@@ -306,12 +315,14 @@ export class Player {
     });
   }
 
-  public update(time: number) {
-    this.boatGroup.rotation.y += 0.001;
-    this.boatGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
+  public update(time: number, delta: number) {
+    this.animationTime += delta;
+
+    this.boatGroup.rotation.y += 0.0001 * delta;
+    this.boatGroup.rotation.z = Math.sin(this.animationTime * 0.0005) * 0.2;
     this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
-    this.birdGroup.rotation.y += 0.003;
+    this.birdGroup.rotation.y += 0.0002 * delta;
     this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
     this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;
 

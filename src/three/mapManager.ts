@@ -96,13 +96,16 @@ export class MapManager {
   private pathLine: Line2 | null = null;
   private readonly pathMaterial = new Line2NodeMaterial({
     color: 0x000000,
-    linewidth: 10,
+    linewidth: Math.max(3, 10 * (window.innerHeight / 900)),
     dashed: true,
     dashSize: 0.18,
     gapSize: 0.1,
     opacity: 0.3,
     transparent: true,
   });
+  private onResize = () => {
+    this.pathMaterial.linewidth = Math.max(3, 10 * (window.innerHeight / 900));
+  };
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.scene = scene;
@@ -129,6 +132,7 @@ export class MapManager {
       this.generateMap();
     });
 
+    window.addEventListener('resize', this.onResize);
     this.initWatchers();
   }
 
@@ -201,6 +205,8 @@ export class MapManager {
   }
 
   public destroy(): void {
+    window.removeEventListener('resize', this.onResize);
+
     // Stop all watchers
     this.stopWatchers.forEach((stop) => stop());
     this.stopWatchers = [];
