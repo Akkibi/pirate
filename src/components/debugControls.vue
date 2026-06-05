@@ -55,6 +55,53 @@
     >
       Shoot Cannons
     </button>
+    <button
+      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      @click="gameState.gameStarted = !gameState.gameStarted"
+    >
+      <span class="text-xs opacity-55">Game :</span>
+      {{ gameState.gameStarted ? 'Started' : 'Stopped' }}
+    </button>
+  </div>
+  <div
+    class="pointer-events-none col-span-2 col-start-7 row-span-2 row-start-1 flex flex-col gap-1 self-start justify-self-start font-mono text-xs"
+  >
+    <div class="bg-amber-950/80 border border-amber-700 px-2 py-1 text-amber-300">
+      <div class="text-amber-500 font-black mb-1">PERF</div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">FPS</span>
+        <span
+          :class="
+            renderStats.fps < 30
+              ? 'text-red-400'
+              : renderStats.fps < 50
+                ? 'text-yellow-400'
+                : 'text-green-400'
+          "
+          >{{ renderStats.fps }}</span
+        >
+      </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">ms</span>
+        <span class="text-amber-100">{{ renderStats.frameTime }}</span>
+      </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">calls</span>
+        <span class="text-amber-100">{{ renderStats.drawCalls }}</span>
+      </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">tris</span>
+        <span class="text-amber-100">{{ renderStats.triangles.toLocaleString() }}</span>
+      </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">geo</span>
+        <span class="text-amber-100">{{ renderStats.geometries }}</span>
+      </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-amber-500">tex</span>
+        <span class="text-amber-100">{{ renderStats.textures }}</span>
+      </div>
+    </div>
   </div>
   <div
     class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end gap-2 self-end"
@@ -131,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { gameState, getNextBoardPosition, moveUserPosition } from '../utils/gameStore';
+import { gameState, getNextBoardPosition, moveUserPosition, renderStats } from '../utils/gameStore';
 import { gameEvents } from '../events/gameEvents';
 
 const moveCorsair = (direction: string) => {

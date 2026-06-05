@@ -15,10 +15,6 @@
     </div>
   </div>
 
-  <div class="absolute inset-0 z-0 opacity-20">
-    <Silk />
-  </div>
-
   <div
     :class="[
       'col-span-6 col-start-2 row-start-5 flex flex-col justify-end gap-1 px-1',
@@ -69,7 +65,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameButton from './ui/GameButton.vue';
-import Silk from './Silk.vue';
 import { gameText } from '../content/gameText';
 import { gameState } from '../utils/gameStore';
 
@@ -92,10 +87,12 @@ const openSettings = () => undefined;
 
 function startGame() {
   emit('start');
+  gameState.gameStarted = true;
 }
 
 function resumeGame() {
   emit('resume');
+  gameState.gameStarted = true;
 }
 </script>
 
