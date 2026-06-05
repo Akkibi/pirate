@@ -221,7 +221,7 @@ export class Player {
             cannonWorldPos.clone(),
             velocity,
             800,
-            new THREE.Vector2(0.04, 0.005),
+            new THREE.Vector2(0.04, 0.01),
             -Math.atan2(velocity.z, velocity.x),
             new THREE.Color(0, 0, 0),
             0.5 + Math.random() * 0.5

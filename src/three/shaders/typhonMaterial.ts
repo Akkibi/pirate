@@ -1,7 +1,6 @@
 import * as THREE from 'three/webgpu';
 import {
   positionGeometry,
-  positionWorld,
   mix,
   clamp,
   fract,
@@ -14,24 +13,10 @@ import {
   sin,
   attribute,
   time,
-  mx_worley_noise_float,
   mx_noise_vec3,
   atan2,
-  floor,
-  mod,
 } from 'three/tsl';
-
-// Water base — same constants as waterMaterial.ts
-const WATER_SCALE = 2;
-const WATER_SPEED = 0.4;
-const BASE_OPACITY = 0.45;
-const CHESS_DARKEN = 0.12;
-
-// sRGB hex → linear: WebGPU pipeline is linear; the renderer applies linearToSRGB at output
-const _deep = new THREE.Color(0x008c74);
-const _surface = new THREE.Color(0x00a680);
-const DEEP_COLOR = vec3(_deep.r, _deep.g, _deep.b);
-const SURFACE_COLOR = vec3(_surface.r, _surface.g, _surface.b);
+import { BASE_OPACITY, createWaterColorNode } from './waterBase';
 
 // Blender ColorRamp stops (pos 0.0 / 0.5 / 1.0) — sRGB hex → linear
 const _colCenter = new THREE.Color(0x36b097);
@@ -52,15 +37,7 @@ export function createTyphonMaterial(
   mat.depthWrite = false;
 
   // ── Water base (world-space → seamless across all tiles) ─────────────────
-  const worldXZ = positionWorld.xz.mul(WATER_SCALE).add(time.mul(WATER_SPEED));
-  const worley = mx_worley_noise_float(worldXZ, 0.85);
-  const chess = mod(
-    floor(positionWorld.x.add(0.5)).add(floor(positionWorld.z.add(0.5))),
-    float(2.0)
-  );
-  const waterColor = mix(DEEP_COLOR, SURFACE_COLOR, worley).mul(
-    float(1.0).sub(chess.mul(float(CHESS_DARKEN)))
-  );
+  const waterColor = createWaterColorNode();
   // ── Typhon spiral ─────────────────────────────────────────────────────────
   // positionGeometry is the raw geometry attribute — before the per-instance
   // matrix is applied. This keeps the spiral centered on every tile regardless
