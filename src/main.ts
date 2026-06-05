@@ -3,7 +3,7 @@ import './style.css';
 import App from './App.vue';
 import { GameLoop } from './utils/gameLoop';
 import { clearSavedGameProgress } from './utils/gameProgress';
-import { resetGameState } from './utils/gameStore';
+import { resetGameState, gameState } from './utils/gameStore';
 
 createApp(App).mount('#app');
 
@@ -11,11 +11,13 @@ export async function initGame(options?: { resume?: boolean }) {
   const gameLoop = new GameLoop();
 
   if (options?.resume) {
+    gameState.gameStarted = true;
     await gameLoop.resumeFromSavedProgress();
     return;
   }
 
   resetGameState();
   clearSavedGameProgress();
+  gameState.gameStarted = true;
   await gameLoop.startTurn();
 }

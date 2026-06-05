@@ -1,6 +1,6 @@
 <template>
   <button
-    class="bg-amber-700 border-2 border-amber-900 bg-opacity-50 p-1 text-sm text-amber-100 aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
+    class="bg-slate-900 rounded-full bg-opacity-50 p-2 text-sm text-white aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
     @click="requestFullscreen"
   >
     <svg

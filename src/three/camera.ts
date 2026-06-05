@@ -37,12 +37,6 @@ export class Camera {
     this.cameraGroup.add(this.cameraPositionGroup);
     scene.add(this.cameraGroup);
 
-    gsap.fromTo(
-      this.camera.position,
-      { x: -50, y: 0, z: 2.5 },
-      { x: 0, y: 0, z: 0, duration: 2, ease: 'expo.out' }
-    );
-
     this.cameraPositionGroup.position.copy(cameraPositions.focused);
     this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, -1, 0)));
 
@@ -153,8 +147,24 @@ export class Camera {
 
   public update(time: number): void {
     this.cameraGroup.rotation.x = Math.sin(time * 0.0005) * 0.02;
-    // this.cameraGroup.rotation.x = time * 0.0005;
     this.cameraGroup.rotation.z = Math.sin(time * 0.00021) * 0.02;
+  }
+
+  public start(): void {
+    gsap.fromTo(
+      this.camera.position,
+      { x: -20, y: 0, z: 2.5 },
+      {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 2,
+        ease: 'expo.out',
+        onUpdate: () => {
+          this.camera.lookAt(this.cameraGroup.position.clone().add(new THREE.Vector3(0, 0.1, 0)));
+        },
+      }
+    );
   }
 
   private updatePosition(): void {

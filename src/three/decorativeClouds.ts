@@ -11,7 +11,7 @@ export class DecorativeClouds {
   constructor() {
     this.cloudGroup = new THREE.Group();
     const cloud = modelLoader.get('./models/clouds.glb').scene.clone();
-    cloud.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    cloud.position.add(new THREE.Vector3(0.5, -5, 0.5));
     this.cloudGroup.add(cloud);
     this.initWatchers();
   }
@@ -33,10 +33,8 @@ export class DecorativeClouds {
   private updateVisibility(isOverview: boolean) {
     if (isOverview) {
       gsap.to(this.cloudGroup.position, { y: 0, duration: 1, ease: 'expo.out' });
-      gsap.to(this.cloudGroup.scale, { x: 1, y: 1, z: 1, duration: 1, ease: 'expo.out' });
     } else {
       gsap.to(this.cloudGroup.position, { y: -5, duration: 1, ease: 'expo.out' });
-      gsap.to(this.cloudGroup.scale, { x: 0.5, y: 0.5, z: 0.5, duration: 1, ease: 'expo.out' });
     }
   }
 }

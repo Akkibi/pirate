@@ -553,15 +553,6 @@ export function formatBoardCoordinate(position: Pick<THREE.Vector2, 'x' | 'y'>):
   return `${'ABCDEFG'[6 - position.y] ?? '?'}${position.x + 1}`;
 }
 
-export const renderStats = reactive({
-  fps: 0,
-  frameTime: 0,
-  drawCalls: 0,
-  triangles: 0,
-  geometries: 0,
-  textures: 0,
-});
-
 export function getBoardTileStateAtPosition(
   position: Pick<THREE.Vector2, 'x' | 'y'>
 ): BoardTileState | null {

@@ -3,60 +3,60 @@
     class="pointer-events-auto col-span-4 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end"
   >
     <button
-      class="bg-amber-700 min-w-20 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-20 p-1 px-3 text-white font-black"
       @click="toggleEntityVisibility"
     >
       {{ gameState.entitiesVisible ? 'Hide' : 'Show' }}
     </button>
     <button
-      class="bg-amber-700 min-w-30 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-30 p-1 px-3 text-white font-black"
       @click="toggleTurn"
     >
       <span class="text-xs opacity-55"> Turn : </span>
       {{ gameState.currentPhase === 'crew' ? 'Crew' : 'Parrot' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="toggleFocus"
     >
       {{ gameState.focusedView ? 'Focus' : 'Unfocussed' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="toggleArrows"
     >
       <span class="text-xs opacity-55">Arrows are :</span>
       {{ gameState.displayArrows ? 'On' : 'Off' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="toggleCorsair"
     >
       <span class="text-xs opacity-55">Corsair :</span>
       {{ gameState.displayCorsair ? 'On' : 'Off' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="gameState.displayCannons = !gameState.displayCannons"
     >
       <span class="text-xs opacity-55">Cannons :</span>
       {{ gameState.displayCannons ? 'On' : 'Off' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="gameState.displayBottle = !gameState.displayBottle"
     >
       <span class="text-xs opacity-55">Bottle :</span>
       {{ gameState.displayBottle ? 'On' : 'Off' }}
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="gameEvents.emit('boat:shoot_cannons', {})"
     >
       Shoot Cannons
     </button>
     <button
-      class="bg-amber-700 min-w-24 p-1 px-2 text-amber-100 font-black border-3 border-amber-900"
+      class="bg-slate-900 rounded-full min-w-24 p-1 px-3 text-white font-black"
       @click="gameState.gameStarted = !gameState.gameStarted"
     >
       <span class="text-xs opacity-55">Game :</span>
@@ -64,76 +64,34 @@
     </button>
   </div>
   <div
-    class="pointer-events-none col-span-2 col-start-7 row-span-2 row-start-1 flex flex-col gap-1 self-start justify-self-start font-mono text-xs"
-  >
-    <div class="bg-amber-950/80 border border-amber-700 px-2 py-1 text-amber-300">
-      <div class="text-amber-500 font-black mb-1">PERF</div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">FPS</span>
-        <span
-          :class="
-            renderStats.fps < 30
-              ? 'text-red-400'
-              : renderStats.fps < 50
-                ? 'text-yellow-400'
-                : 'text-green-400'
-          "
-          >{{ renderStats.fps }}</span
-        >
-      </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">ms</span>
-        <span class="text-amber-100">{{ renderStats.frameTime }}</span>
-      </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">calls</span>
-        <span class="text-amber-100">{{ renderStats.drawCalls }}</span>
-      </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">tris</span>
-        <span class="text-amber-100">{{ renderStats.triangles.toLocaleString() }}</span>
-      </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">geo</span>
-        <span class="text-amber-100">{{ renderStats.geometries }}</span>
-      </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-amber-500">tex</span>
-        <span class="text-amber-100">{{ renderStats.textures }}</span>
-      </div>
-    </div>
-  </div>
-  <div
     class="pointer-events-auto col-span-4 col-start-5 row-span-2 row-start-7 flex min-h-0 items-end justify-end gap-2 self-end"
   >
     <div class="flex flex-col items-center gap-1">
-      <span class="text-xs font-black text-amber-900">Corsair</span>
+      <span class="text-xs font-black text-white">Corsair</span>
       <div class="relative flex items-center justify-center gap-2">
-        <div
-          class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
-        ></div>
+        <div class="absolute inset-0 h-full w-full scale-75 rounded-[40%] bg-black"></div>
         <button
-          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
           @click="moveCorsair('left')"
         >
           Left
         </button>
         <div class="flex flex-col gap-2">
           <button
-            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
             @click="moveCorsair('up')"
           >
             Up
           </button>
           <button
-            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
             @click="moveCorsair('down')"
           >
             Down
           </button>
         </div>
         <button
-          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
           @click="moveCorsair('right')"
         >
           Right
@@ -141,33 +99,31 @@
       </div>
     </div>
     <div class="flex flex-col items-center gap-1">
-      <span class="text-xs font-black text-amber-900">Player</span>
+      <span class="text-xs font-black text-white">Player</span>
       <div class="relative flex items-center justify-center gap-2">
-        <div
-          class="absolute inset-0 h-full w-full scale-75 rounded-[40%] border-3 border-amber-900 bg-amber-950"
-        ></div>
+        <div class="absolute inset-0 h-full w-full scale-75 rounded-[40%] bg-black"></div>
         <button
-          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
           @click="movePlayer('left')"
         >
           Left
         </button>
         <div class="flex flex-col gap-2">
           <button
-            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
             @click="movePlayer('up')"
           >
             Up
           </button>
           <button
-            class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+            class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
             @click="movePlayer('down')"
           >
             Down
           </button>
         </div>
         <button
-          class="relative min-w-16 border-3 border-amber-900 bg-amber-700 p-1 px-2 font-black text-amber-100"
+          class="relative min-w-16 bg-slate-900 rounded-full p-1 px-3 font-black text-white"
           @click="movePlayer('right')"
         >
           Right
@@ -178,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { gameState, getNextBoardPosition, moveUserPosition, renderStats } from '../utils/gameStore';
+import { gameState, getNextBoardPosition, moveUserPosition } from '../utils/gameStore';
 import { gameEvents } from '../events/gameEvents';
 
 const moveCorsair = (direction: string) => {

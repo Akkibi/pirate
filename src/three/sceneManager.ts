@@ -4,7 +4,7 @@ import { MapManager } from './mapManager';
 import { createSeaSkyBackground, type SeaSkyBackground } from './skytexture';
 import { gsap } from 'gsap';
 import { Player } from './player';
-import { gameState, renderStats } from '../utils/gameStore';
+import { gameState } from '../utils/gameStore';
 import { Corsair } from './corsair';
 import { objectPool } from './instancedModelManger';
 import { ParticleSystemManager } from './particleSystemManager';
@@ -30,7 +30,6 @@ export class SceneManager {
   public corsair!: Corsair;
   private particleSystemManager!: ParticleSystemManager;
   private decorativeClouds!: DecorativeClouds;
-  private statsFrameCount = 0;
   private stats: Stats;
   private gameSceneReady = false;
 
@@ -60,8 +59,9 @@ export class SceneManager {
 
     this.stats = new Stats();
     this.stats.dom.style.position = 'absolute';
-    this.stats.dom.style.display = 'none';
-    this.canvas.parentElement?.appendChild(this.stats.dom);
+    if (import.meta.env.DEV) {
+      this.canvas.parentElement?.appendChild(this.stats.dom);
+    }
 
     this.initWatchers();
   }
@@ -85,22 +85,26 @@ export class SceneManager {
   private initWatchers(): void {
     watch(
       () => gameState.gameStarted,
-      (started) => {
-        if (started && !this.gameSceneReady) {
-          this.initGameScene();
-          this.gameSceneReady = true;
+      async (started) => {
+        if (started) {
+          if (!this.gameSceneReady) {
+            this.initGameScene();
+            this.gameSceneReady = true;
+            await this.renderer.compileAsync(this.scene, this.camera.getNative());
+            await this.renderer.renderAsync(this.scene, this.camera.getNative());
+          }
+          this.activeScene = this.scene;
+          this.startElements();
+        } else {
+          this.activeScene = this.menuScene;
         }
-        this.activeScene = started ? this.scene : this.menuScene;
       },
       { immediate: true }
     );
+  }
 
-    watch(
-      () => gameState.debugMode,
-      (debug) => {
-        this.stats.dom.style.display = debug ? 'block' : 'none';
-      }
-    );
+  private startElements(): void {
+    this.camera.start();
   }
 
   async init(): Promise<void> {
@@ -146,17 +150,8 @@ export class SceneManager {
       this.corsair.update(timeSeconds);
       this.camera.update(timeSeconds);
       this.particleSystemManager.update(deltaTime);
-    }
-
-    this.statsFrameCount++;
-    if (this.statsFrameCount % 30 === 0) {
-      renderStats.fps = deltaTime > 0 ? Math.round(1000 / deltaTime) : 0;
-      renderStats.frameTime = Math.round(deltaTime * 10) / 10;
-      const info = this.renderer.info;
-      renderStats.drawCalls = info.render.calls;
-      renderStats.triangles = info.render.triangles;
-      renderStats.geometries = info.memory.geometries;
-      renderStats.textures = info.memory.textures;
+    } else {
+      // animate the menu shader
     }
   };
 

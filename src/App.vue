@@ -28,7 +28,10 @@ import {
 import { gameState } from './utils/gameStore';
 import { playSound, startBackgroundMusic } from './utils/soundManager';
 
+const isDev = import.meta.env.DEV;
 const started = ref(false);
+const startedDelayed = ref(false);
+const landingRef = ref<InstanceType<typeof Landing> | null>(null);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
 
@@ -178,19 +181,31 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
 });
 
 function startGame() {
-  playSound('pirateIntro');
-  startBackgroundMusic();
-  started.value = true;
-
-  initGame();
+  landingRef.value?.exit(() => {
+    playSound('pirateIntro');
+    startBackgroundMusic();
+    started.value = true;
+    void initGame();
+  });
 }
 
 function resumeGame() {
-  startBackgroundMusic();
-  started.value = true;
-
-  initGame({ resume: true });
+  landingRef.value?.exit(() => {
+    startBackgroundMusic();
+    started.value = true;
+    void initGame({ resume: true });
+  });
 }
+
+watch(started, (value) => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        startedDelayed.value = value;
+      });
+    });
+  });
+});
 
 function toggleUI() {
   playSound('uiClick');
@@ -249,7 +264,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
       >
         <button
           v-if="started"
-          class="border-2 border-amber-900 bg-amber-700 px-2 py-1 font-black text-amber-100"
+          class="rounded-full bg-slate-900 px-3 py-1 font-black text-white"
           @click="toggleUI"
         >
           {{ UIShown ? 'Hide UI' : 'Show UI' }}
@@ -257,7 +272,13 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         <FullscreenButton />
       </div>
 
-      <Landing v-if="!started" :show-resume="canResume" @resume="resumeGame" @start="startGame" />
+      <Landing
+        ref="landingRef"
+        v-if="!startedDelayed"
+        :show-resume="canResume"
+        @resume="resumeGame"
+        @start="startGame"
+      />
 
       <component
         :is="activeScreenComponent"
@@ -284,7 +305,19 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         </template>
       </component>
 
-      <DebugControls v-if="started && !UIShown" />
+      <DebugControls v-if="started && !UIShown && isDev" />
+      <div
+        class="w-[5vh] h-[5vh] bg-black absolute z-10 -translate-x-1/2 -translate-y-1/2 rotate-45"
+      ></div>
+      <div
+        class="w-[5vh] h-[5vh] bg-black absolute z-10 -translate-x-1/2 translate-y-1/2 rotate-45 bottom-0"
+      ></div>
+      <div
+        class="w-[5vh] h-[5vh] bg-black absolute z-10 translate-x-1/2 translate-y-1/2 rotate-45 bottom-0 right-0"
+      ></div>
+      <div
+        class="w-[5vh] h-[5vh] bg-black absolute z-10 translate-x-1/2 -translate-y-1/2 rotate-45 right-0"
+      ></div>
     </ScreenGrid>
   </div>
 </template>

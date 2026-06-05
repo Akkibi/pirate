@@ -19,7 +19,7 @@
           backgroundImage: 'url(/images/parchment/left_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
-          left: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
+          left: 'var(--parchment-clip-x)',
         }"
       />
       <div :class="surfaceClasses">
@@ -48,7 +48,7 @@
           backgroundImage: 'url(/images/parchment/right_end.webp)',
           backgroundSize: '100% 100%',
           width: 'var(--parchment-end-width)',
-          right: 'max(0px, calc(var(--parchment-clip-x) - var(--parchment-end-width)))',
+          right: 'var(--parchment-clip-x)',
         }"
       />
     </component>
@@ -241,7 +241,7 @@ async function animateIn() {
       {
         '--parchment-clip-x': '0%',
         duration: 1,
-        ease: 'power2.inOut',
+        ease: 'expo.out',
       },
       0
     )
@@ -249,10 +249,10 @@ async function animateIn() {
       textRef.value,
       {
         opacity: 1,
-        duration: 0.35,
-        ease: 'power2.out',
+        duration: 0.9,
+        ease: 'expo.out',
       },
-      '>-0.1'
+      '>-0.9'
     );
 }
 

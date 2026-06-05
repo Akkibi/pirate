@@ -1,5 +1,16 @@
 <template>
-  <div class="col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4">
+  <div
+    class="absolute bg-black inset-0 z-0 anchor-mask"
+    :style="{
+      maskImage: `url(${randomMask}), linear-gradient(black, black)`,
+      maskSize: '10000vh, cover',
+    }"
+    ref="maskRef"
+  ></div>
+  <div
+    ref="logoRef"
+    class="col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4"
+  >
     <div class="landing-logo z-10" aria-label="Captain!">
       <div class="landing-logo__artwork">
         <img
@@ -16,6 +27,7 @@
   </div>
 
   <div
+    ref="loadingBarRef"
     :class="[
       'col-span-6 col-start-2 row-start-5 flex flex-col justify-end gap-1 px-1',
       isLoaded && 'animate-hide',
@@ -32,7 +44,7 @@
     </div>
   </div>
 
-  <div class="pointer-events-auto col-span-6 col-start-2 row-start-6 min-h-0">
+  <div ref="startButtonRef" class="pointer-events-auto col-span-6 col-start-2 row-start-6 min-h-0">
     <GameButton
       :label="gameText.landing.primaryButton"
       :on-click="startGame"
@@ -40,7 +52,11 @@
     />
   </div>
 
-  <div v-if="showResume" class="pointer-events-auto col-span-6 col-start-2 row-start-7 min-h-0">
+  <div
+    v-if="showResume"
+    ref="resumeButtonRef"
+    class="pointer-events-auto col-span-6 col-start-2 row-start-7 min-h-0"
+  >
     <GameButton
       :label="gameText.landing.resumeButton"
       :on-click="resumeGame"
@@ -49,6 +65,7 @@
   </div>
 
   <div
+    ref="settingsButtonRef"
     :class="[
       'pointer-events-auto col-span-6 col-start-2 min-h-0',
       showResume ? 'row-start-8' : 'row-start-7',
@@ -63,7 +80,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import gsap from 'gsap';
 import GameButton from './ui/GameButton.vue';
 import { gameText } from '../content/gameText';
 import { gameState } from '../utils/gameStore';
@@ -77,6 +95,85 @@ withDefaults(
   }
 );
 
+const masks = ['/images/masks/anchor.svg', '/images/masks/wheel.svg'];
+const randomMask = masks[Math.floor(Math.random() * masks.length)];
+
+const logoRef = ref<HTMLElement | null>(null);
+
+onMounted(() => {
+  const tl = gsap.timeline();
+
+  if (logoRef.value) {
+    tl.from(logoRef.value, { y: '-110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.1);
+  }
+
+  const buttonEls = [
+    loadingBarRef.value,
+    startButtonRef.value,
+    resumeButtonRef.value,
+    settingsButtonRef.value,
+  ].filter(Boolean) as HTMLElement[];
+
+  buttonEls.forEach((el, i) => {
+    tl.from(el, { y: '110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.1 + i * 0.08);
+  });
+});
+const loadingBarRef = ref<HTMLElement | null>(null);
+const maskRef = ref<HTMLElement | null>(null);
+const startButtonRef = ref<HTMLElement | null>(null);
+const resumeButtonRef = ref<HTMLElement | null>(null);
+const settingsButtonRef = ref<HTMLElement | null>(null);
+
+function exit(onSceneChange?: () => void) {
+  const tl = gsap.timeline({ onComplete: () => onSceneChange?.() });
+
+  if (logoRef.value) {
+    tl.to(
+      logoRef.value,
+      {
+        y: '-110vh',
+        duration: 0.5,
+        ease: 'expo.in',
+      },
+      '<'
+    );
+  }
+  if (maskRef.value) {
+    tl.fromTo(
+      maskRef.value,
+      { maskSize: '1000%, cover' },
+      {
+        maskSize: '0.1%, cover',
+        duration: 0.5,
+        ease: 'expo.out',
+      },
+      '<'
+    );
+  }
+
+  const buttonEls = [
+    loadingBarRef.value,
+    startButtonRef.value,
+    resumeButtonRef.value,
+    settingsButtonRef.value,
+  ].filter(Boolean) as HTMLElement[];
+
+  buttonEls.forEach((el, i) => {
+    tl.to(
+      el,
+      {
+        y: '110vh',
+        duration: 0.5,
+        ease: 'expo.in',
+        delay: (3 - i) * 0.05,
+      },
+      '0'
+    );
+  });
+}
+
+defineExpose({ exit });
+
 const emit = defineEmits<{
   (event: 'start'): void;
   (event: 'resume'): void;
@@ -87,16 +184,22 @@ const openSettings = () => undefined;
 
 function startGame() {
   emit('start');
-  gameState.gameStarted = true;
 }
 
 function resumeGame() {
   emit('resume');
-  gameState.gameStarted = true;
 }
 </script>
 
 <style scoped>
+.anchor-mask {
+  mask-repeat: no-repeat, no-repeat;
+  mask-position: center, center;
+  mask-size: contain, cover;
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
 .landing-logo {
   position: relative;
   width: min(88vw, 46rem, calc((50vh - 2rem) * 2.169));
