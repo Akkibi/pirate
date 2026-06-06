@@ -7,9 +7,7 @@
       @shown="buttonsVisible = true"
     >
       <div class="card-confirm-content">
-        <p class="screen-message-title font-title">
-          {{ title }}
-        </p>
+        <p class="screen-message-title font-title">{{ title }}</p>
 
         <img
           v-if="card.imageSrc"

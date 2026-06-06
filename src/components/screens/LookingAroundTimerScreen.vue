@@ -1,40 +1,109 @@
 <template>
   <div :class="timerClasses">
-    <div class="mt-6 relative">
-      <!-- Tally counter outer casing -->
-      <div
-        class="relative bg-amber-950 rounded-sm border-2 border-amber-800 px-5 py-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]"
-      >
-        <!-- Corner rivets -->
+    <div class="mt-6 flex flex-col items-center gap-2">
+      <!-- Number at top -->
+      <Transition name="ticker" mode="out-in">
         <span
-          class="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
-        ></span>
-        <span
-          class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
-        ></span>
-        <span
-          class="absolute bottom-1.5 left-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
-        ></span>
-        <span
-          class="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-700 shadow-inner"
-        ></span>
-
-        <!-- Display window -->
-        <div
-          class="relative overflow-hidden bg-stone-950 border border-amber-900/60 rounded-sm px-6 py-2 w-24 text-center"
+          :key="currentStep"
+          class="text-5xl font-bold font-mono tabular-nums leading-none"
+          style="
+            color: #fff3cb;
+            text-shadow:
+              -2px -2px 0 #000,
+              0 -2px 0 #000,
+              2px -2px 0 #000,
+              2px 0 0 #000,
+              2px 2px 0 #000,
+              0 2px 0 #000,
+              -2px 2px 0 #000,
+              -2px 0 0 #000;
+          "
+          >{{ currentStep }}</span
         >
-          <!-- Mechanical divider line -->
-          <span class="absolute inset-x-0 top-1/2 h-px bg-amber-900/60 z-10"></span>
+      </Transition>
 
-          <!-- Animated digit -->
-          <Transition name="ticker" mode="out-in">
-            <span
-              :key="currentStep"
-              class="relative block text-5xl font-bold text-amber-400 font-mono leading-none tabular-nums"
-              >{{ currentStep }}</span
-            >
-          </Transition>
-        </div>
+      <!-- Clock face -->
+      <div class="relative w-32 h-32">
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- Outer bezel -->
+          <circle cx="50" cy="50" r="48" fill="#472422" stroke="#f1b730" stroke-width="2" />
+          <!-- Clock face -->
+          <circle cx="50" cy="50" r="44" fill="#371412" />
+
+          <!-- Background ring -->
+          <circle
+            cx="50"
+            cy="50"
+            r="36"
+            fill="none"
+            stroke="#f1b730"
+            stroke-opacity="0.15"
+            stroke-width="8"
+          />
+
+          <!-- Elapsed arc sweeping clockwise from 12 o'clock -->
+          <circle
+            cx="50"
+            cy="50"
+            r="36"
+            fill="none"
+            stroke="#f1b730"
+            stroke-opacity="0.7"
+            stroke-width="8"
+            :stroke-dasharray="circumference"
+            :stroke-dashoffset="dashOffset"
+            transform="rotate(-90 50 50)"
+            style="transition: stroke-dashoffset 0.6s ease-out"
+          />
+
+          <!-- Tick marks at each step position -->
+          <g v-for="i in 5" :key="i" :transform="`rotate(${(i - 1) * 72} 50 50)`">
+            <line
+              x1="50"
+              y1="7"
+              x2="50"
+              y2="16"
+              stroke="#d7a75b"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </g>
+
+          <!-- Needle -->
+          <line
+            x1="50"
+            y1="50"
+            x2="50"
+            y2="13"
+            stroke="#f1b730"
+            stroke-width="3"
+            stroke-linecap="round"
+            :style="{
+              transform: `rotate(${needleRotation}deg)`,
+              transformOrigin: '50px 50px',
+              transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+            }"
+          />
+          <!-- Needle tail (counterweight) -->
+          <line
+            x1="50"
+            y1="50"
+            x2="50"
+            y2="60"
+            stroke="#d7a75b"
+            stroke-width="2"
+            stroke-linecap="round"
+            :style="{
+              transform: `rotate(${needleRotation}deg)`,
+              transformOrigin: '50px 50px',
+              transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+            }"
+          />
+
+          <!-- Center pivot -->
+          <circle cx="50" cy="50" r="5" fill="#472422" stroke="#f1b730" stroke-width="1.5" />
+          <circle cx="50" cy="50" r="2.5" fill="#f1b730" />
+        </svg>
       </div>
     </div>
   </div>
@@ -66,12 +135,15 @@ const emit = defineEmits<{
   (event: 'finished'): void;
 }>();
 
-// const countdownSteps = [5, 4, 3, 2, 1];
 const currentStep = ref(5);
 const timerClasses = computed(() => [
   'countdown-timer row-span-2 flex items-start justify-baseline',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
 ]);
+
+const circumference = 2 * Math.PI * 36;
+const needleRotation = computed(() => ((5 - currentStep.value) / 5) * 360);
+const dashOffset = computed(() => circumference - ((5 - currentStep.value) / 5) * circumference);
 
 let countdownTimer: number | null = null;
 
@@ -142,6 +214,18 @@ onBeforeUnmount(() => {
 }
 .ticker-leave-active {
   animation: tick-out 0.12s ease-in;
+}
+
+.dark-text-outline {
+  text-shadow:
+    -2px -2px 0 #000,
+    0 -2px 0 #000,
+    2px -2px 0 #000,
+    2px 0 0 #000,
+    2px 2px 0 #000,
+    0 2px 0 #000,
+    -2px 2px 0 #000,
+    -2px 0 0 #000;
 }
 
 @keyframes tick-in {

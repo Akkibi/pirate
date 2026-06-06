@@ -12,12 +12,28 @@
         <p class="difficulty-body">
           {{ body }}
         </p>
-        <div class="difficulty-selector pointer-events-auto text-amber-950">
-          <button class="difficulty-step" type="button" @click="decrement">-</button>
-          <div class="difficulty-value font-title">
-            {{ selectedValue }}
+        <div class="difficulty-selector pointer-events-auto">
+          <button
+            class="difficulty-step"
+            type="button"
+            :disabled="selectedValue <= minValue"
+            @click="decrement"
+          >
+            -
+          </button>
+          <div class="difficulty-value font-title overflow-hidden relative">
+            <Transition name="ticker" mode="out-in">
+              <span :key="selectedValue" class="block">{{ selectedValue }}</span>
+            </Transition>
           </div>
-          <button class="difficulty-step" type="button" @click="increment">+</button>
+          <button
+            class="difficulty-step"
+            type="button"
+            :disabled="selectedValue >= maxValue"
+            @click="increment"
+          >
+            +
+          </button>
         </div>
       </div>
     </template>
@@ -84,45 +100,101 @@ function confirm() {
 
 .difficulty-title {
   max-width: min(100%, 54rem);
-  color: #7c3f16;
   font-size: clamp(1.45rem, 7vmin, 4.5rem);
   line-height: 0.85;
   overflow-wrap: anywhere;
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+  background-color: #371412;
+  color: transparent;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+  filter: saturate(1.5);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .difficulty-body {
   width: min(100%, 52rem);
   min-width: 0;
-  color: #7c3f16;
   font-size: var(--ui-message-body-size);
   line-height: 1.22;
   white-space: normal;
   overflow-wrap: anywhere;
   hyphens: auto;
   text-wrap: pretty;
+  background-color: #61220e;
+  color: transparent;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .difficulty-selector {
   display: flex;
   align-items: center;
   gap: clamp(0.55rem, 4vmin, 1.7rem);
+  background-color: #371412;
+  color: rgba(255, 244, 205, 1);
+  -webkit-mask-image: url(/images/parchment/phase_parent.svg);
+  -webkit-mask-size: 100% 100%;
+  mask-image: url(/images/parchment/phase_parent.svg);
+  mask-size: 100% 100%;
+  padding: clamp(0.5rem, 2vmin, 1rem) clamp(0.75rem, 3vmin, 1.5rem);
+  clip-path: polygon(5% 0, 100% 5%, 95% 100%, 0 100%);
 }
 
 .difficulty-step {
   width: clamp(2rem, 7.5vmin, 3.6rem);
   height: clamp(2rem, 7.5vmin, 3.6rem);
   border-radius: 0.5rem;
+  background: transparent;
   font-size: clamp(1.2rem, 4.6vmin, 2.3rem);
   font-weight: 900;
   line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.difficulty-step:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
 
 .difficulty-value {
   min-width: clamp(2.6rem, 10vmin, 5.2rem);
-  color: #3f1309;
   font-size: clamp(2.25rem, 10.5vmin, 5.5rem);
   line-height: 1;
   padding-top: clamp(0.25rem, 2.2vmin, 1rem);
+  background-color: rgba(255, 244, 205, 1);
+  color: transparent;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.ticker-enter-active {
+  animation: tick-in 0.12s ease-out;
+}
+.ticker-leave-active {
+  animation: tick-out 0.12s ease-in;
+}
+
+@keyframes tick-in {
+  from {
+    transform: translateY(60%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tick-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-60%);
+    opacity: 0;
+  }
 }
 </style>

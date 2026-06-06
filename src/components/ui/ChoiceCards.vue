@@ -7,6 +7,12 @@
       :style="cardStyles(index, card)"
       :disabled="card.disabled"
       @click="handleCardClick(card)"
+      @mousedown="handleCardPress(card)"
+      @mouseup="handleCardRelease()"
+      @mouseleave="handleCardRelease()"
+      @touchstart.passive="handleCardPress(card)"
+      @touchend="handleCardRelease()"
+      @touchcancel="handleCardRelease()"
     >
       <template v-if="card.imageSrc">
         <template v-if="isActionCard(card)">
@@ -87,6 +93,7 @@ const gridClasses = computed(() => [
 ]);
 const hasActionCards = computed(() => props.cards.some(isActionCard));
 const selectedCardKey = ref<string | number | null>(null);
+const pressedCardKey = ref<string | number | null>(null);
 const resolvingSelection = ref(false);
 
 let selectionTimer: number | null = null;
@@ -116,6 +123,16 @@ function getActionCardRotation(index: number): number {
   const rotations = [-2.6, 1.8, -1.5, 2.4];
 
   return rotations[index % rotations.length] ?? 0;
+}
+
+function handleCardPress(card: ChoiceCard) {
+  if (!card.disabled && !resolvingSelection.value && isActionCard(card)) {
+    pressedCardKey.value = getCardKey(card);
+  }
+}
+
+function handleCardRelease() {
+  pressedCardKey.value = null;
 }
 
 function handleCardClick(card: ChoiceCard) {
@@ -175,7 +192,9 @@ function cardClasses(card: ChoiceCard) {
 function cardStyles(index: number, card: ChoiceCard): CSSProperties {
   const staggerIndex = Math.min(index, 3);
   const isAction = isActionCard(card);
-  const isSelected = selectedCardKey.value === getCardKey(card);
+  const cardKey = getCardKey(card);
+  const isSelected = selectedCardKey.value === cardKey;
+  const isPressed = pressedCardKey.value === cardKey;
   const isDimmed = resolvingSelection.value && !isSelected;
   const columnIndex = index % columnCount.value;
   const rowIndex = Math.floor(index / columnCount.value);
@@ -187,21 +206,38 @@ function cardStyles(index: number, card: ChoiceCard): CSSProperties {
     width: 'var(--choice-card-width)',
     height: 'var(--choice-card-height)',
     opacity: props.revealed ? (isDimmed ? '0.22' : '1') : '0',
-    transform: getCardTransform(isAction, isSelected, actionRotation),
+    transform: getCardTransform(isAction, isSelected, actionRotation, isPressed),
     pointerEvents: props.revealed && !resolvingSelection.value ? 'auto' : 'none',
     transitionDelay: isSelected || isAction ? '0ms' : `${staggerIndex * 110}ms`,
-    transitionDuration: isSelected ? `${getSelectionDelay(card)}ms` : isAction ? '220ms' : '480ms',
+    transitionDuration: isSelected
+      ? `${getSelectionDelay(card)}ms`
+      : isAction
+        ? isPressed
+          ? '120ms'
+          : '200ms'
+        : '480ms',
     transitionProperty: 'transform, opacity, filter',
-    transitionTimingFunction: isAction ? 'ease-out' : 'cubic-bezier(0.22, 1, 0.36, 1)',
+    transitionTimingFunction: isAction
+      ? 'cubic-bezier(0.16, 1, 0.3, 1)'
+      : 'cubic-bezier(0.22, 1, 0.36, 1)',
     '--choice-card-flip-delay': isAction ? '0ms' : `${staggerIndex * 110 + 420}ms`,
   };
 }
 
-function getCardTransform(isAction: boolean, isSelected: boolean, actionRotation: number): string {
+function getCardTransform(
+  isAction: boolean,
+  isSelected: boolean,
+  actionRotation: number,
+  isPressed: boolean = false
+): string {
   if (isSelected) {
     return isAction
       ? `translate3d(0, 0, 0) rotate(${actionRotation}deg) scale(0.96)`
       : 'translate3d(-42vw, -3vh, 0) rotate(-8deg) scale(0.42)';
+  }
+
+  if (isAction && isPressed) {
+    return `translate3d(0, 1vh, 0) rotate(${actionRotation}deg) scaleX(0.9) scaleY(0.9)`;
   }
 
   if (props.revealed) {

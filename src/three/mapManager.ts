@@ -82,7 +82,6 @@ const tileTypes = [
     ) => createTyphonMaterial(opacity),
   },
   { name: 'fog', url: './models/fog.glb' },
-  { name: 'flag', url: './models/flag.glb' },
 ];
 
 export class MapManager {

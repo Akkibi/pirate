@@ -333,16 +333,35 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   justify-content: center;
   gap: var(--ui-message-gap);
   overflow: hidden;
-  color: #71320e;
   text-align: center;
+
+  /*color: #71320e;*/
+  background-color: #61220e;
+  color: transparent;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  background-clip: text;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .screen-message-title {
   max-width: min(100%, 64rem);
   font-size: var(--ui-message-title-size);
   line-height: 0.88;
+  /*color: #472422;*/
   overflow-wrap: anywhere;
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+  /*filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));*/
+  background-color: #371412;
+  color: transparent;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+  filter: saturate(1.5);
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  background-clip: text;
+  padding-top: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .screen-message-body {

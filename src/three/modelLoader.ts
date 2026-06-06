@@ -10,7 +10,6 @@ const ALL_MODELS = [
   './models/monsters/serpent.glb',
   './models/typhon.glb',
   './models/fog.glb',
-  './models/flag.glb',
   './models/board.glb',
   './models/environement.glb',
   './models/boat.glb',
