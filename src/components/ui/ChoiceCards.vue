@@ -140,7 +140,7 @@ function handleCardClick(card: ChoiceCard) {
     return;
   }
 
-  playSound(isActionCard(card) ? 'uiClick' : 'cards');
+  playSound(isActionCard(card) ? 'parchmentSmall' : 'cards');
   selectedCardKey.value = getCardKey(card);
   resolvingSelection.value = true;
 
@@ -161,10 +161,10 @@ function clearRevealSoundTimers() {
 function playRevealSoundsForCards() {
   clearRevealSoundTimers();
 
-  props.cards.forEach((_, index) => {
+  props.cards.forEach((card, index) => {
     const timer = window.setTimeout(
       () => {
-        playSound('cards', { volume: 0.32 });
+        playSound(isActionCard(card) ? 'parchmentSmall' : 'cards', { volume: 0.32 });
       },
       Math.min(index, 3) * 110
     );
@@ -245,7 +245,7 @@ function getCardTransform(
   }
 
   return isAction
-    ? `translate3d(0, 0, 0) rotate(${actionRotation}deg) scale(0.98)`
+    ? `translate3d(0, 2.4rem, 0) rotate(${actionRotation}deg) scale(0.94)`
     : 'translate3d(0, 2rem, 0)';
 }
 

@@ -21,6 +21,7 @@ import gsap from 'gsap';
 import { gameEvents } from '../events/gameEvents';
 import { ParticleSystemManager } from './particleSystemManager';
 import { ArrowManager } from './arrowManager';
+import { playSound } from '../utils/soundManager';
 
 const _teal = new THREE.Color(0x008c74);
 const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
@@ -358,8 +359,9 @@ export class Player {
       for (const [name, mesh] of arrowMeshes) {
         if (mesh === clickedMesh) {
           this.arrowManager.highlight(name);
-          gameEvents.emit('crew:arrow_click', { direction: name });
+          playSound('uiClick');
           gameState.arrowClicked = name;
+          gameEvents.emit('crew:arrow_click', { direction: name });
           break;
         }
       }

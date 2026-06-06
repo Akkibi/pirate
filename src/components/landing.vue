@@ -104,7 +104,7 @@ onMounted(() => {
   const tl = gsap.timeline();
 
   if (logoRef.value) {
-    tl.from(logoRef.value, { y: '-110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.1);
+    tl.from(logoRef.value, { y: '-110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.25);
   }
 
   const buttonEls = [
@@ -115,7 +115,7 @@ onMounted(() => {
   ].filter(Boolean) as HTMLElement[];
 
   buttonEls.forEach((el, i) => {
-    tl.from(el, { y: '110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.1 + i * 0.08);
+    tl.from(el, { y: '110vh', duration: 0.75, ease: 'elastic.out(1, 0.75)' }, 0.25 + i * 0.08);
   });
 });
 const loadingBarRef = ref<HTMLElement | null>(null);

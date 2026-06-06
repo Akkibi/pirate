@@ -34,6 +34,7 @@ const startedDelayed = ref(false);
 const landingRef = ref<InstanceType<typeof Landing> | null>(null);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
+const handOverlayRequestKey = ref(0);
 
 onMounted(() => {
   startBackgroundMusic();
@@ -80,8 +81,14 @@ function withoutChrome<T extends Record<string, unknown>>(props: T): Omit<T, 'ch
   const screenProps = { ...props };
 
   delete screenProps.chrome;
+  delete screenProps.openHandOnPrimary;
+  delete screenProps.openHandOnSecondary;
 
   return screenProps;
+}
+
+function requestChromeHandOverlay() {
+  handOverlayRequestKey.value += 1;
 }
 
 const activeScreenProps = computed<Record<string, unknown> | null>(() => {
@@ -117,10 +124,14 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
         sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
-          : () => resolveScreen({ action: 'primary' }),
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
         onSecondaryButtonClick: screen.props.secondaryButtonOnClick
           ? screen.props.secondaryButtonOnClick
-          : () => resolveScreen({ action: 'secondary' }),
+          : screen.props.openHandOnSecondary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'secondary' }),
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
 
@@ -139,10 +150,14 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
         sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
-          : () => resolveScreen({ action: 'primary' }),
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
         onSecondaryButtonClick: screen.props.secondaryButtonOnClick
           ? screen.props.secondaryButtonOnClick
-          : () => resolveScreen({ action: 'secondary' }),
+          : screen.props.openHandOnSecondary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'secondary' }),
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
 
@@ -156,10 +171,14 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
         })),
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
-          : () => resolveScreen({ action: 'primary' }),
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
         onSecondaryButtonClick: screen.props.secondaryButtonOnClick
           ? screen.props.secondaryButtonOnClick
-          : () => resolveScreen({ action: 'secondary' }),
+          : screen.props.openHandOnSecondary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'secondary' }),
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
 
@@ -169,10 +188,14 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
         sideChromeLayout: usesSideChromeLayout.value,
         onPrimaryButtonClick: screen.props.primaryButtonOnClick
           ? screen.props.primaryButtonOnClick
-          : () => resolveScreen({ action: 'primary' }),
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
         onSecondaryButtonClick: screen.props.secondaryButtonOnClick
           ? screen.props.secondaryButtonOnClick
-          : () => resolveScreen({ action: 'secondary' }),
+          : screen.props.openHandOnSecondary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'secondary' }),
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
   }
@@ -245,6 +268,15 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
     <Canvas />
 
+    <div class="portrait-rotation-screen" aria-live="polite">
+      <div class="portrait-rotation-icon" aria-hidden="true">
+        <span class="portrait-rotation-phone"></span>
+        <span class="portrait-rotation-arrow">↻</span>
+      </div>
+      <p class="portrait-rotation-title font-title">Tourne ton téléphone</p>
+      <p class="portrait-rotation-body">Passe en mode paysage pour continuer.</p>
+    </div>
+
     <ScreenGrid overlay class="z-20">
       <div
         v-if="started && UIShown && displayedScreenChrome"
@@ -255,6 +287,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
           :show-rhum="displayedScreenChrome.showRhum"
           :show-peanuts="displayedScreenChrome.showPeanuts"
           :can-use-cards="displayedScreenChrome.canUseCards"
+          :hand-open-request-key="handOverlayRequestKey"
           @use-card="handleChromeCardUse"
         />
       </div>
@@ -295,6 +328,26 @@ function handleChromeCardUse(cardInstanceId: string | number) {
             <p v-if="currentScreen.content.body" class="screen-message-body">
               {{ currentScreen.content.body }}
             </p>
+            <div
+              v-if="currentScreen.content.stats?.length"
+              class="screen-message-stats"
+              :style="{ '--stats-count': currentScreen.content.stats.length }"
+            >
+              <p
+                v-for="stat in currentScreen.content.stats"
+                :key="`label-${stat.label}`"
+                class="screen-message-stat-label"
+              >
+                {{ stat.label }}
+              </p>
+              <p
+                v-for="stat in currentScreen.content.stats"
+                :key="`value-${stat.label}`"
+                class="screen-message-stat-value"
+              >
+                {{ stat.value }}
+              </p>
+            </div>
             <p v-if="currentScreen.content.caption" class="screen-message-caption">
               {{ currentScreen.content.caption }}
             </p>
@@ -385,5 +438,103 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   overflow-wrap: anywhere;
   hyphens: auto;
   text-wrap: pretty;
+}
+
+.screen-message-stats {
+  --stats-count: 2;
+  display: grid;
+  width: min(100%, 42rem);
+  grid-template-columns: repeat(var(--stats-count), minmax(0, 1fr));
+  gap: 0.35rem 1.25rem;
+  align-items: end;
+  margin-block: 0.35rem;
+}
+
+.screen-message-stat-label {
+  min-width: 0;
+  font-size: clamp(1.1rem, 1.8vw, 2rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.screen-message-stat-value {
+  min-width: 0;
+  font-size: clamp(1.9rem, 4vw, 4.5rem);
+  font-weight: 900;
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.portrait-rotation-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: #120c08;
+  color: #f7ddb1;
+  text-align: center;
+}
+
+.portrait-rotation-icon {
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.portrait-rotation-phone {
+  position: absolute;
+  inset: 0.7rem 1.75rem;
+  border: 0.22rem solid currentColor;
+  border-radius: 0.55rem;
+  box-shadow: 0 0 0 0.16rem rgba(113, 50, 14, 0.45);
+  transform: rotate(-22deg);
+}
+
+.portrait-rotation-phone::after {
+  position: absolute;
+  bottom: 0.28rem;
+  left: 50%;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+  content: '';
+  transform: translateX(-50%);
+}
+
+.portrait-rotation-arrow {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.35rem;
+  font-size: 2.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.portrait-rotation-title {
+  max-width: 18rem;
+  font-size: clamp(2.4rem, 12vw, 4.8rem);
+  line-height: 0.85;
+  color: #f7ddb1;
+}
+
+.portrait-rotation-body {
+  max-width: 18rem;
+  font-size: clamp(1rem, 4.8vw, 1.45rem);
+  line-height: 1.15;
+  color: #e7c28d;
+}
+
+@media (orientation: portrait) {
+  .portrait-rotation-screen {
+    display: flex;
+  }
 }
 </style>

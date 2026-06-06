@@ -41,10 +41,15 @@
     </TransitionGroup>
 
     <Transition name="deck-stack">
-      <div
+      <button
         v-if="showDeckStack"
         class="deck-stack"
+        type="button"
         :aria-label="`Cartes tresor restantes: ${remainingDeckCount}`"
+        @pointerdown="showDeckLabel"
+        @pointerup="hideDeckLabel"
+        @pointerleave="hideDeckLabel"
+        @pointercancel="hideDeckLabel"
       >
         <span
           v-for="card in deckStackCards"
@@ -54,7 +59,12 @@
         >
           <img class="deck-stack-card__image" src="/images/cards/dos.webp" alt="" />
         </span>
-      </div>
+
+        <span v-if="deckLabelVisible" class="deck-stack-label" aria-hidden="true">
+          <span>Pioche</span>
+          <span>Cartes Restantes: {{ remainingDeckCount }}</span>
+        </span>
+      </button>
     </Transition>
 
     <Transition name="hand-stack">
@@ -63,7 +73,7 @@
         class="hand-stack-button"
         type="button"
         aria-label="Voir les cartes tresor en main"
-        @click="openHandOverlay"
+        @click="openHandOverlay()"
       >
         <span
           v-for="card in handStackCards"
@@ -149,12 +159,14 @@ const props = withDefaults(
     showRhum?: boolean;
     showPeanuts?: boolean;
     canUseCards?: boolean;
+    handOpenRequestKey?: number;
   }>(),
   {
     phase: undefined,
     showRhum: false,
     showPeanuts: false,
     canUseCards: false,
+    handOpenRequestKey: 0,
   }
 );
 
@@ -163,6 +175,7 @@ const emit = defineEmits<{
 }>();
 
 const handOverlayOpen = ref(false);
+const deckLabelVisible = ref(false);
 const displayedRhumCount = ref(gameState.currentRhum);
 const initialRhumFillPlayed = ref(false);
 const rhumFillTimers: number[] = [];
@@ -344,9 +357,21 @@ const handOverlayStyle = computed(
     }) as CSSProperties
 );
 
-function openHandOverlay() {
-  playSound('uiClick');
+function openHandOverlay(options?: { playClick?: boolean }) {
+  if (options?.playClick !== false) {
+    playSound('uiClick');
+  }
+
   handOverlayOpen.value = true;
+}
+
+function showDeckLabel() {
+  playSound('uiClick');
+  deckLabelVisible.value = true;
+}
+
+function hideDeckLabel() {
+  deckLabelVisible.value = false;
 }
 
 function handleOverlayCardClick(card: { instanceId: string | number; usable: boolean }) {
@@ -421,6 +446,23 @@ watch(showHandStack, (shown) => {
     handOverlayOpen.value = false;
   }
 });
+
+watch(showDeckStack, (shown) => {
+  if (!shown) {
+    deckLabelVisible.value = false;
+  }
+});
+
+watch(
+  () => props.handOpenRequestKey,
+  (requestKey, previousRequestKey) => {
+    if (!requestKey || requestKey === previousRequestKey || !props.canUseCards) {
+      return;
+    }
+
+    openHandOverlay({ playClick: false });
+  }
+);
 
 watch(
   () => gameState.currentRhum,
@@ -499,12 +541,12 @@ onBeforeUnmount(() => {
 
 .hand-stack-button {
   position: absolute;
-  bottom: calc(var(--ui-hand-stack-height) * -0.28);
-  left: calc(var(--ui-hand-stack-width) * -0.42);
+  bottom: calc(var(--ui-hand-stack-height) * -0.34);
+  left: calc(var(--ui-hand-stack-width) * -0.52);
   z-index: 16;
   pointer-events: auto;
-  width: calc(var(--ui-hand-stack-width) * 2.65);
-  height: calc(var(--ui-hand-stack-height) * 2.05);
+  width: calc(var(--ui-hand-stack-width) * 3.2);
+  height: calc(var(--ui-hand-stack-height) * 2.55);
   padding: 0;
   border: 0;
   background: transparent;
@@ -519,7 +561,12 @@ onBeforeUnmount(() => {
   z-index: 15;
   width: calc(var(--ui-hand-stack-width) * 1.38);
   height: calc(var(--ui-hand-stack-height) * 1.38);
-  pointer-events: none;
+  pointer-events: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
   transform: translate3d(-50%, 0, 0) rotate(90deg);
   transform-origin: 50% 50%;
 }
@@ -549,14 +596,38 @@ onBeforeUnmount(() => {
   filter: drop-shadow(0 0.16rem 0.16rem rgba(0, 0, 0, 0.24));
 }
 
+.deck-stack-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.5rem);
+  z-index: 20;
+  display: flex;
+  min-width: max-content;
+  flex-direction: column;
+  gap: 0.12rem;
+  border: 0.14rem solid #7a3510;
+  border-radius: 0.4rem;
+  background: rgba(255, 241, 188, 0.96);
+  padding: 0.34rem 0.5rem;
+  color: #5a2309;
+  font-size: clamp(0.62rem, 1.45vmin, 0.9rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-align: left;
+  text-shadow: none;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: left center;
+  box-shadow: 0 0.22rem 0.45rem rgba(0, 0, 0, 0.22);
+}
+
 .hand-stack-card {
   position: absolute;
   bottom: calc(var(--ui-hand-stack-height) * 0.08);
   left: calc(var(--ui-hand-stack-width) * 0.22);
   z-index: var(--hand-card-z);
   display: flex;
-  width: calc(var(--ui-hand-stack-width) * 1.26);
-  height: calc(var(--ui-hand-stack-height) * 1.26);
+  width: calc(var(--ui-hand-stack-width) * 1.58);
+  height: calc(var(--ui-hand-stack-height) * 1.58);
   align-items: center;
   justify-content: center;
   transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0)
@@ -594,11 +665,11 @@ onBeforeUnmount(() => {
 
 .peanut-stack {
   position: absolute;
-  bottom: var(--ui-chrome-bottom-inset);
+  top: calc(var(--ui-grid-padding) + var(--ui-phase-width) * 1.7);
   left: var(--ui-chrome-side-inset);
   z-index: 16;
   display: flex;
-  width: var(--ui-resource-width);
+  width: calc(var(--ui-resource-width) * 1.18);
   flex-direction: column;
   align-items: center;
   gap: var(--ui-resource-gap);

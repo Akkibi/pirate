@@ -31,10 +31,19 @@
       </div>
     </Parchment>
   </div>
-
   <div
     :class="[
       'row-start-7 transition-opacity duration-300',
+      confirmButtonLayoutClasses,
+      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+    ]"
+  >
+    <GameButton :label="confirmLabel" :on-click="onConfirm" :revealed="buttonsVisible" />
+  </div>
+
+  <div
+    :class="[
+      'row-start-8 transition-opacity duration-300',
       cancelButtonLayoutClasses,
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
@@ -45,16 +54,6 @@
       :on-click="onCancel"
       :revealed="buttonsVisible"
     />
-  </div>
-
-  <div
-    :class="[
-      'row-start-7 transition-opacity duration-300',
-      confirmButtonLayoutClasses,
-      buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-    ]"
-  >
-    <GameButton :label="confirmLabel" :on-click="onConfirm" :revealed="buttonsVisible" />
   </div>
 </template>
 
@@ -93,10 +92,10 @@ const parchmentClasses = computed(() => [
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
 ]);
 const cancelButtonLayoutClasses = computed(() =>
-  props.sideChromeLayout ? 'col-start-2 col-span-3' : 'col-start-1 col-span-4'
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-1 col-span-8'
 );
 const confirmButtonLayoutClasses = computed(() =>
-  props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
+  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-1 col-span-8'
 );
 </script>
 

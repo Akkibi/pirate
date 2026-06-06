@@ -8,6 +8,10 @@ export interface ScreenContent {
   body?: string;
   caption?: string;
   footer?: string;
+  stats?: {
+    label: string;
+    value: string;
+  }[];
 }
 
 export type DayPhaseIndicator = 'aurore' | 'matinee' | 'journee' | 'soiree';
@@ -31,6 +35,8 @@ type BaseButtonProps = {
   secondaryButtonLabel?: string;
   showUndo?: boolean;
   undoLabel?: string;
+  openHandOnPrimary?: boolean;
+  openHandOnSecondary?: boolean;
   primaryButtonOnClick?: () => void;
   secondaryButtonOnClick?: () => void;
 };

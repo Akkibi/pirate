@@ -8,6 +8,7 @@ type SoundKey =
   | 'monster'
   | 'typhon'
   | 'rhumRound'
+  | 'rhumNight'
   | 'rhumDefeat'
   | 'cards'
   | 'dice'
@@ -21,10 +22,14 @@ type SoundKey =
   | 'captain'
   | 'battle'
   | 'parrot'
+  | 'parrotSurroundings'
   | 'parrotShare'
   | 'parrotToCrew'
   | 'crewToParrot'
-  | 'peanut';
+  | 'peanut'
+  | 'crewPeanut'
+  | 'pirateReaction'
+  | 'parchmentSmall';
 
 const SOUND_SOURCES: Record<SoundKey, string[]> = {
   background: ['/sounds/bande son.mp3'],
@@ -41,33 +46,41 @@ const SOUND_SOURCES: Record<SoundKey, string[]> = {
   ],
   rhumSelect: ['/sounds/UI global (click, sélection rhum)/selection rhum.mp3'],
   calmSea: ['/sounds/mer calme.mp3'],
-  island: ['/sounds/abordage ile.mp3'],
-  monster: [
-    '/sounds/bruit de monstre/bruit de monstre 3.wav',
-    '/sounds/bruit de monstre/bruit de monstre 4.mp3',
-    '/sounds/bruit de monstre/bruit de monstre 2.mp3',
-    '/sounds/bruit de monstre/bruit de monstre.wav',
+  island: [
+    '/sounds/abordageile.mp3',
+    '/sounds/abordageile2.mp3',
+    '/sounds/abordageile3.mp3',
+    '/sounds/abordageile 4mp3.mp3',
+    '/sounds/abordageile5.mp3',
   ],
-  typhon: ['/sounds/bruit typhon/typhon.mp3', '/sounds/bruit typhon/typhon2.mp3'],
+  monster: [
+    '/sounds/bruit de monstre.mp3',
+    '/sounds/bruit de monstre 2.mp3',
+    '/sounds/bruit de monstre 3.mp3',
+    '/sounds/bruit de monstre 4.mp3',
+  ],
+  typhon: ['/sounds/typhon1.mp3', '/sounds/typhon2.mp3', '/sounds/typhon3.mp3'],
   rhumRound: ['/sounds/tournee de rhum.mp3'],
+  rhumNight: ['/sounds/rhumnuit.mp3', '/sounds/rhumnuit2.mp3'],
   rhumDefeat: ['/sounds/defaiterhum.mp3'],
   cards: ['/sounds/cartes.wav'],
   dice: ['/sounds/des.mp3'],
   timer: ['/sounds/timer.mp3'],
   corsair: ['/sounds/fregate corsaire.mp3'],
   anchor: ['/sounds/jeter lancre.mp3'],
-  tequila: ['/sounds/tequilla.mp3'],
-  bombeArtisanale: ['/sounds/bombe artisanale.mp3'],
+  tequila: ['/sounds/tequila.mp3'],
+  bombeArtisanale: ['/sounds/bombeartisanale.mp3'],
   bateauEnBouteille: ['/sounds/bateau en bouteille.mp3'],
-  poudreACanon: ['/sounds/poudre a canon.mp3'],
-  captain: ['/sounds/capitaine.mp3'],
+  poudreACanon: ['/sounds/poudreacanon.mp3'],
+  captain: ['/sounds/victoire.mp3'],
   battle: ['/sounds/bataille.wav'],
   parrot: [
     '/sounds/bruit de perroquet/perroquet5.mp3',
     '/sounds/bruit de perroquet/perroquet3.mp3',
     '/sounds/bruit de perroquet/perroquet2.mp3',
   ],
-  parrotShare: ['/sounds/perroquepartage.mp3'],
+  parrotSurroundings: ['/sounds/perroquetalentours.mp3', '/sounds/perroquetalentours2.mp3'],
+  parrotShare: ['/sounds/perroquettuile.mp3', '/sounds/perroquettuile2.mp3'],
   parrotToCrew: ['/sounds/perroquet a pirate.mp3'],
   crewToParrot: ['/sounds/equipage a perroquet.mp3'],
   peanut: [
@@ -75,7 +88,51 @@ const SOUND_SOURCES: Record<SoundKey, string[]> = {
     '/sounds/bruit cacahuète/cacahuete 2.mp3',
     '/sounds/bruit cacahuète/cachuete.mp3',
   ],
+  crewPeanut: ['/sounds/a moi.mp3', '/sounds/a moi2.mp3', '/sounds/a moi3.mp3'],
+  pirateReaction: [
+    '/sounds/yaaar.mp3',
+    '/sounds/yaaar2.mp3',
+    '/sounds/yaaar3.mp3',
+    '/sounds/yaaar4.mp3',
+    '/sounds/ahaha.mp3',
+    '/sounds/ahaha2.mp3',
+  ],
+  parchmentSmall: ['/sounds/papier/petit parchemin.wav'],
 };
+
+const SOUND_SELECTION_MODE: Partial<Record<SoundKey, 'roundRobin'>> = {
+  rhumNight: 'roundRobin',
+  parrotSurroundings: 'roundRobin',
+  parrotShare: 'roundRobin',
+};
+
+const PIRATE_REACTION_TRIGGER_KEYS = new Set<SoundKey>([
+  'calmSea',
+  'island',
+  'monster',
+  'typhon',
+  'rhumNight',
+  'rhumDefeat',
+  'corsair',
+  'anchor',
+  'tequila',
+  'bombeArtisanale',
+  'bateauEnBouteille',
+  'poudreACanon',
+  'captain',
+  'battle',
+  'parrot',
+  'parrotSurroundings',
+  'parrotShare',
+  'parrotToCrew',
+  'crewToParrot',
+  'peanut',
+  'crewPeanut',
+]);
+
+const PIRATE_REACTION_CHANCE = 0.12;
+const BACKGROUND_CROSSFADE_SECONDS = 3;
+const BACKGROUND_FADE_SECONDS = 2.4;
 
 const SOUND_VOLUME: Partial<Record<SoundKey, number>> = {
   background: 0.18,
@@ -87,6 +144,7 @@ const SOUND_VOLUME: Partial<Record<SoundKey, number>> = {
   monster: 0.5,
   typhon: 0.48,
   rhumRound: 0.5,
+  rhumNight: 0.5,
   rhumDefeat: 0.55,
   cards: 0.42,
   dice: 0.46,
@@ -95,67 +153,66 @@ const SOUND_VOLUME: Partial<Record<SoundKey, number>> = {
   anchor: 0.5,
   tequila: 0.5,
   parrot: 0.42,
+  parrotSurroundings: 0.48,
   parrotShare: 0.48,
   parrotToCrew: 0.48,
   crewToParrot: 0.48,
   peanut: 0.5,
+  crewPeanut: 0.5,
+  pirateReaction: 0.42,
   battle: 0.55,
-};
-
-const SOUND_MAX_DURATION_MS: Partial<Record<SoundKey, number>> = {
-  uiClick: 220,
-  pirateIntro: 950,
-  rhumSelect: 360,
-  calmSea: 2200,
-  island: 2400,
-  monster: 2200,
-  typhon: 2200,
-  rhumRound: 1600,
-  rhumDefeat: 2200,
-  dice: 900,
-  corsair: 2200,
-  anchor: 1300,
-  tequila: 1800,
-  bombeArtisanale: 1800,
-  bateauEnBouteille: 700,
-  poudreACanon: 1500,
-  captain: 2600,
-  battle: 2600,
-  parrot: 1200,
-  parrotShare: 1800,
-  parrotToCrew: 1800,
-  crewToParrot: 1800,
-  peanut: 1200,
+  parchmentSmall: 0.38,
 };
 
 type SoundOptions = {
   volume?: number;
   interrupt?: boolean;
-  maxDuration?: number;
 };
 
 type ActiveSound = {
   audio: HTMLAudioElement;
-  stopTimer: number | null;
+  initialVolume: number;
   cleanup: () => void;
+};
+
+type BackgroundTrack = {
+  audio: HTMLAudioElement;
+  fadeFrame: number | null;
+  startedNext: boolean;
 };
 
 const audioCache = new Map<string, HTMLAudioElement>();
 const activeSounds = new Map<SoundKey, Set<ActiveSound>>();
-let backgroundAudio: HTMLAudioElement | null = null;
+const soundSourceIndexes = new Map<SoundKey, number>();
+const backgroundTracks = new Set<BackgroundTrack>();
+let backgroundAudio: BackgroundTrack | null = null;
+let backgroundMonitorFrame: number | null = null;
+let backgroundUnlockListenersAttached = false;
 
 function canUseAudio(): boolean {
   return typeof Audio !== 'undefined';
 }
 
-function getRandomSource(key: SoundKey): string | null {
+function getSoundSource(key: SoundKey): string | null {
   const sources = SOUND_SOURCES[key];
 
   if (sources.length === 0) {
     return null;
   }
 
+  if (SOUND_SELECTION_MODE[key] === 'roundRobin') {
+    const currentIndex = soundSourceIndexes.get(key) ?? 0;
+    const nextSource = sources[currentIndex % sources.length] ?? null;
+    soundSourceIndexes.set(key, (currentIndex + 1) % sources.length);
+
+    return nextSource;
+  }
+
   return sources[Math.floor(Math.random() * sources.length)] ?? null;
+}
+
+function shouldPlayPirateReaction(key: SoundKey): boolean {
+  return PIRATE_REACTION_TRIGGER_KEYS.has(key) && Math.random() < PIRATE_REACTION_CHANCE;
 }
 
 function getAudio(source: string): HTMLAudioElement | null {
@@ -177,18 +234,17 @@ function getAudio(source: string): HTMLAudioElement | null {
   return audio;
 }
 
-function playAudio(audio: HTMLAudioElement): void {
-  void audio.play().catch(() => {
-    // Mobile Safari can reject audio until a valid user gesture unlocks it.
-  });
+function playAudio(audio: HTMLAudioElement): Promise<boolean> {
+  return audio.play().then(
+    () => true,
+    () => {
+      // Mobile Safari can reject audio until a valid user gesture unlocks it.
+      return false;
+    }
+  );
 }
 
 function removeActiveSound(key: SoundKey, activeSound: ActiveSound): void {
-  if (activeSound.stopTimer !== null) {
-    window.clearTimeout(activeSound.stopTimer);
-    activeSound.stopTimer = null;
-  }
-
   const sounds = activeSounds.get(key);
 
   if (!sounds) {
@@ -206,13 +262,14 @@ function stopActiveSound(activeSound: ActiveSound): void {
   activeSound.cleanup();
   activeSound.audio.pause();
   activeSound.audio.currentTime = 0;
+  activeSound.audio.volume = activeSound.initialVolume;
 }
 
-function registerActiveSound(key: SoundKey, audio: HTMLAudioElement, maxDuration?: number): void {
+function registerActiveSound(key: SoundKey, audio: HTMLAudioElement): void {
   const handleEnded = () => removeActiveSound(key, activeSound);
   const activeSound: ActiveSound = {
     audio,
-    stopTimer: null,
+    initialVolume: audio.volume,
     cleanup: () => {
       audio.removeEventListener('ended', handleEnded);
       removeActiveSound(key, activeSound);
@@ -220,12 +277,6 @@ function registerActiveSound(key: SoundKey, audio: HTMLAudioElement, maxDuration
   };
 
   audio.addEventListener('ended', handleEnded, { once: true });
-
-  if (maxDuration !== undefined) {
-    activeSound.stopTimer = window.setTimeout(() => {
-      stopActiveSound(activeSound);
-    }, maxDuration);
-  }
 
   const sounds = activeSounds.get(key) ?? new Set<ActiveSound>();
 
@@ -256,7 +307,9 @@ export function stopScreenSounds(): void {
 }
 
 export function playSound(key: SoundKey, options?: SoundOptions): void {
-  const source = getRandomSource(key);
+  resumeBackgroundMusic();
+
+  const source = getSoundSource(key);
 
   if (!source) {
     return;
@@ -276,35 +329,247 @@ export function playSound(key: SoundKey, options?: SoundOptions): void {
   audio.volume = options?.volume ?? SOUND_VOLUME[key] ?? 0.45;
   audio.currentTime = 0;
 
-  registerActiveSound(key, audio, options?.maxDuration ?? SOUND_MAX_DURATION_MS[key]);
-  playAudio(audio);
+  registerActiveSound(key, audio);
+  void playAudio(audio);
+
+  if (shouldPlayPirateReaction(key)) {
+    playSound('pirateReaction');
+  }
 }
 
 export function startBackgroundMusic(): void {
+  attachBackgroundUnlockListeners();
+
+  if (backgroundAudio) {
+    resumeBackgroundMusic();
+    return;
+  }
+
+  startBackgroundTrack();
+}
+
+function getBackgroundVolume(): number {
+  return SOUND_VOLUME.background ?? 0.18;
+}
+
+function createBackgroundTrack(): BackgroundTrack | null {
   const source = SOUND_SOURCES.background[0];
 
   if (!source) {
+    return null;
+  }
+
+  const baseAudio = getAudio(source);
+
+  if (!baseAudio) {
+    return null;
+  }
+
+  const audio = baseAudio.cloneNode(true) as HTMLAudioElement;
+  audio.loop = false;
+  audio.preload = 'auto';
+  audio.currentTime = 0;
+  audio.volume = 0;
+
+  const track: BackgroundTrack = {
+    audio,
+    fadeFrame: null,
+    startedNext: false,
+  };
+
+  audio.addEventListener('ended', () => {
+    const shouldRestart = backgroundAudio === track;
+
+    cleanupBackgroundTrack(track);
+
+    if (shouldRestart) {
+      startBackgroundTrack();
+    }
+  });
+
+  return track;
+}
+
+function startBackgroundTrack(): void {
+  const previousTrack = backgroundAudio;
+  const nextTrack = createBackgroundTrack();
+
+  if (!nextTrack) {
     return;
   }
 
-  const audio = getAudio(source);
+  backgroundTracks.add(nextTrack);
 
-  if (!audio) {
+  if (!previousTrack) {
+    backgroundAudio = nextTrack;
+  }
+
+  void playAudio(nextTrack.audio).then((didPlay) => {
+    if (!didPlay) {
+      if (previousTrack) {
+        previousTrack.startedNext = false;
+        cleanupBackgroundTrack(nextTrack);
+      }
+
+      return;
+    }
+
+    backgroundAudio = nextTrack;
+    fadeBackgroundTrack(nextTrack, getBackgroundVolume(), BACKGROUND_FADE_SECONDS);
+
+    if (previousTrack && previousTrack !== nextTrack) {
+      fadeBackgroundTrack(previousTrack, 0, BACKGROUND_FADE_SECONDS, true);
+    }
+
+    scheduleBackgroundMonitor();
+  });
+}
+
+function fadeBackgroundTrack(
+  track: BackgroundTrack,
+  targetVolume: number,
+  durationSeconds: number,
+  stopAfterFade = false
+): void {
+  if (typeof window === 'undefined') {
+    track.audio.volume = targetVolume;
+
+    if (stopAfterFade) {
+      cleanupBackgroundTrack(track);
+    }
+
     return;
   }
 
-  backgroundAudio = audio;
-  backgroundAudio.loop = true;
-  backgroundAudio.volume = SOUND_VOLUME.background ?? 0.18;
+  if (track.fadeFrame !== null) {
+    window.cancelAnimationFrame(track.fadeFrame);
+  }
 
-  playAudio(backgroundAudio);
+  const startVolume = track.audio.volume;
+  const startedAt = window.performance.now();
+
+  const updateFade = (now: number) => {
+    const elapsedSeconds = (now - startedAt) / 1000;
+    const progress = Math.min(1, elapsedSeconds / durationSeconds);
+    const easedProgress = progress * progress * (3 - 2 * progress);
+
+    track.audio.volume = startVolume + (targetVolume - startVolume) * easedProgress;
+
+    if (progress < 1) {
+      track.fadeFrame = window.requestAnimationFrame(updateFade);
+      return;
+    }
+
+    track.fadeFrame = null;
+    track.audio.volume = targetVolume;
+
+    if (stopAfterFade) {
+      cleanupBackgroundTrack(track);
+    }
+  };
+
+  track.fadeFrame = window.requestAnimationFrame(updateFade);
+}
+
+function cleanupBackgroundTrack(track: BackgroundTrack): void {
+  if (track.fadeFrame !== null && typeof window !== 'undefined') {
+    window.cancelAnimationFrame(track.fadeFrame);
+    track.fadeFrame = null;
+  }
+
+  track.audio.pause();
+  track.audio.currentTime = 0;
+  track.audio.volume = 0;
+  backgroundTracks.delete(track);
+
+  if (backgroundAudio === track) {
+    backgroundAudio = null;
+  }
+}
+
+function scheduleBackgroundMonitor(): void {
+  if (typeof window === 'undefined' || backgroundMonitorFrame !== null) {
+    return;
+  }
+
+  const tick = () => {
+    backgroundMonitorFrame = null;
+    monitorBackgroundMusic();
+
+    if (backgroundTracks.size > 0) {
+      scheduleBackgroundMonitor();
+    }
+  };
+
+  backgroundMonitorFrame = window.requestAnimationFrame(tick);
+}
+
+function monitorBackgroundMusic(): void {
+  const currentTrack = backgroundAudio;
+
+  if (!currentTrack || currentTrack.audio.paused || currentTrack.startedNext) {
+    return;
+  }
+
+  const { currentTime, duration } = currentTrack.audio;
+
+  if (!Number.isFinite(duration) || duration <= BACKGROUND_CROSSFADE_SECONDS) {
+    return;
+  }
+
+  if (duration - currentTime <= BACKGROUND_CROSSFADE_SECONDS) {
+    currentTrack.startedNext = true;
+    startBackgroundTrack();
+  }
+}
+
+export function resumeBackgroundMusic(): void {
+  if (!backgroundAudio) {
+    startBackgroundMusic();
+    return;
+  }
+
+  for (const track of backgroundTracks) {
+    if (!track.audio.paused) {
+      continue;
+    }
+
+    void playAudio(track.audio).then((didPlay) => {
+      if (!didPlay) {
+        return;
+      }
+
+      if (track === backgroundAudio && track.audio.volume === 0) {
+        fadeBackgroundTrack(track, getBackgroundVolume(), BACKGROUND_FADE_SECONDS);
+      }
+
+      scheduleBackgroundMonitor();
+    });
+  }
+
+  scheduleBackgroundMonitor();
+}
+
+function attachBackgroundUnlockListeners(): void {
+  if (backgroundUnlockListenersAttached || typeof window === 'undefined') {
+    return;
+  }
+
+  backgroundUnlockListenersAttached = true;
+
+  const resume = () => resumeBackgroundMusic();
+
+  window.addEventListener('pointerdown', resume);
+  window.addEventListener('keydown', resume);
 }
 
 export function stopBackgroundMusic(): void {
-  if (!backgroundAudio) {
-    return;
+  if (backgroundMonitorFrame !== null && typeof window !== 'undefined') {
+    window.cancelAnimationFrame(backgroundMonitorFrame);
+    backgroundMonitorFrame = null;
   }
 
-  backgroundAudio.pause();
-  backgroundAudio.currentTime = 0;
+  for (const track of [...backgroundTracks]) {
+    cleanupBackgroundTrack(track);
+  }
 }

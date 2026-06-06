@@ -175,7 +175,7 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => hasPrimaryButton.value && hasSecondaryButton.value
+  () => hasPrimaryButton.value && hasSecondaryButton.value && props.showUndo
 );
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',

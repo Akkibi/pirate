@@ -91,7 +91,7 @@ export const gameText = {
       },
       directionConfirm: {
         title: 'T’es sûr.e de ton choix ?',
-        body: 'Tu as encore XX déplacement.',
+        body: 'Il te reste XX mouvement.',
         primaryButton: 'Révéler la case',
         secondaryButton: 'Retour',
       },
@@ -222,7 +222,7 @@ export const gameText = {
       },
       directionConfirm: {
         title: 'T’es sûr.e de ton choix ?',
-        body: 'Tu as encore XX déplacement.',
+        body: 'Il te reste XX mouvement.',
         primaryButton: 'Révéler la case',
         secondaryButton: 'Retour',
       },

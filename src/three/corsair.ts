@@ -76,6 +76,6 @@ export class Corsair {
 
     this.corsairGroup.rotation.y += 0.001;
     this.corsairGroup.rotation.z = Math.sin(time * 0.0005) * 0.2;
-    this.corsairGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
+    this.corsairGroup.position.y = Math.sin(time * 0.001) * 0.025 + 0.12;
   }
 }
