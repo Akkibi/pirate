@@ -1,6 +1,10 @@
 <template>
   <button type="button" :class="buttonClasses" :disabled="disabled" @click="handleClick">
-    <span class="button-background" aria-hidden="true" />
+    <span class="button-background-wrapper" aria-hidden="true">
+      <span class="button-background" />
+      <span class="button-bevel-shadow" />
+      <span class="button-bevel-light" />
+    </span>
     <span class="rivet rivet-top-left" aria-hidden="true" />
     <span class="rivet rivet-top-right" aria-hidden="true" />
     <span class="rivet rivet-bottom-left" aria-hidden="true" />
@@ -123,6 +127,31 @@ function handleClick() {
         #000 calc(var(--button-scoop) + 1px)
       )
       bottom right / 51% 51% no-repeat;
+  --button-scoop-mask-inverted:
+    radial-gradient(
+        circle at 0 0,
+        #000 0 var(--button-scoop),
+        transparent calc(var(--button-scoop) + 1px)
+      )
+      top left / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 100% 0,
+        #000 0 var(--button-scoop),
+        transparent calc(var(--button-scoop) + 1px)
+      )
+      top right / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 0 100%,
+        #000 0 var(--button-scoop),
+        transparent calc(var(--button-scoop) + 1px)
+      )
+      bottom left / 51% 51% no-repeat,
+    radial-gradient(
+        circle at 100% 100%,
+        #000 0 var(--button-scoop),
+        transparent calc(var(--button-scoop) + 1px)
+      )
+      bottom right / 51% 51% no-repeat;
   --button-text: #fff3cb;
 
   color: var(--button-text);
@@ -172,36 +201,64 @@ function handleClick() {
   opacity: 0.4;
 }
 
+.button-background-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 0.45rem, 0) scaleY(0.78);
+  transform-origin: center bottom;
+  transition:
+    opacity 220ms ease,
+    transform 360ms cubic-bezier(0.16, 0.92, 0.18, 1.08);
+  transition-delay: 0ms;
+  -webkit-mask: var(--button-scoop-mask);
+  mask: var(--button-scoop-mask);
+  background: var(--button-bg);
+}
+
+.game-button--revealed .button-background-wrapper {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scaleY(1);
+  transition-delay: 110ms, 110ms;
+}
+
+.button-bevel-light,
+.button-bevel-shadow {
+  --button-scoop: var(--ui-button-inner-scoop);
+  transition: background-color 120ms ease;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask: var(--button-scoop-mask-inverted);
+  mask: var(--button-scoop-mask-inverted);
+  mix-blend-mode: soft-light;
+}
+
+.button-bevel-light {
+  background: rgba(255, 230, 150, 0.6);
+  transform: translate(3px, 3px);
+}
+
+.button-bevel-shadow {
+  background: rgba(0, 0, 0, 0.6);
+  transform: translate(-3px, -3px);
+}
+
 .button-background {
   --button-scoop: var(--ui-button-inner-scoop);
 
   position: absolute;
   inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: var(--button-bg);
-  opacity: 0;
-  transform: translate3d(0, 0.45rem, 0) scaleY(0.78);
-  transform-origin: center bottom;
-  box-shadow:
-    inset 3px 3px 0px rgba(255, 224, 133, 0.1),
-    inset -3px -3px 0 rgba(0, 0, 0, 0.5);
-  -webkit-mask: var(--button-scoop-mask);
-  mask: var(--button-scoop-mask);
-  filter: drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.8));
+  background: transparent;
   transition:
-    opacity 220ms ease,
-    transform 360ms cubic-bezier(0.16, 0.92, 0.18, 1.08),
     background-color 120ms ease,
-    box-shadow 120ms ease,
-    filter 120ms ease;
-  transition-delay: 0ms;
-}
-
-.game-button--revealed .button-background {
-  opacity: 1;
-  transform: translate3d(0, 0, 0) scaleY(1);
-  transition-delay: 110ms, 110ms, 0ms, 110ms, 110ms;
+    box-shadow 120ms ease;
+  box-shadow:
+    inset 3px 3px 0px rgba(255, 224, 133, 0.4),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.4);
+  mix-blend-mode: soft-light;
 }
 
 .rivet {
@@ -287,11 +344,23 @@ function handleClick() {
 
 .game-button:not(:disabled):hover .button-background,
 .game-button:not(:disabled):active .button-background {
-  background: var(--button-bg-hover);
   box-shadow:
-    inset 3px 3px 0px rgba(0, 0, 0, 0.5),
-    inset -3px -3px 0 rgba(255, 224, 133, 0.05);
-  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    inset 3px 3px 0px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 0 rgba(255, 224, 133, 0.4);
+}
+
+.game-button:not(:disabled):hover .button-background-wrapper,
+.game-button:not(:disabled):active .button-background-wrapper {
+  background: var(--button-bg-hover);
+}
+
+.game-button:not(:disabled):hover .button-bevel-light,
+.game-button:not(:disabled):active .button-bevel-light {
+  background: rgba(0, 0, 0, 0.5);
+}
+.game-button:not(:disabled):hover .button-bevel-shadow,
+.game-button:not(:disabled):active .button-bevel-shadow {
+  background: rgba(255, 230, 150, 0.5);
 }
 
 .game-button:not(:disabled):hover .text-message,
