@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { float, attribute, vec3 } from 'three/tsl';
+import { float, attribute } from 'three/tsl';
 import { BASE_OPACITY, createWaterColorNode } from './waterBase';
 
 export function createWaterMaterial(
