@@ -29,14 +29,14 @@
       class="peanut-stack"
       name="peanut-token"
       tag="div"
-      aria-label="Cacahuetes"
+      :aria-label="gameText.screenChrome.peanutsLabel"
     >
       <img
         v-for="token in peanutTokens"
         :key="`peanut-${token}`"
         class="peanut-stack__token"
         src="/images/indicators/peanut.webp"
-        alt="Cacahuete"
+        :alt="gameText.screenChrome.peanutAlt"
       />
     </TransitionGroup>
 
@@ -45,7 +45,7 @@
         v-if="showDeckStack"
         class="deck-stack"
         type="button"
-        :aria-label="`Cartes tresor restantes: ${remainingDeckCount}`"
+        :aria-label="`${gameText.screenChrome.remainingTreasureCards}: ${remainingDeckCount}`"
         @pointerdown="showDeckLabel"
         @pointerup="hideDeckLabel"
         @pointerleave="hideDeckLabel"
@@ -61,8 +61,8 @@
         </span>
 
         <span v-if="deckLabelVisible" class="deck-stack-label" aria-hidden="true">
-          <span>Pioche</span>
-          <span>Cartes Restantes: {{ remainingDeckCount }}</span>
+          <span>{{ gameText.screenChrome.deck }}</span>
+          <span>{{ gameText.screenChrome.cardsRemaining }}: {{ remainingDeckCount }}</span>
         </span>
       </button>
     </Transition>
@@ -72,7 +72,7 @@
         v-if="showHandStack"
         class="hand-stack-button"
         type="button"
-        aria-label="Voir les cartes tresor en main"
+        :aria-label="gameText.screenChrome.viewHand"
         @click="openHandOverlay()"
       >
         <span
@@ -87,7 +87,12 @@
     </Transition>
 
     <Transition name="rhum-meter">
-      <div v-if="showRhum" class="rhum-meter" :style="rhumMeterStyle" aria-label="Rhum">
+      <div
+        v-if="showRhum"
+        class="rhum-meter"
+        :style="rhumMeterStyle"
+        :aria-label="gameText.screenChrome.rhum"
+      >
         <TransitionGroup name="rhum-bottle" tag="div" class="rhum-meter__stack">
           <span
             v-for="bottle in rhumBottles"
@@ -102,7 +107,11 @@
                   ? '/images/indicators/rhum_full.webp'
                   : '/images/indicators/rhum_empty.webp'
               "
-              :alt="bottle.filled ? 'Bouteille de rhum pleine' : 'Bouteille de rhum vide'"
+              :alt="
+                bottle.filled
+                  ? gameText.screenChrome.fullRhumBottle
+                  : gameText.screenChrome.emptyRhumBottle
+              "
             />
             <span v-if="bottle.animated" class="rhum-meter__animation" aria-hidden="true"></span>
           </span>
@@ -111,11 +120,15 @@
     </Transition>
 
     <Transition name="hand-overlay" :duration="{ enter: 980, leave: 760 }">
-      <div v-if="handOverlayOpen && showHandStack" class="hand-overlay" aria-label="Cartes tresor">
+      <div
+        v-if="handOverlayOpen && showHandStack"
+        class="hand-overlay"
+        :aria-label="gameText.screenChrome.treasureCards"
+      >
         <button
           class="hand-overlay__scrim"
           type="button"
-          aria-label="Fermer les cartes"
+          :aria-label="gameText.screenChrome.closeCards"
           @click="closeHandOverlay"
         ></button>
 
@@ -134,7 +147,7 @@
         </div>
 
         <div class="hand-overlay__close">
-          <GameButton label="Fermer" :on-click="closeHandOverlay" />
+          <GameButton :label="gameText.common.close" :on-click="closeHandOverlay" />
         </div>
       </div>
     </Transition>
@@ -147,11 +160,13 @@ import GameButton from './GameButton.vue';
 import { gameState, getBoardTileStateAtPosition } from '../../utils/gameStore';
 import {
   getTreasureCardDefinition,
+  getTreasureCardTitle,
   type TreasureCardInstance,
   type TreasurePhase,
 } from '../../utils/treasureCards';
 import type { DayPhaseIndicator } from '../../utils/uiFlowStore';
 import { playSound } from '../../utils/soundManager';
+import { gameText } from '../../content/gameText';
 
 const props = withDefaults(
   defineProps<{
@@ -180,33 +195,33 @@ const displayedRhumCount = ref(gameState.currentRhum);
 const initialRhumFillPlayed = ref(false);
 const rhumFillTimers: number[] = [];
 
-const phaseConfigs: Record<
-  DayPhaseIndicator,
-  { icon: string; label: string; parentColor: string }
-> = {
+const phaseConfigs: Record<DayPhaseIndicator, { icon: string; parentColor: string }> = {
   aurore: {
     icon: '/images/indicators/picto_aurore.webp',
-    label: 'Aurore',
     parentColor: '#CA889E',
   },
   matinee: {
     icon: '/images/indicators/picto_matinee.webp',
-    label: 'Matinee',
     parentColor: '#E8B94E',
   },
   journee: {
     icon: '/images/indicators/picto_journee.webp',
-    label: 'Journee',
     parentColor: '#E18354',
   },
   soiree: {
     icon: '/images/indicators/picto_nuit.webp',
-    label: 'Soiree',
     parentColor: '#3C4D90',
   },
 };
 
-const phaseConfig = computed(() => (props.phase ? phaseConfigs[props.phase] : null));
+const phaseConfig = computed(() =>
+  props.phase
+    ? {
+        ...phaseConfigs[props.phase],
+        label: gameText.screenChrome.phaseLabels[props.phase],
+      }
+    : null
+);
 const currentTreasurePhase = computed<TreasurePhase | null>(() => {
   switch (props.phase) {
     case 'matinee':
@@ -311,7 +326,7 @@ const handStackCards = computed(() => {
     return {
       key: card.instanceId,
       imageSrc,
-      alt: definition.title,
+      alt: getTreasureCardTitle(card.cardId),
       usable: isUsable,
       style,
     };
@@ -323,14 +338,6 @@ const handOverlayCards = computed(() =>
     const cardCount = gameState.crewHand.length;
     const definition = getTreasureCardDefinition(card.cardId);
     const usable = isTreasureCardUsable(card);
-    const centerOffset = index - (cardCount - 1) / 2;
-    const overlayGapVw = 1.2;
-    const overlayAvailableVw = 86;
-    const overlayCardWidthVw = Math.min(
-      16,
-      Math.max(0, (overlayAvailableVw - Math.max(0, cardCount - 1) * overlayGapVw) / cardCount)
-    );
-    const spreadStep = overlayCardWidthVw + overlayGapVw;
     const enterOrder = Math.min(index, 7);
     const leaveOrder = Math.min(cardCount - index - 1, 7);
 
@@ -338,24 +345,27 @@ const handOverlayCards = computed(() =>
       key: card.instanceId,
       instanceId: card.instanceId,
       imageSrc: definition.imageSrc ?? '/images/cards/dos.webp',
-      alt: definition.title,
+      alt: getTreasureCardTitle(card.cardId),
       usable,
       style: {
-        '--hand-overlay-card-width': `${overlayCardWidthVw}vw`,
-        '--hand-overlay-rest-x': `${centerOffset * spreadStep}vw`,
         '--hand-overlay-enter-delay': `${enterOrder * 48}ms`,
         '--hand-overlay-leave-delay': `${leaveOrder * 34}ms`,
       } as CSSProperties,
     };
   })
 );
-const handOverlayStyle = computed(
-  () =>
-    ({
-      '--hand-overlay-count': Math.max(1, handOverlayCards.value.length),
-      '--hand-overlay-gap': 'var(--ui-hand-overlay-gap)',
-    }) as CSSProperties
-);
+const handOverlayStyle = computed(() => {
+  const cardCount = Math.max(1, handOverlayCards.value.length);
+  const gapVw = 1.15;
+  const availableWidthVw = 90 - Math.max(0, cardCount - 1) * gapVw;
+  const cardWidthVw = Math.min(23, Math.max(12.5, availableWidthVw / cardCount));
+
+  return {
+    '--hand-overlay-count': cardCount,
+    '--hand-overlay-gap': 'clamp(0.45rem, 1.15vw, 0.95rem)',
+    '--hand-overlay-card-width': `${cardWidthVw}vw`,
+  } as CSSProperties;
+});
 
 function openHandOverlay(options?: { playClick?: boolean }) {
   if (options?.playClick !== false) {
@@ -541,12 +551,12 @@ onBeforeUnmount(() => {
 
 .hand-stack-button {
   position: absolute;
-  bottom: calc(var(--ui-hand-stack-height) * -0.34);
-  left: calc(var(--ui-hand-stack-width) * -0.52);
+  bottom: calc(var(--ui-hand-stack-height) * -0.72);
+  left: calc(var(--ui-hand-stack-width) * -0.92);
   z-index: 16;
   pointer-events: auto;
-  width: calc(var(--ui-hand-stack-width) * 3.2);
-  height: calc(var(--ui-hand-stack-height) * 2.55);
+  width: calc(var(--ui-hand-stack-width) * 5.2);
+  height: calc(var(--ui-hand-stack-height) * 4.55);
   padding: 0;
   border: 0;
   background: transparent;
@@ -626,8 +636,8 @@ onBeforeUnmount(() => {
   left: calc(var(--ui-hand-stack-width) * 0.22);
   z-index: var(--hand-card-z);
   display: flex;
-  width: calc(var(--ui-hand-stack-width) * 1.58);
-  height: calc(var(--ui-hand-stack-height) * 1.58);
+  width: calc(var(--ui-hand-stack-width) * 2);
+  height: calc(var(--ui-hand-stack-height) * 2);
   align-items: center;
   justify-content: center;
   transform: translate3d(var(--hand-card-x), var(--hand-card-y), 0)
@@ -639,6 +649,8 @@ onBeforeUnmount(() => {
 }
 
 .hand-stack-card--usable {
+  width: calc(var(--ui-hand-stack-width) * 4);
+  height: calc(var(--ui-hand-stack-height) * 4);
   transform: translate3d(calc(var(--hand-card-x) + 0.08rem), calc(var(--hand-card-y) - 0.22rem), 0)
     rotate(var(--hand-card-rotation)) scale(1.05);
 }
@@ -705,7 +717,24 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   z-index: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--hand-overlay-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: clamp(0.75rem, 2.5vmin, 1.25rem) max(1rem, 4vw) clamp(4.2rem, 15vh, 5.5rem);
   pointer-events: none;
+  scroll-padding-inline: max(1rem, 4vw);
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+@supports (justify-content: safe center) {
+  .hand-overlay__cards {
+    justify-content: safe center;
+  }
 }
 
 .hand-overlay__close {
@@ -724,23 +753,19 @@ onBeforeUnmount(() => {
   --hand-overlay-source-y: calc(
     50vh - var(--ui-chrome-bottom-inset) - (var(--ui-hand-stack-height) * 0.55)
   );
-  --hand-overlay-card-width: 14vw;
-  --hand-overlay-rest-x: 0vw;
-  --hand-overlay-rest-y: 0rem;
-  --hand-overlay-rest-scale: 1;
+  --hand-overlay-card-width: 23vw;
 
-  position: absolute;
-  top: 43%;
-  left: 50%;
-  width: min(var(--hand-overlay-card-width), calc(66vh * 0.7), 14rem);
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(10rem, var(--hand-overlay-card-width), 18rem);
+  max-width: calc(64dvh * 0.7);
   aspect-ratio: 350 / 500;
   padding: 0;
   border: 0;
   background: transparent;
   pointer-events: auto;
-  transform: translate(-50%, -50%)
-    translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0)
-    scale(var(--hand-overlay-rest-scale));
+  scroll-snap-align: center;
+  transform: translate3d(0, 0, 0);
   transition:
     filter 220ms ease,
     opacity 220ms ease,
@@ -752,9 +777,6 @@ onBeforeUnmount(() => {
 }
 
 .hand-overlay__card--usable {
-  --hand-overlay-rest-y: -0.35rem;
-  --hand-overlay-rest-scale: 1.04;
-
   cursor: pointer;
 }
 
@@ -968,39 +990,31 @@ onBeforeUnmount(() => {
 @keyframes hand-overlay-card-in {
   from {
     opacity: 0.3;
-    transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(-10deg)
-      scale(0.45);
+    transform: translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0)
+      rotate(-10deg) scale(0.45);
   }
 
   68% {
     opacity: 1;
-    transform: translate(-50%, -50%)
-      translate3d(calc(var(--hand-overlay-rest-x) + 0.18rem), var(--hand-overlay-rest-y), 0)
-      rotate(-2deg) scale(calc(var(--hand-overlay-rest-scale) * 1.02));
+    transform: translate3d(0.18rem, 0, 0) rotate(-2deg) scale(1.02);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0) rotate(0deg)
-      scale(var(--hand-overlay-rest-scale));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
   }
 }
 
 @keyframes hand-overlay-card-out {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-rest-x), var(--hand-overlay-rest-y), 0) rotate(0deg)
-      scale(var(--hand-overlay-rest-scale));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
   }
 
   to {
     opacity: 0;
-    transform: translate(-50%, -50%)
-      translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0) rotate(-10deg)
-      scale(0.42);
+    transform: translate3d(var(--hand-overlay-source-x), var(--hand-overlay-source-y), 0)
+      rotate(-10deg) scale(0.42);
   }
 }
 
