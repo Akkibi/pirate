@@ -19,12 +19,24 @@
   >
     <div class="dice-stage" aria-hidden="true">
       <div class="dice-cube text-amber-100" :style="diceStyle">
-        <div class="dice-face dice-face--front">0</div>
-        <div class="dice-face dice-face--right">1</div>
-        <div class="dice-face dice-face--top">1</div>
-        <div class="dice-face dice-face--bottom">2</div>
-        <div class="dice-face dice-face--left">2</div>
-        <div class="dice-face dice-face--back">3</div>
+        <div class="dice-face dice-face--front">
+          <img class="dice-face-image" src="/images/dice/de0.png" alt="" />
+        </div>
+        <div class="dice-face dice-face--right">
+          <img class="dice-face-image" src="/images/dice/de1.png" alt="" />
+        </div>
+        <div class="dice-face dice-face--top">
+          <img class="dice-face-image" src="/images/dice/de1.png" alt="" />
+        </div>
+        <div class="dice-face dice-face--bottom">
+          <img class="dice-face-image" src="/images/dice/de2.png" alt="" />
+        </div>
+        <div class="dice-face dice-face--left">
+          <img class="dice-face-image" src="/images/dice/de2.png" alt="" />
+        </div>
+        <div class="dice-face dice-face--back">
+          <img class="dice-face-image" src="/images/dice/d3.png" alt="" />
+        </div>
       </div>
       <div
         class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 w-70 h-14 bg-black/20 -z-10 rounded-[50%]"
@@ -175,23 +187,23 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => hasPrimaryButton.value && hasSecondaryButton.value && props.showUndo
+  () => hasPrimaryButton.value && (hasSecondaryButton.value || props.showUndo)
 );
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
     ? `${normalRightButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} ${hasSecondaryButton.value || props.showUndo ? 'row-start-7' : 'row-start-8'}`,
+    : `${normalFullButtonClasses.value} row-start-7`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
     ? `${normalLeftButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} ${props.showUndo ? 'row-start-7' : 'row-start-8'}`,
+    : `${normalFullButtonClasses.value} row-start-7`,
 ]);
 const undoButtonClasses = computed(() => [
-  'col-span-2 row-start-8 transition-opacity duration-300',
-  props.sideChromeLayout ? 'col-start-2' : 'col-start-1',
+  'row-start-7 transition-opacity duration-300',
+  normalButtonsShareFirstRow.value ? normalLeftButtonClasses.value : normalFullButtonClasses.value,
 ]);
 const diceVisible = ref(false);
 const buttonsVisible = ref(false);
@@ -375,12 +387,15 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  /*border: 1px solid currentColor;*/
-  background: no-repeat url('/images/dice-bg.webp') center / contain;
-  font-size: calc(var(--dice-size) / 2);
-  font-weight: 700;
-  border-radius: 2px;
+  overflow: hidden;
   backface-visibility: hidden;
+}
+
+.dice-face-image {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .dice-face--front {

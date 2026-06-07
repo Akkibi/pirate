@@ -111,7 +111,7 @@ const normalLeftButtonClasses = computed(() =>
 const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
-const normalButtonsShareFirstRow = computed(() => props.showUndo && hasSecondaryButton.value);
+const normalButtonsShareFirstRow = computed(() => hasSecondaryButton.value || props.showUndo);
 const parchmentClasses = computed(() => [
   props.sideChromeLayout
     ? 'col-start-2 col-span-6 row-start-1 row-span-6'
@@ -120,18 +120,18 @@ const parchmentClasses = computed(() => [
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalLeftButtonClasses.value} row-start-7`
+    ? `${normalRightButtonClasses.value} row-start-7`
     : `${normalFullButtonClasses.value} row-start-7`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalRightButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} row-start-8`,
+    ? `${normalLeftButtonClasses.value} row-start-7`
+    : `${normalFullButtonClasses.value} row-start-7`,
 ]);
 const undoButtonClasses = computed(() => [
-  'col-span-2 row-start-8 transition-opacity duration-300',
-  props.sideChromeLayout ? 'col-start-2' : 'col-start-1',
+  'row-start-7 transition-opacity duration-300',
+  normalButtonsShareFirstRow.value ? normalLeftButtonClasses.value : normalFullButtonClasses.value,
 ]);
 
 function handleParchmentShown() {

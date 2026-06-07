@@ -8,17 +8,17 @@
       :class="parchmentClasses"
       :style="{
         '--parchment-clip-x': '50%',
-        '--parchment-end-width': 'var(--ui-parchment-end-width)',
       }"
       @click="handleClick"
     >
-      <div
+      <img
         ref="leftEndRef"
-        class="absolute top-0 z-10 h-full"
+        class="parchment-end absolute top-0 z-10 h-full w-auto"
+        src="/images/parchment/left_end.webp"
+        alt=""
+        aria-hidden="true"
+        :draggable="false"
         :style="{
-          backgroundImage: 'url(/images/parchment/left_end.webp)',
-          backgroundSize: '100% 100%',
-          width: 'var(--parchment-end-width)',
           left: 'var(--parchment-clip-x)',
         }"
       />
@@ -41,13 +41,14 @@
           </div>
         </div>
       </div>
-      <div
+      <img
         ref="rightEndRef"
-        class="absolute top-0 z-10 h-full"
+        class="parchment-end absolute top-0 z-10 h-full w-auto"
+        src="/images/parchment/right_end.webp"
+        alt=""
+        aria-hidden="true"
+        :draggable="false"
         :style="{
-          backgroundImage: 'url(/images/parchment/right_end.webp)',
-          backgroundSize: '100% 100%',
-          width: 'var(--parchment-end-width)',
           right: 'var(--parchment-clip-x)',
         }"
       />
@@ -59,7 +60,8 @@
 import { computed, nextTick, onBeforeUnmount, ref, useSlots, watch } from 'vue';
 import { gsap } from 'gsap';
 
-type ParchmentSize = 'sm' | 'md' | 'bg' | 'fill';
+type ParchmentSize = 'sm' | 'small' | 'md' | 'medium' | 'bg' | 'fill';
+type NormalizedParchmentSize = 'sm' | 'md' | 'bg' | 'fill';
 type DisplayMode = 'inline' | 'overlay';
 type DismissMode = 'manual' | 'auto';
 type HideReason = 'manual' | 'auto';
@@ -109,6 +111,11 @@ const rightEndRef = ref<HTMLElement | null>(null);
 const isRendered = ref(props.visible);
 const rootTag = computed(() => (props.clickable ? 'button' : 'div'));
 const hasDefaultSlot = computed(() => Boolean(slots.default));
+const normalizedSize = computed<NormalizedParchmentSize>(() => {
+  if (props.size === 'small') return 'sm';
+  if (props.size === 'medium') return 'md';
+  return props.size;
+});
 
 let animationTimeline: gsap.core.Timeline | null = null;
 let autoHideTimer: number | null = null;
@@ -119,14 +126,14 @@ const wrapperClasses = computed(() =>
     : 'flex h-full w-full min-h-0 items-center justify-center'
 );
 
-const sizeClasses: Record<ParchmentSize, string> = {
-  sm: 'min-h-16 w-full max-w-[22rem]',
-  md: 'min-h-20 w-full max-w-[28rem]',
-  bg: 'h-[clamp(16rem,50vh,30rem)] w-[min(82vw,30rem)]',
-  fill: 'h-full w-full',
+const sizeClasses: Record<NormalizedParchmentSize, string> = {
+  sm: 'parchment-root--sm',
+  md: 'parchment-root--md',
+  bg: 'parchment-root--bg',
+  fill: 'parchment-root--fill',
 };
 
-const textSizeClasses: Record<ParchmentSize, string> = {
+const textSizeClasses: Record<NormalizedParchmentSize, string> = {
   sm: 'parchment-text--sm',
   md: 'parchment-text--md',
   bg: 'parchment-text--bg',
@@ -134,15 +141,15 @@ const textSizeClasses: Record<ParchmentSize, string> = {
 };
 
 const parchmentClasses = computed(() => [
-  'relative h-full w-full overflow-hidden pointer-events-auto text-yellow-800',
+  'parchment-root relative flex min-h-0 overflow-hidden pointer-events-auto text-yellow-800',
+  sizeClasses[normalizedSize.value],
   props.clickable ? 'border-0 bg-transparent p-0' : '',
   props.clickable && !props.disabled ? 'cursor-pointer' : '',
   props.disabled ? 'cursor-not-allowed opacity-60' : '',
 ]);
 
 const surfaceClasses = computed(() => [
-  'parchment-surface relative flex h-full min-h-0 items-stretch justify-stretch',
-  sizeClasses[props.size],
+  'parchment-surface relative flex h-full min-h-0 w-full items-stretch justify-stretch',
   props.surfaceClass,
 ]);
 
@@ -150,7 +157,7 @@ const contentClasses = computed(() => [
   'relative min-h-0 w-full h-full overflow-hidden text-black',
   hasDefaultSlot.value
     ? `parchment-content ${props.contentClass}`
-    : `parchment-text flex items-center justify-center text-center ${textSizeClasses[props.size]} ${props.contentClass} text-black`,
+    : `parchment-text flex items-center justify-center text-center ${textSizeClasses[normalizedSize.value]} ${props.contentClass} text-black`,
 ]);
 
 function clearAutoHideTimer() {
@@ -337,15 +344,57 @@ onBeforeUnmount(() => {
   padding: var(--ui-grid-padding);
 }
 
+.parchment-root {
+  width: 100%;
+  max-width: 100%;
+}
+
+.parchment-root--sm {
+  height: auto;
+  min-height: 4rem;
+  max-width: 22rem;
+}
+
+.parchment-root--md {
+  height: auto;
+  min-height: 5rem;
+  max-width: 28rem;
+}
+
+.parchment-root--bg {
+  width: min(82vw, 30rem);
+  height: clamp(16rem, 50vh, 30rem);
+}
+
+.parchment-root--fill {
+  width: 100%;
+  height: 100%;
+}
+
+.parchment-end {
+  pointer-events: none;
+  user-select: none;
+}
+
 .parchment-surface {
+  height: 100%;
+  width: 100%;
   padding: var(--ui-parchment-surface-pad-y) var(--ui-parchment-surface-pad-x);
 }
 
+.parchment-root--sm .parchment-surface,
+.parchment-root--md .parchment-surface {
+  height: auto;
+  min-height: inherit;
+}
+
 .parchment-content {
+  height: 100%;
   padding: var(--ui-parchment-content-pad) 2rem;
 }
 
 .parchment-text {
+  height: 100%;
   padding: var(--ui-parchment-text-pad-y) 2rem;
   min-width: 0;
   white-space: normal;
@@ -353,6 +402,14 @@ onBeforeUnmount(() => {
   hyphens: auto;
   line-height: 1.18;
   text-wrap: pretty;
+}
+
+.parchment-root--sm .parchment-content,
+.parchment-root--sm .parchment-text,
+.parchment-root--md .parchment-content,
+.parchment-root--md .parchment-text {
+  height: auto;
+  min-height: inherit;
 }
 
 .parchment-text--sm {

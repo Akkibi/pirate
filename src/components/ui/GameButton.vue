@@ -375,14 +375,14 @@ function handleClick() {
 }
 
 .game-button--secondary {
-  --button-bg: #473522;
-  --button-bg-hover: #372512;
-  --button-border: #d7a75b;
+  --button-bg: #472422;
+  --button-bg-hover: #371412;
+  --button-border: #f1b730;
 }
 
 .game-button--undo {
-  --button-bg: #6b2618;
-  --button-bg-hover: #5b1608;
-  --button-border: #e7a45e;
+  --button-bg: #472422;
+  --button-bg-hover: #371412;
+  --button-border: #f1b730;
 }
 </style>

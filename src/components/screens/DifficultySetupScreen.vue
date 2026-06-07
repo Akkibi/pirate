@@ -1,16 +1,16 @@
 <template>
   <FullMessageButtonScreen
-    :primary-button-label="primaryButtonLabel"
+    :primary-button-label="resolvedPrimaryButtonLabel"
     :on-primary-button-click="confirm"
     :side-chrome-layout="sideChromeLayout"
   >
     <template #message>
       <div class="difficulty-content">
         <p class="difficulty-title font-title">
-          {{ title }}
+          {{ resolvedTitle }}
         </p>
         <p class="difficulty-body">
-          {{ body }}
+          {{ resolvedBody }}
         </p>
         <div class="difficulty-selector pointer-events-auto">
           <button
@@ -41,9 +41,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import FullMessageButtonScreen from './FullMessageButtonScreen.vue';
 import { playSound } from '../../utils/soundManager';
+import { gameText } from '../../content/gameText';
 
 const props = withDefaults(
   defineProps<{
@@ -57,17 +58,22 @@ const props = withDefaults(
     sideChromeLayout?: boolean;
   }>(),
   {
-    title: 'L’Arrachée doit charger sa cale',
-    body: 'Choisis le niveau de difficulté. Moins de rhum rend la partie plus difficile. 6 bouteilles sont conseillées pour une première partie.',
+    title: undefined,
+    body: undefined,
     minValue: 3,
     maxValue: 9,
-    primaryButtonLabel: 'Remplir la cale',
+    primaryButtonLabel: undefined,
     onConfirm: undefined,
     sideChromeLayout: false,
   }
 );
 
 const selectedValue = ref(props.initialValue);
+const resolvedTitle = computed(() => props.title ?? gameText.setup.difficulty.title);
+const resolvedBody = computed(() => props.body ?? gameText.setup.difficulty.body);
+const resolvedPrimaryButtonLabel = computed(
+  () => props.primaryButtonLabel ?? gameText.setup.difficulty.primaryButton
+);
 
 function increment() {
   playSound('rhumSelect');

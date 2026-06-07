@@ -7,7 +7,9 @@
       @shown="buttonsVisible = true"
     >
       <div class="card-confirm-content">
-        <p class="screen-message-title font-title">{{ title }}</p>
+        <p class="screen-message-title font-title">
+          {{ resolvedTitle }}
+        </p>
 
         <img
           v-if="card.imageSrc"
@@ -25,8 +27,8 @@
           </div>
           <p class="text-left text-sm leading-relaxed">{{ card.caption }}</p>
         </div>
-        <p v-if="body" class="card-confirm-body max-w-xl">
-          {{ body }}
+        <p v-if="resolvedBody" class="card-confirm-body max-w-xl">
+          {{ resolvedBody }}
         </p>
       </div>
     </Parchment>
@@ -38,19 +40,19 @@
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
   >
-    <GameButton :label="confirmLabel" :on-click="onConfirm" :revealed="buttonsVisible" />
+    <GameButton :label="resolvedConfirmLabel" :on-click="onConfirm" :revealed="buttonsVisible" />
   </div>
 
   <div
     :class="[
-      'row-start-8 transition-opacity duration-300',
+      'row-start-7 transition-opacity duration-300',
       cancelButtonLayoutClasses,
       buttonsVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
     ]"
   >
     <GameButton
       variant="secondary"
-      :label="cancelLabel"
+      :label="resolvedCancelLabel"
       :on-click="onCancel"
       :revealed="buttonsVisible"
     />
@@ -63,6 +65,7 @@ import Parchment from '../parchment.vue';
 import GameButton from '../ui/GameButton.vue';
 import type { TreasureCardView } from '../../utils/treasureCards';
 import type { ButtonHandler } from '../../types/ui';
+import { gameText } from '../../content/gameText';
 
 const props = withDefaults(
   defineProps<{
@@ -76,10 +79,10 @@ const props = withDefaults(
     sideChromeLayout?: boolean;
   }>(),
   {
-    title: 'Utiliser cette carte ?',
-    body: "Tu ne peux utiliser qu'une seule carte par tour de jeu.",
-    confirmLabel: 'Valider',
-    cancelLabel: 'Annuler',
+    title: undefined,
+    body: undefined,
+    confirmLabel: undefined,
+    cancelLabel: undefined,
     onConfirm: undefined,
     onCancel: undefined,
     sideChromeLayout: false,
@@ -87,15 +90,19 @@ const props = withDefaults(
 );
 
 const buttonsVisible = ref(false);
+const resolvedTitle = computed(() => props.title ?? gameText.cards.confirmTitle);
+const resolvedBody = computed(() => props.body ?? gameText.cards.confirmBody);
+const resolvedConfirmLabel = computed(() => props.confirmLabel ?? gameText.common.confirm);
+const resolvedCancelLabel = computed(() => props.cancelLabel ?? gameText.common.cancel);
 const parchmentClasses = computed(() => [
   'row-span-4 row-start-2',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
 ]);
 const cancelButtonLayoutClasses = computed(() =>
-  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-1 col-span-8'
+  props.sideChromeLayout ? 'col-start-2 col-span-3' : 'col-start-1 col-span-4'
 );
 const confirmButtonLayoutClasses = computed(() =>
-  props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-1 col-span-8'
+  props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 </script>
 
@@ -130,11 +137,11 @@ const confirmButtonLayoutClasses = computed(() =>
 
 .card-confirm-fallback {
   width: min(100%, 32rem);
-  border: 2px solid #78350f;
+  border: 2px solid #f1b730;
   border-radius: 0.375rem;
-  background: #16a34a;
+  background: #472422;
   padding: clamp(0.65rem, 1.5vmin, 1rem);
-  color: #000;
+  color: #fff3cb;
 }
 
 .card-confirm-body {
