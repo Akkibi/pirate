@@ -9,6 +9,10 @@ const GAME_PROGRESS_STORAGE_KEY = 'pirate.game.progress';
 
 export type GameCheckpoint =
   | 'intro.gameStart'
+  | 'intro.tutorialPerroquet'
+  | 'intro.tutorialEquipage'
+  | 'intro.tutorialCorsaires'
+  | 'intro.tutorialMiseEnPlace'
   | 'intro.difficulty'
   | 'intro.boatPlacement'
   | 'intro.initialCardChoice'
@@ -125,6 +129,17 @@ export function saveGameProgress(checkpoint: GameCheckpoint, data?: GameProgress
   }
 
   persistGameProgressHistory(history);
+}
+
+export function refreshLatestSavedGameProgress(): boolean {
+  const latestProgress = peekSavedGameProgress();
+
+  if (!latestProgress) {
+    return false;
+  }
+
+  saveGameProgress(latestProgress.checkpoint, latestProgress.data);
+  return true;
 }
 
 export function popSavedGameProgress(): SavedGameProgress | null {

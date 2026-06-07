@@ -1,6 +1,9 @@
 <template>
   <button
-    class="bg-slate-900 rounded-full bg-opacity-50 p-2 text-sm text-white aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
+    class="rounded-full bg-opacity-50 p-2 text-sm text-white aspect-square cursor-pointer hover:bg-opacity-75 transition flex items-center justify-center"
+    type="button"
+    style="background: #472422"
+    :aria-label="gameText.ui.fullscreenButtonLabel"
     @click="requestFullscreen"
   >
     <svg
@@ -24,6 +27,7 @@
 
 <script setup lang="ts">
 import { playSound } from '../utils/soundManager';
+import { gameText } from '../content/gameText';
 
 interface FullscreenHTMLElement extends HTMLElement {
   mozRequestFullScreen?: () => Promise<void>;

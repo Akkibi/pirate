@@ -2,6 +2,7 @@ import { shallowRef } from 'vue';
 import type { ChoiceCard } from '../types/ui';
 import type { TreasureCardView } from './treasureCards';
 import { stopScreenSounds } from './soundManager';
+import type { GameCheckpoint, GameProgressData } from './gameProgress';
 
 export interface ScreenContent {
   title?: string;
@@ -15,6 +16,12 @@ export interface ScreenContent {
 }
 
 export type DayPhaseIndicator = 'aurore' | 'matinee' | 'journee' | 'soiree';
+
+export interface TutorialScreenContent extends ScreenContent {
+  title: string;
+  body: string;
+  items?: readonly string[];
+}
 
 export interface ScreenChrome {
   phase?: DayPhaseIndicator;
@@ -70,6 +77,17 @@ export type UIScreen =
         };
     }
   | {
+      type: 'tutorial';
+      content: TutorialScreenContent;
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          imageSrc: string;
+          imageAlt: string;
+          primaryButtonLabel: string;
+          secondaryButtonLabel: string;
+        };
+    }
+  | {
       type: 'looking-around-timer';
       content?: ScreenContent;
       props: {
@@ -89,6 +107,7 @@ export type UIScreen =
       props: BaseButtonProps &
         ScreenChromeProps & {
           cards: ChoiceCardInput[];
+          buttonsOnLastRow?: boolean;
         };
     }
   | {
@@ -109,6 +128,11 @@ type ActiveUIScreen = UIScreen & {
   instanceId: number;
 };
 
+export interface ActiveUIScreenProgress {
+  checkpoint: GameCheckpoint;
+  data?: GameProgressData;
+}
+
 export type UIScreenResult =
   | { action: 'primary' }
   | { action: 'secondary' }
@@ -118,15 +142,20 @@ export type UIScreenResult =
   | { action: 'card'; cardId: string | number | undefined };
 
 export const currentScreen = shallowRef<ActiveUIScreen | null>(null);
+export const currentScreenProgress = shallowRef<ActiveUIScreenProgress | null>(null);
 
 let nextScreenInstanceId = 1;
 let pendingResolve: ((value: UIScreenResult) => void) | null = null;
 
-export function showScreen(screen: UIScreen): Promise<UIScreenResult> {
+export function showScreen(
+  screen: UIScreen,
+  progress?: ActiveUIScreenProgress
+): Promise<UIScreenResult> {
   currentScreen.value = {
     ...screen,
     instanceId: nextScreenInstanceId++,
   };
+  currentScreenProgress.value = progress ?? null;
 
   return new Promise<UIScreenResult>((resolve) => {
     pendingResolve = resolve;
@@ -139,6 +168,7 @@ export function resolveScreen(result: UIScreenResult): void {
   stopScreenSounds();
   pendingResolve = null;
   currentScreen.value = null;
+  currentScreenProgress.value = null;
 
   resolve?.(result);
 }
@@ -147,4 +177,5 @@ export function clearScreen(): void {
   stopScreenSounds();
   pendingResolve = null;
   currentScreen.value = null;
+  currentScreenProgress.value = null;
 }

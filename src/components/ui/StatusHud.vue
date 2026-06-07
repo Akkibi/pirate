@@ -3,27 +3,31 @@
     class="status-hud pointer-events-none flex max-w-full flex-wrap items-center rounded-md border-2 border-amber-900/80 bg-[#211207]/85 text-amber-100 shadow-lg backdrop-blur-sm"
   >
     <div class="flex items-center gap-1">
-      <span class="font-bold">Rhum</span>
+      <span class="font-bold">{{ gameText.statusHud.rhum }}</span>
       <span>{{ gameState.currentRhum }}/{{ gameState.maxRhum }}</span>
     </div>
     <div class="h-4 w-px bg-amber-700/70"></div>
     <div class="flex items-center gap-1">
-      <span class="font-bold">Carte</span>
-      <span>{{ gameState.usedTreasureThisTurn ? 'jouee' : 'dispo' }}</span>
+      <span class="font-bold">{{ gameText.statusHud.card }}</span>
+      <span>{{
+        gameState.usedTreasureThisTurn
+          ? gameText.statusHud.cardPlayed
+          : gameText.statusHud.cardAvailable
+      }}</span>
     </div>
     <div class="h-4 w-px bg-amber-700/70"></div>
     <div class="flex items-center gap-1">
-      <span class="font-bold">Main</span>
+      <span class="font-bold">{{ gameText.statusHud.hand }}</span>
       <span>{{ gameState.crewHand.length }}</span>
     </div>
     <div class="h-4 w-px bg-amber-700/70"></div>
     <div class="flex items-center gap-1">
-      <span class="font-bold">Cacahuetes</span>
+      <span class="font-bold">{{ gameText.statusHud.peanuts }}</span>
       <span>{{ gameState.peanutTokens }}</span>
     </div>
     <div class="h-4 w-px bg-amber-700/70"></div>
     <div class="flex items-center gap-1">
-      <span class="font-bold">Equip.</span>
+      <span class="font-bold">{{ gameText.statusHud.equipment }}</span>
       <span>{{ equipmentLabel }}</span>
     </div>
   </div>
@@ -32,19 +36,20 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { gameState } from '../../utils/gameStore';
+import { gameText } from '../../content/gameText';
 
 const equipmentLabel = computed(() => {
   const equipped = [];
 
   if (gameState.bottleTokenEquipped) {
-    equipped.push('bouteille');
+    equipped.push(gameText.statusHud.bottle);
   }
 
   if (gameState.cannonTokenEquipped) {
-    equipped.push('canon');
+    equipped.push(gameText.statusHud.cannon);
   }
 
-  return equipped.length > 0 ? equipped.join(' + ') : 'aucun';
+  return equipped.length > 0 ? equipped.join(' + ') : gameText.statusHud.none;
 });
 </script>
 

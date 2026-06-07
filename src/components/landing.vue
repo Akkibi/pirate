@@ -55,7 +55,7 @@
   <div
     v-if="showResume"
     ref="resumeButtonRef"
-    class="pointer-events-auto col-span-6 col-start-2 row-start-7 min-h-0"
+    class="pointer-events-auto col-span-2 col-start-2 row-start-7 min-h-0"
   >
     <GameButton
       :label="gameText.landing.resumeButton"
@@ -65,10 +65,24 @@
   </div>
 
   <div
+    ref="demoButtonRef"
+    :class="[
+      'pointer-events-auto row-start-7 min-h-0',
+      showResume ? 'col-span-2 col-start-4' : 'col-span-3 col-start-2',
+    ]"
+  >
+    <GameButton
+      :label="gameText.landing.demoButton"
+      :on-click="startDemoGame"
+      :disabled="!isLoaded"
+    />
+  </div>
+
+  <div
     ref="settingsButtonRef"
     :class="[
-      'pointer-events-auto col-span-6 col-start-2 min-h-0',
-      showResume ? 'row-start-8' : 'row-start-7',
+      'pointer-events-auto row-start-7 min-h-0',
+      showResume ? 'col-span-2 col-start-6' : 'col-span-3 col-start-5',
     ]"
   >
     <GameButton
@@ -111,6 +125,7 @@ onMounted(() => {
     loadingBarRef.value,
     startButtonRef.value,
     resumeButtonRef.value,
+    demoButtonRef.value,
     settingsButtonRef.value,
   ].filter(Boolean) as HTMLElement[];
 
@@ -122,6 +137,7 @@ const loadingBarRef = ref<HTMLElement | null>(null);
 const maskRef = ref<HTMLElement | null>(null);
 const startButtonRef = ref<HTMLElement | null>(null);
 const resumeButtonRef = ref<HTMLElement | null>(null);
+const demoButtonRef = ref<HTMLElement | null>(null);
 const settingsButtonRef = ref<HTMLElement | null>(null);
 
 function exit(onSceneChange?: () => void) {
@@ -155,6 +171,7 @@ function exit(onSceneChange?: () => void) {
     loadingBarRef.value,
     startButtonRef.value,
     resumeButtonRef.value,
+    demoButtonRef.value,
     settingsButtonRef.value,
   ].filter(Boolean) as HTMLElement[];
 
@@ -176,14 +193,21 @@ defineExpose({ exit });
 
 const emit = defineEmits<{
   (event: 'start'): void;
+  (event: 'demo'): void;
   (event: 'resume'): void;
+  (event: 'settings'): void;
 }>();
 
 const isLoaded = computed(() => gameState.loadingProgress >= 100);
-const openSettings = () => undefined;
+const openSettings = () => emit('settings');
 
 function startGame() {
   emit('start');
+}
+
+function startDemoGame() {
+  emit('demo');
+  gameState.gameStarted = true;
 }
 
 function resumeGame() {

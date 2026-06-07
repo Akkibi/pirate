@@ -1,3 +1,5 @@
+import { appSettings } from './appSettings';
+
 type SoundKey =
   | 'background'
   | 'uiClick'
@@ -306,8 +308,24 @@ export function stopScreenSounds(): void {
   }
 }
 
+export function stopSoundEffects(): void {
+  for (const key of [...activeSounds.keys()]) {
+    if (key === 'background') {
+      continue;
+    }
+
+    stopSound(key);
+  }
+}
+
 export function playSound(key: SoundKey, options?: SoundOptions): void {
-  resumeBackgroundMusic();
+  if (!appSettings.soundEffectsEnabled) {
+    return;
+  }
+
+  if (appSettings.musicEnabled) {
+    resumeBackgroundMusic();
+  }
 
   const source = getSoundSource(key);
 
@@ -338,6 +356,10 @@ export function playSound(key: SoundKey, options?: SoundOptions): void {
 }
 
 export function startBackgroundMusic(): void {
+  if (!appSettings.musicEnabled) {
+    return;
+  }
+
   attachBackgroundUnlockListeners();
 
   if (backgroundAudio) {
@@ -524,6 +546,10 @@ function monitorBackgroundMusic(): void {
 }
 
 export function resumeBackgroundMusic(): void {
+  if (!appSettings.musicEnabled) {
+    return;
+  }
+
   if (!backgroundAudio) {
     startBackgroundMusic();
     return;

@@ -2,7 +2,10 @@
 import { computed, ref, onMounted, watch } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
+import SettingsOverlay from './components/settingsOverlay.vue';
+import GameMenuOverlay from './components/gameMenuOverlay.vue';
 import FullMessageButtonScreen from './components/screens/FullMessageButtonScreen.vue';
+import TutorialParchmentScreen from './components/screens/TutorialParchmentScreen.vue';
 import DifficultySetupScreen from './components/screens/DifficultySetupScreen.vue';
 import CardConfirmScreen from './components/screens/CardConfirmScreen.vue';
 import LookingAroundTimerScreen from './components/screens/LookingAroundTimerScreen.vue';
@@ -10,15 +13,16 @@ import TopMessageLowerButtonScreen from './components/screens/TopMessageLowerBut
 import TopMessageLowerButtonCardsScreen from './components/screens/TopMessageLowerButtonCardsScreen.vue';
 import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowerButtonDiceScreen.vue';
 import { initGame } from './main';
-import { hasSavedGameProgress } from './utils/gameProgress';
+import { hasSavedGameProgress, saveGameProgress } from './utils/gameProgress';
 import { modelLoader } from './three/modelLoader';
 import {
+  clearScreen,
   currentScreen,
+  currentScreenProgress,
   resolveScreen,
   type ScreenChrome as ScreenChromeState,
 } from './utils/uiFlowStore';
 import FullscreenButton from './components/fullscreenButton.vue';
-import DebugControls from './components/debugControls.vue';
 import ScreenGrid from './components/ui/ScreenGrid.vue';
 import ScreenChrome from './components/ui/ScreenChrome.vue';
 import {
@@ -27,6 +31,8 @@ import {
 } from './utils/treasureCardSelection';
 import { gameState } from './utils/gameStore';
 import { playSound, startBackgroundMusic } from './utils/soundManager';
+import { gameText } from './content/gameText';
+import DebugControls from './components/debugControls.vue';
 
 const isDev = import.meta.env.DEV;
 const started = ref(false);
@@ -35,6 +41,8 @@ const landingRef = ref<InstanceType<typeof Landing> | null>(null);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
 const handOverlayRequestKey = ref(0);
+const settingsOpen = ref(false);
+const gameMenuOpen = ref(false);
 
 onMounted(() => {
   startBackgroundMusic();
@@ -45,6 +53,7 @@ const screenComponentMap = {
   'difficulty-setup': DifficultySetupScreen,
   'card-confirm': CardConfirmScreen,
   'full-message-button': FullMessageButtonScreen,
+  tutorial: TutorialParchmentScreen,
   'looking-around-timer': LookingAroundTimerScreen,
   'top-message-lower-button': TopMessageLowerButtonScreen,
   'top-message-lower-button-cards': TopMessageLowerButtonCardsScreen,
@@ -135,6 +144,22 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
 
+    case 'tutorial':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        title: screen.content.title,
+        body: screen.content.body,
+        caption: screen.content.caption,
+        items: screen.content.items ?? [],
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : () => resolveScreen({ action: 'primary' }),
+        onSecondaryButtonClick: screen.props.secondaryButtonOnClick
+          ? screen.props.secondaryButtonOnClick
+          : () => resolveScreen({ action: 'secondary' }),
+      };
+
     case 'looking-around-timer':
       return {
         ...withoutChrome(screen.props),
@@ -203,19 +228,48 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
   return null;
 });
 
+function runAfterLandingExit(callback: () => void) {
+  if (!landingRef.value) {
+    callback();
+    return;
+  }
+
+  landingRef.value.exit(callback);
+}
+
 function startGame() {
-  landingRef.value?.exit(() => {
+  runAfterLandingExit(() => {
     playSound('pirateIntro');
     startBackgroundMusic();
     started.value = true;
+    settingsOpen.value = false;
+    gameMenuOpen.value = false;
+    canResume.value = false;
+
     void initGame();
   });
 }
 
-function resumeGame() {
-  landingRef.value?.exit(() => {
+function startDemoGame() {
+  runAfterLandingExit(() => {
+    playSound('pirateIntro');
     startBackgroundMusic();
     started.value = true;
+    settingsOpen.value = false;
+    gameMenuOpen.value = false;
+    canResume.value = false;
+
+    void initGame({ demo: true });
+  });
+}
+
+function resumeGame() {
+  runAfterLandingExit(() => {
+    startBackgroundMusic();
+    started.value = true;
+    settingsOpen.value = false;
+    gameMenuOpen.value = false;
+
     void initGame({ resume: true });
   });
 }
@@ -230,10 +284,44 @@ watch(started, (value) => {
   });
 });
 
-function toggleUI() {
+function openSettings() {
+  settingsOpen.value = true;
+}
+
+function closeSettings() {
   playSound('uiClick');
-  UIShown.value = !UIShown.value;
-  gameState.debugMode = !UIShown.value;
+  settingsOpen.value = false;
+}
+
+function openGameMenu() {
+  playSound('uiClick');
+  gameMenuOpen.value = true;
+}
+
+function closeGameMenu() {
+  playSound('uiClick');
+  gameMenuOpen.value = false;
+}
+
+function openGameSettings() {
+  gameMenuOpen.value = false;
+  settingsOpen.value = true;
+}
+
+function saveGameAndReturnHome() {
+  if (currentScreenProgress.value) {
+    saveGameProgress(currentScreenProgress.value.checkpoint, currentScreenProgress.value.data);
+  }
+
+  clearScreen();
+
+  gameMenuOpen.value = false;
+  settingsOpen.value = false;
+  UIShown.value = true;
+  started.value = false;
+  gameState.debugMode = false;
+  gameState.gameStarted = false;
+  canResume.value = hasSavedGameProgress();
 }
 
 function handleChromeCardUse(cardInstanceId: string | number) {
@@ -273,8 +361,8 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         <span class="portrait-rotation-phone"></span>
         <span class="portrait-rotation-arrow">↻</span>
       </div>
-      <p class="portrait-rotation-title font-title">Tourne ton téléphone</p>
-      <p class="portrait-rotation-body">Passe en mode paysage pour continuer.</p>
+      <p class="portrait-rotation-title font-title">{{ gameText.ui.orientationTitle }}</p>
+      <p class="portrait-rotation-body">{{ gameText.ui.orientationBody }}</p>
     </div>
 
     <ScreenGrid overlay class="z-20">
@@ -297,10 +385,16 @@ function handleChromeCardUse(cardInstanceId: string | number) {
       >
         <button
           v-if="started"
-          class="rounded-full bg-slate-900 px-3 py-1 font-black text-white"
-          @click="toggleUI"
+          class="top-menu-button"
+          type="button"
+          :aria-label="gameText.ui.menuButtonLabel"
+          @click="openGameMenu"
         >
-          {{ UIShown ? 'Hide UI' : 'Show UI' }}
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7H20" />
+            <path d="M4 12H20" />
+            <path d="M4 17H20" />
+          </svg>
         </button>
         <FullscreenButton />
       </div>
@@ -309,7 +403,9 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         ref="landingRef"
         v-if="!startedDelayed"
         :show-resume="canResume"
+        @demo="startDemoGame"
         @resume="resumeGame"
+        @settings="openSettings"
         @start="startGame"
       />
 
@@ -372,6 +468,15 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         class="w-[5vh] h-[5vh] bg-black absolute z-10 translate-x-1/2 -translate-y-1/2 rotate-45 right-0"
       ></div>
     </ScreenGrid>
+
+    <GameMenuOverlay
+      v-if="started && gameMenuOpen"
+      @close="closeGameMenu"
+      @open-settings="openGameSettings"
+      @save-and-quit="saveGameAndReturnHome"
+    />
+
+    <SettingsOverlay v-if="settingsOpen" @close="closeSettings" />
   </div>
 </template>
 
@@ -387,8 +492,6 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   gap: var(--ui-message-gap);
   overflow: hidden;
   text-align: center;
-
-  /*color: #71320e;*/
   background-color: #61220e;
   color: transparent;
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
@@ -493,7 +596,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   inset: 0.7rem 1.75rem;
   border: 0.22rem solid currentColor;
   border-radius: 0.55rem;
-  box-shadow: 0 0 0 0.16rem rgba(113, 50, 14, 0.45);
+  box-shadow: 0 0 0 0.16rem rgba(55, 20, 18, 0.45);
   transform: rotate(-22deg);
 }
 
@@ -536,5 +639,34 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   .portrait-rotation-screen {
     display: flex;
   }
+}
+
+.top-menu-button {
+  display: flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #472422;
+  padding: 0.5rem;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.top-menu-button:hover {
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.top-menu-button svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.4;
 }
 </style>
