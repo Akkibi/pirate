@@ -10,6 +10,7 @@
     :undo-label="undoLabel"
     :on-undo-click="onUndoClick"
     :side-chrome-layout="sideChromeLayout"
+    :buttons-on-last-row="buttonsOnLastRow"
   >
     <template #message>
       <slot name="message">{{ message }}</slot>
@@ -53,6 +54,7 @@ withDefaults(
     undoLabel?: string;
     onUndoClick?: ButtonHandler;
     sideChromeLayout?: boolean;
+    buttonsOnLastRow?: boolean;
   }>(),
   {
     message: '',
@@ -65,6 +67,7 @@ withDefaults(
     undoLabel: 'Undo',
     onUndoClick: undefined,
     sideChromeLayout: false,
+    buttonsOnLastRow: false,
   }
 );
 </script>

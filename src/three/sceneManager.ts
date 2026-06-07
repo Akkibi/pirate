@@ -32,6 +32,7 @@ export class SceneManager {
   private decorativeClouds!: DecorativeClouds;
   private stats: Stats;
   private gameSceneReady = false;
+  private activeGameStartedAt: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     this.canvas = canvas;
@@ -82,14 +83,42 @@ export class SceneManager {
     this.particleSystemManager.setTexture('/images/point.png');
   }
 
+  private destroyGameScene(): void {
+    if (!this.gameSceneReady) {
+      return;
+    }
+
+    this.mapManager.destroy();
+    this.player.destroy();
+    this.corsair.destroy();
+    this.decorativeClouds.destroy();
+    this.scene.remove(this.decorativeClouds.cloudGroup);
+    this.scene.remove(this.seaSky.mesh);
+    this.seaSky.mesh.geometry.dispose();
+    if (Array.isArray(this.seaSky.mesh.material)) {
+      this.seaSky.mesh.material.forEach((material) => material.dispose());
+    } else {
+      this.seaSky.mesh.material.dispose();
+    }
+    this.particleSystemManager.removeAll();
+    objectPool.dispose();
+    this.gameSceneReady = false;
+    this.activeGameStartedAt = null;
+  }
+
   private initWatchers(): void {
     watch(
       () => gameState.gameStarted,
       async (started) => {
         if (started) {
+          if (this.gameSceneReady && this.activeGameStartedAt !== gameState.gameStartedAt) {
+            this.destroyGameScene();
+          }
+
           if (!this.gameSceneReady) {
             this.initGameScene();
             this.gameSceneReady = true;
+            this.activeGameStartedAt = gameState.gameStartedAt;
             await this.renderer.compileAsync(this.scene, this.camera.getNative());
             await this.renderer.renderAsync(this.scene, this.camera.getNative());
           }
@@ -160,11 +189,7 @@ export class SceneManager {
     document.removeEventListener('click', this.handleCanvasClick);
     gsap.ticker.remove(this.animate);
     if (this.gameSceneReady) {
-      this.mapManager.destroy();
-      this.player.destroy();
-      this.corsair.destroy();
-      this.decorativeClouds.destroy();
-      this.particleSystemManager.removeAll();
+      this.destroyGameScene();
     }
     // Dispose the pool (geometries only) while the renderer is still alive,
     // so WebGPU node cleanup doesn't crash on a dead context.

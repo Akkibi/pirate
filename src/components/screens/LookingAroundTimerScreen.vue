@@ -112,6 +112,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
+import { playSound } from '../../utils/soundManager';
 
 const props = withDefaults(
   defineProps<{
@@ -176,6 +177,7 @@ function startCountdown() {
     return;
   }
 
+  playSound('timer', { interrupt: true });
   tickCountdown();
 }
 

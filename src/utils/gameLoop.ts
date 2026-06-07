@@ -26,14 +26,52 @@ import {
 import { showScreen, type UIScreen, type UIScreenResult } from './uiFlowStore';
 import { runParrotTurn, type ParrotCheckpoint } from './gameLoopParrotTurn';
 import { runCrewTurn, type CrewCheckpoint } from './gameLoopCrewTurn';
-import { createTreasureDeck, toTreasureCardView } from './treasureCards';
+import { createDemoTreasureDeck, createTreasureDeck, toTreasureCardView } from './treasureCards';
 import { playSound } from './soundManager';
 
 type IntroCheckpoint =
   | 'intro.gameStart'
+  | 'intro.tutorialPerroquet'
+  | 'intro.tutorialEquipage'
+  | 'intro.tutorialCorsaires'
+  | 'intro.tutorialMiseEnPlace'
   | 'intro.difficulty'
   | 'intro.boatPlacement'
   | 'intro.initialCardChoice';
+
+type TutorialCheckpoint = Extract<IntroCheckpoint, `intro.tutorial${string}`>;
+type TutorialContentKey = 'perroquet' | 'equipage' | 'corsaires' | 'miseEnPlace';
+
+const INTRO_TUTORIAL_SCREENS: Array<{
+  checkpoint: TutorialCheckpoint;
+  contentKey: TutorialContentKey;
+  imageSrc: string;
+}> = [
+  {
+    checkpoint: 'intro.tutorialPerroquet',
+    contentKey: 'perroquet',
+    imageSrc: '/images/perroquet.webp',
+  },
+  {
+    checkpoint: 'intro.tutorialEquipage',
+    contentKey: 'equipage',
+    imageSrc: '/images/equipage.webp',
+  },
+  {
+    checkpoint: 'intro.tutorialCorsaires',
+    contentKey: 'corsaires',
+    imageSrc: '/images/corsaires.webp',
+  },
+  {
+    checkpoint: 'intro.tutorialMiseEnPlace',
+    contentKey: 'miseEnPlace',
+    imageSrc: '/images/mise-en-place.webp',
+  },
+];
+
+function isTutorialCheckpoint(checkpoint: IntroCheckpoint): checkpoint is TutorialCheckpoint {
+  return INTRO_TUTORIAL_SCREENS.some((screen) => screen.checkpoint === checkpoint);
+}
 
 class UndoNavigationError extends Error {
   constructor() {
@@ -142,6 +180,10 @@ export class GameLoop {
   private async runFromHistoryEntryToTurnEnd(entry: SavedGameProgress): Promise<boolean> {
     switch (entry.checkpoint) {
       case 'intro.gameStart':
+      case 'intro.tutorialPerroquet':
+      case 'intro.tutorialEquipage':
+      case 'intro.tutorialCorsaires':
+      case 'intro.tutorialMiseEnPlace':
       case 'intro.difficulty':
       case 'intro.boatPlacement':
       case 'intro.initialCardChoice':
@@ -207,7 +249,7 @@ export class GameLoop {
       this.saveCheckpointHistory(checkpoint, data);
     }
 
-    const result = await showScreen(screen);
+    const result = await showScreen(screen, { checkpoint, data });
 
     if (result.action === 'undo') {
       await this.undoToPreviousScreen({
@@ -261,7 +303,11 @@ export class GameLoop {
         },
       });
 
-      startAt = 'intro.difficulty';
+      startAt = 'intro.tutorialPerroquet';
+    }
+
+    if (isTutorialCheckpoint(startAt)) {
+      startAt = await this.tutorialScreens(startAt);
     }
 
     if (startAt === 'intro.difficulty') {
@@ -278,7 +324,7 @@ export class GameLoop {
 
       if (difficulty.action === 'difficulty') {
         setRhumCapacity(difficulty.maxRhum);
-        setTreasureDeck(createTreasureDeck());
+        setTreasureDeck(gameState.demoMode ? createDemoTreasureDeck() : createTreasureDeck());
         gameState.gameStartedAt = Date.now();
       }
 
@@ -305,6 +351,33 @@ export class GameLoop {
     if (startAt === 'intro.initialCardChoice') {
       await this.initialCrewCardChoice();
     }
+  }
+
+  private async tutorialScreens(startAt: TutorialCheckpoint): Promise<IntroCheckpoint> {
+    const startIndex = Math.max(
+      0,
+      INTRO_TUTORIAL_SCREENS.findIndex((screen) => screen.checkpoint === startAt)
+    );
+
+    for (const tutorialScreen of INTRO_TUTORIAL_SCREENS.slice(startIndex)) {
+      const content = gameText.tutorial[tutorialScreen.contentKey];
+      const result = await this.showCheckpointScreen(tutorialScreen.checkpoint, {
+        type: 'tutorial',
+        content,
+        props: {
+          imageSrc: tutorialScreen.imageSrc,
+          imageAlt: content.title,
+          primaryButtonLabel: gameText.tutorial.nextButton,
+          secondaryButtonLabel: gameText.tutorial.skipButton,
+        },
+      });
+
+      if (result.action === 'secondary') {
+        return 'intro.difficulty';
+      }
+    }
+
+    return 'intro.difficulty';
   }
 
   private async initialCrewCardChoice(): Promise<void> {
@@ -388,16 +461,18 @@ export class GameLoop {
     const elapsedLabel = `${elapsedMinutes.toString().padStart(2, '0')}m${elapsedSeconds
       .toString()
       .padStart(2, '0')}s`;
-    const rhumConsumedLabel = `${gameState.rhumConsumed} bouteille${
-      gameState.rhumConsumed > 1 ? 's' : ''
-    }`;
+    const rhumConsumedUnit =
+      gameState.rhumConsumed > 1
+        ? gameText.units.rhumBottlePlural
+        : gameText.units.rhumBottleSingular;
+    const rhumConsumedLabel = `${gameState.rhumConsumed} ${rhumConsumedUnit}`;
     const resultStats = [
       {
-        label: 'Temps écoulé',
+        label: gameText.gameOver.elapsedTimeLabel,
         value: elapsedLabel,
       },
       {
-        label: 'Rhum consommé',
+        label: gameText.gameOver.rhumConsumedLabel,
         value: rhumConsumedLabel,
       },
     ];
@@ -405,30 +480,43 @@ export class GameLoop {
       gameState.gameResult === 'won'
         ? {
             title: gameText.gameOver.wonTitle,
-            body: 'Le capitaine a été retrouvé !',
+            body: gameText.gameOver.wonBody,
             stats: resultStats,
           }
         : gameState.gameResult === 'lost-corsair'
           ? {
               title: gameText.gameOver.lostTitle,
-              body: 'Les corsaires vous capturent et vous exilent.',
+              body: gameText.gameOver.lostCorsairBody,
               stats: resultStats,
             }
           : {
               title: gameText.gameOver.lostTitle,
-              body: 'L’Équipage n’a plus de rhum et renonce à l’expédition.',
+              body: gameText.gameOver.lostRhumBody,
               stats: resultStats,
             };
 
-    await this.showCheckpointScreen('gameOver', {
+    const gameOverAction = await this.showCheckpointScreen('gameOver', {
       type: 'full-message-button',
       content: resultContent,
       props: {
         primaryButtonLabel: gameText.gameOver.revealMapButton,
         secondaryButtonLabel: gameText.gameOver.primaryButton,
-        primaryButtonOnClick: () => undefined,
       },
     });
+
+    if (gameOverAction.action === 'primary') {
+      gameState.entitiesVisible = true;
+      gameState.displayCorsair = true;
+      gameState.cameraFocusPosition = null;
+
+      await showScreen({
+        type: 'full-message-button',
+        props: {
+          showParchment: false,
+          primaryButtonLabel: gameText.gameOver.primaryButton,
+        },
+      });
+    }
 
     clearSavedGameProgress();
     resetGameState();

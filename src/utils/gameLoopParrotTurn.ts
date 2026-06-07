@@ -44,36 +44,41 @@ const PARROT_CHROME: ScreenChrome = {
   showPeanuts: true,
 };
 
-const PASS_PHONE_TO_CREW_LABEL = 'Passer le téléphone à l’Équipage';
-
 function formatActionCount(count: number): string {
-  return `${count} action${count > 1 ? 's' : ''}`;
+  const unit = count > 1 ? gameText.units.actionPlural : gameText.units.actionSingular;
+
+  return `${count} ${unit}`;
 }
 
 function formatCaseCount(count: number): string {
-  return `${count} case${count > 1 ? 's' : ''}`;
+  const unit = count > 1 ? gameText.units.casePlural : gameText.units.caseSingular;
+
+  return `${count} ${unit}`;
 }
 
 function formatCorsairPositionFromBoat(): string {
+  const corsairText = gameText.turn2Plus.parrot.corsairLocation;
   const deltaX = gameState.corsairPosition.x - gameState.userPosition.x;
   const deltaY = gameState.corsairPosition.y - gameState.userPosition.y;
   const relativeParts: string[] = [];
 
   if (deltaY !== 0) {
     relativeParts.push(
-      `${formatCaseCount(Math.abs(deltaY))} à ${deltaY > 0 ? 'droite' : 'gauche'}`
+      `${formatCaseCount(Math.abs(deltaY))} ${deltaY > 0 ? corsairText.right : corsairText.left}`
     );
   }
 
   if (deltaX !== 0) {
-    relativeParts.push(`${formatCaseCount(Math.abs(deltaX))} ${deltaX > 0 ? 'en haut' : 'en bas'}`);
+    relativeParts.push(
+      `${formatCaseCount(Math.abs(deltaX))} ${deltaX > 0 ? corsairText.up : corsairText.down}`
+    );
   }
 
   if (relativeParts.length === 0) {
-    return 'La frégate corsaire est sur la case du bateau.';
+    return corsairText.onBoat;
   }
 
-  return `La frégate corsaire est à ${relativeParts.join(' et ')} du bateau.`;
+  return `${corsairText.relativePrefix} ${relativeParts.join(corsairText.relativeJoin)} ${corsairText.fromBoatSuffix}`;
 }
 
 export async function runParrotTurn({
@@ -151,14 +156,12 @@ export async function runParrotTurn({
           type: 'full-message-button',
           content: {
             title: gameText.turn2Plus.parrot.dawnWithFoodCheck.title,
-            body: `${gameText.turn2Plus.parrot.dawnWithFoodCheck.body} Tu en possèdes ${gameState.peanutTokens}.`,
+            body: `${gameText.turn2Plus.parrot.dawnWithFoodCheck.body} ${gameText.turn2Plus.parrot.dawnWithFoodCheck.ownedCountPrefix} ${gameState.peanutTokens}${gameText.turn2Plus.parrot.dawnWithFoodCheck.ownedCountSuffix}`,
           },
           props: {
             chrome: PARROT_CHROME,
             primaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.primaryButton,
             secondaryButtonLabel: gameText.turn2Plus.parrot.dawnWithFoodCheck.secondaryButton,
-            showUndo: true,
-            undoLabel: gameText.turn1.parrot.dawnIntro.undoLabel,
           },
         },
         {
@@ -187,12 +190,13 @@ export async function runParrotTurn({
           type: 'top-message-lower-button-cards',
           content: {
             title: gameText.turn2Plus.parrot.dawnChoice.title,
-            body: `Tu peux faire ${formatActionCount(remainingParrotActions)} à ce tour.`,
+            body: `${gameText.turn2Plus.parrot.dawnChoice.actionCountPrefix} ${formatActionCount(remainingParrotActions)} ${gameText.turn2Plus.parrot.dawnChoice.actionCountSuffix}`,
           },
           props: {
             chrome: PARROT_CHROME,
             showUndo: true,
             undoLabel: gameText.turn2Plus.parrot.dawnChoice.undoLabel,
+            buttonsOnLastRow: true,
             cards: [
               {
                 id: 'observe',
@@ -200,7 +204,7 @@ export async function runParrotTurn({
                 caption: gameText.turn2Plus.parrot.dawnChoice.cards[0].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_observerlesalentours.webp',
-                imageAlt: 'Observer les alentours',
+                imageAlt: gameText.turn2Plus.parrot.dawnChoice.cards[0].title,
               },
               {
                 id: 'corsair',
@@ -208,7 +212,7 @@ export async function runParrotTurn({
                 caption: gameText.turn2Plus.parrot.dawnChoice.cards[1].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_repererlescorsaires.webp',
-                imageAlt: 'Repérer les corsaires',
+                imageAlt: gameText.turn2Plus.parrot.dawnChoice.cards[1].title,
               },
               {
                 id: 'share',
@@ -216,7 +220,7 @@ export async function runParrotTurn({
                 caption: gameText.turn2Plus.parrot.dawnChoice.cards[2].caption,
                 variant: 'action',
                 imageSrc: '/images/action_cards/action_card_partagerdesinformations.webp',
-                imageAlt: 'Partager des informations',
+                imageAlt: gameText.turn2Plus.parrot.dawnChoice.cards[2].title,
               },
             ],
           },
@@ -255,7 +259,6 @@ export async function runParrotTurn({
 
     if (currentStep === 'parrot.lookAroundTimer') {
       if (shouldWaitForMapReveal) {
-        playSound('parrotSurroundings');
         await waitForEvent('parrot:map_revealed');
         shouldWaitForMapReveal = false;
       }
@@ -335,7 +338,10 @@ export async function runParrotTurn({
             },
             props: {
               chrome: PARROT_CHROME,
-              primaryButtonLabel: remainingParrotActions > 1 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
+              primaryButtonLabel:
+                remainingParrotActions > 1
+                  ? gameText.common.next
+                  : gameText.turn1.parrot.helpCrew.primaryButton,
             },
           },
           {
@@ -366,7 +372,10 @@ export async function runParrotTurn({
           },
           props: {
             chrome: PARROT_CHROME,
-            primaryButtonLabel: remainingParrotActions > 1 ? 'Suivant' : PASS_PHONE_TO_CREW_LABEL,
+            primaryButtonLabel:
+              remainingParrotActions > 1
+                ? gameText.common.next
+                : gameText.turn1.parrot.helpCrew.primaryButton,
           },
         },
         {

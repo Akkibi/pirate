@@ -8,6 +8,8 @@ export type GameResult = 'won' | 'lost-rhum' | 'lost-corsair' | null;
 export type BoardDirection = 'left' | 'right' | 'up' | 'down';
 export const BOARD_TILE_COUNT_X = 5;
 export const BOARD_TILE_COUNT_Y = 7;
+const MIN_INITIAL_CORSAIR_DISTANCE = 5;
+const MONSTER_POOL_KEYS = ['monster_baleine', 'monster_pieuvre', 'monster_serpent'] as const;
 
 export interface BoardTileSnapshot {
   x: number;
@@ -53,6 +55,7 @@ interface StoreInterface {
   arrowClicked: string | null;
   boardTiles: BoardTileSnapshot[];
   exhaustedIslandPositions: BoardPositionSnapshot[];
+  greyedIslandPositions: BoardPositionSnapshot[];
   treasureDeck: TreasureCardInstance[];
   crewHand: TreasureCardInstance[];
   treasureDiscardPile: TreasureCardInstance[];
@@ -66,6 +69,7 @@ interface StoreInterface {
   loadingProgress: number;
   gameStarted: boolean;
   debugMode: boolean;
+  demoMode: boolean;
 }
 
 export interface GameStateSnapshot {
@@ -96,6 +100,7 @@ export interface GameStateSnapshot {
   arrowClicked: string | null;
   boardTiles: BoardTileSnapshot[];
   exhaustedIslandPositions: BoardPositionSnapshot[];
+  greyedIslandPositions?: BoardPositionSnapshot[];
   treasureDeck: TreasureCardInstance[];
   crewHand: TreasureCardInstance[];
   treasureDiscardPile: TreasureCardInstance[];
@@ -106,6 +111,7 @@ export interface GameStateSnapshot {
   tequilaTonight: boolean;
   gameResult: GameResult;
   gameStartedAt: number;
+  demoMode?: boolean;
 }
 
 export const gameState = reactive({
@@ -133,6 +139,7 @@ export const gameState = reactive({
   arrowClicked: null,
   boardTiles: [],
   exhaustedIslandPositions: [],
+  greyedIslandPositions: [],
   treasureDeck: [],
   crewHand: [],
   treasureDiscardPile: [],
@@ -146,6 +153,7 @@ export const gameState = reactive({
   loadingProgress: 0,
   gameStarted: false,
   debugMode: false,
+  demoMode: false,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
@@ -170,10 +178,11 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
       y: 0,
     },
     userPositionHistory: [{ x: 0, y: 0 }],
-    entitiesVisible: true,
+    entitiesVisible: false,
     arrowClicked: null,
     boardTiles: [],
     exhaustedIslandPositions: [],
+    greyedIslandPositions: [],
     treasureDeck: [],
     crewHand: [],
     treasureDiscardPile: [],
@@ -184,6 +193,7 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
     tequilaTonight: false,
     gameResult: null,
     gameStartedAt: Date.now(),
+    demoMode: false,
   };
 }
 
@@ -224,6 +234,10 @@ export function createGameStateSnapshot(): GameStateSnapshot {
       x: position.x,
       y: position.y,
     })),
+    greyedIslandPositions: gameState.greyedIslandPositions.map((position) => ({
+      x: position.x,
+      y: position.y,
+    })),
     treasureDeck: gameState.treasureDeck.map((card) => ({ ...card })),
     crewHand: gameState.crewHand.map((card) => ({ ...card })),
     treasureDiscardPile: gameState.treasureDiscardPile.map((card) => ({ ...card })),
@@ -234,6 +248,7 @@ export function createGameStateSnapshot(): GameStateSnapshot {
     tequilaTonight: gameState.tequilaTonight,
     gameResult: gameState.gameResult,
     gameStartedAt: gameState.gameStartedAt,
+    demoMode: gameState.demoMode,
   };
 }
 
@@ -282,6 +297,19 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
       y: position.y,
     }))
   );
+  gameState.greyedIslandPositions.splice(
+    0,
+    gameState.greyedIslandPositions.length,
+    ...(
+      snapshot.greyedIslandPositions ??
+      gameState.exhaustedIslandPositions.filter(
+        (position) => !isSameBoardPosition(position, userPosition)
+      )
+    ).map((position) => ({
+      x: position.x,
+      y: position.y,
+    }))
+  );
   gameState.treasureDeck.splice(
     0,
     gameState.treasureDeck.length,
@@ -306,6 +334,7 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.tequilaTonight = snapshot.tequilaTonight ?? false;
   gameState.gameResult = snapshot.gameResult ?? null;
   gameState.gameStartedAt = snapshot.gameStartedAt ?? Date.now();
+  gameState.demoMode = snapshot.demoMode ?? false;
 }
 
 export function resetGameState(): void {
@@ -360,6 +389,7 @@ export function getNextBoardPosition(
 }
 
 export function moveUserPosition(direction: string): boolean {
+  const previousPosition = clampBoardPosition(gameState.userPosition);
   const nextPosition = getNextBoardPosition(gameState.userPosition, direction);
 
   if (!nextPosition) {
@@ -369,6 +399,11 @@ export function moveUserPosition(direction: string): boolean {
   }
 
   gameState.userPosition.set(nextPosition.x, nextPosition.y);
+
+  if (isIslandExhausted(previousPosition)) {
+    markIslandGreyed(previousPosition);
+  }
+
   return true;
 }
 
@@ -396,6 +431,13 @@ function pickRandomBoardPosition(positions: BoardPositionSnapshot[]): BoardPosit
   return positions[Math.floor(Math.random() * positions.length)] ?? null;
 }
 
+function getBoardDistance(
+  first: Pick<THREE.Vector2, 'x' | 'y'>,
+  second: Pick<THREE.Vector2, 'x' | 'y'>
+): number {
+  return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
+}
+
 function getAllBoardPositions(): BoardPositionSnapshot[] {
   const positions: BoardPositionSnapshot[] = [];
 
@@ -408,10 +450,101 @@ function getAllBoardPositions(): BoardPositionSnapshot[] {
   return positions;
 }
 
+function createInitialBoardTiles(): BoardTileSnapshot[] {
+  const boardTiles: BoardTileSnapshot[] = [];
+
+  for (let x = 0; x < BOARD_TILE_COUNT_X; x++) {
+    for (let y = 0; y < BOARD_TILE_COUNT_Y; y++) {
+      boardTiles.push({
+        x,
+        y,
+        state: 'water',
+      });
+    }
+  }
+
+  positionBoardTileGroup('island', boardTiles);
+  positionBoardTileGroup('typhon', boardTiles);
+  positionBoardTileGroup('monster', boardTiles);
+
+  boardTiles.forEach((tile) => {
+    if (tile.state === 'monster') {
+      tile.monsterType = MONSTER_POOL_KEYS[Math.floor(Math.random() * MONSTER_POOL_KEYS.length)];
+    }
+
+    if (isSameBoardPosition(tile, gameState.userPosition)) {
+      tile.state = 'water';
+      tile.monsterType = undefined;
+    }
+  });
+
+  return boardTiles;
+}
+
+function positionBoardTileGroup(group: BoardTileState, boardTiles: BoardTileSnapshot[]): void {
+  const totalCount = group === 'island' ? 9 : Math.round(Math.random()) + 8;
+  const blackCount = 4;
+  const whiteCount = totalCount - blackCount;
+
+  const getPool = (parity: number) => boardTiles.filter((tile) => (tile.x + tile.y) % 2 === parity);
+
+  const tryPlace = (pool: BoardTileSnapshot[]): boolean => {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const candidate = pool[Math.floor(Math.random() * pool.length)];
+
+      if (!candidate || candidate.state !== 'water') {
+        continue;
+      }
+
+      const sameTypeNeighbors = boardTiles.filter(
+        (tile) =>
+          tile.state === group &&
+          ((Math.abs(tile.x - candidate.x) === 1 && tile.y === candidate.y) ||
+            (Math.abs(tile.y - candidate.y) === 1 && tile.x === candidate.x))
+      ).length;
+
+      if (sameTypeNeighbors < 2) {
+        candidate.state = group;
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const blackPool = getPool(0);
+  const whitePool = getPool(1);
+
+  for (let index = 0; index < blackCount; index++) {
+    if (!tryPlace(blackPool)) break;
+  }
+
+  for (let index = 0; index < whiteCount; index++) {
+    if (!tryPlace(whitePool)) break;
+  }
+}
+
+export function initializeNewBoardState(): void {
+  const startPosition = new THREE.Vector2(
+    Math.round(Math.random() * (BOARD_TILE_COUNT_X - 1)),
+    Math.round(Math.random() * (BOARD_TILE_COUNT_Y - 1))
+  );
+
+  gameState.userPosition.set(startPosition.x, startPosition.y);
+  gameState.userPositionHistory.splice(
+    0,
+    gameState.userPositionHistory.length,
+    startPosition.clone()
+  );
+  randomizeCorsairAwayFromBoat();
+  setBoardTiles(createInitialBoardTiles());
+}
+
 export function randomizeCorsairAwayFromBoat(): void {
   const nextPosition = pickRandomBoardPosition(
     getAllBoardPositions().filter(
-      (position) => !isSameBoardPosition(position, gameState.userPosition)
+      (position) =>
+        getBoardDistance(position, gameState.userPosition) >= MIN_INITIAL_CORSAIR_DISTANCE
     )
   );
 
@@ -572,9 +705,23 @@ export function markIslandExhausted(position: Pick<THREE.Vector2, 'x' | 'y'>): v
   gameState.exhaustedIslandPositions.push({ x: position.x, y: position.y });
 }
 
+export function markIslandGreyed(position: Pick<THREE.Vector2, 'x' | 'y'>): void {
+  if (isIslandGreyed(position)) {
+    return;
+  }
+
+  gameState.greyedIslandPositions.push({ x: position.x, y: position.y });
+}
+
 export function isIslandExhausted(position: Pick<THREE.Vector2, 'x' | 'y'>): boolean {
   return gameState.exhaustedIslandPositions.some(
     (exhaustedPosition) => exhaustedPosition.x === position.x && exhaustedPosition.y === position.y
+  );
+}
+
+export function isIslandGreyed(position: Pick<THREE.Vector2, 'x' | 'y'>): boolean {
+  return gameState.greyedIslandPositions.some(
+    (greyedPosition) => greyedPosition.x === position.x && greyedPosition.y === position.y
   );
 }
 

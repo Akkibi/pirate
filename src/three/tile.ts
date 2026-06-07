@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { objectPool } from './instancedModelManger';
 import { gsap } from 'gsap';
-import { gameState, isIslandExhausted, type BoardTileState } from '../utils/gameStore';
+import { gameState, isIslandGreyed, type BoardTileState } from '../utils/gameStore';
 import { watch } from 'vue';
 import { instanceTween } from '../utils/instanceTween';
 export type TileStateType = BoardTileState;
@@ -68,6 +68,7 @@ export class Tile {
 
           this.pendingTimeout = setTimeout(() => {
             this.pendingTimeout = null;
+            this.isHidden = false;
             this.updateObject(false);
             this.setTileVisited();
             this.updatePositionShift();
@@ -166,16 +167,8 @@ export class Tile {
     }
   }
 
-  private isCurrentCrewPosition(): boolean {
-    return (
-      gameState.userPosition.x === this.position.x && gameState.userPosition.y === this.position.y
-    );
-  }
-
   private shouldUseExhaustedIslandPool(): boolean {
-    return (
-      this.state === 'island' && isIslandExhausted(this.position) && !this.isCurrentCrewPosition()
-    );
+    return this.state === 'island' && isIslandGreyed(this.position);
   }
 
   private syncIslandVisualState(): void {
@@ -380,6 +373,12 @@ export class Tile {
 
   public hide(): Promise<void> {
     if (this.isHistory) {
+      if (this.isHidden) {
+        this.isHidden = false;
+        this.updateObject(false);
+        this.updatePositionShift();
+      }
+
       return Promise.resolve();
     }
     this.isHidden = true;
@@ -389,6 +388,12 @@ export class Tile {
 
   public show(): Promise<void> {
     if (this.isHistory) {
+      if (this.isHidden) {
+        this.isHidden = false;
+        this.updateObject(false);
+        this.updatePositionShift();
+      }
+
       return Promise.resolve();
     }
     this.isHidden = false;

@@ -16,7 +16,7 @@ import {
 import type { PhaseType } from '../utils/gameStore';
 import { clampBoardPosition, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
-import { watch } from 'vue';
+import { watch, type WatchStopHandle } from 'vue';
 import gsap from 'gsap';
 import { gameEvents } from '../events/gameEvents';
 import { ParticleSystemManager } from './particleSystemManager';
@@ -37,6 +37,8 @@ export class Player {
   private bottleMod: THREE.Object3D | null = null;
   private sceneManager: SceneManager;
   private animationTime: number;
+  private stopWatchers: WatchStopHandle[] = [];
+  private shootCannonsHandler: (() => void) | null = null;
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -127,61 +129,75 @@ export class Player {
   }
 
   private initWatchers(): void {
-    watch(
-      () => gameState.currentPhase,
-      (newPhase) => {
-        this.setPhase(newPhase);
-      }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.currentPhase,
+        (newPhase) => {
+          this.setPhase(newPhase);
+        }
+      )
     );
-    watch(
-      () => gameState.entitiesVisible,
-      () => {
-        this.updatePositionShift();
-      }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.entitiesVisible,
+        () => {
+          this.updatePositionShift();
+        }
+      )
     );
-    watch(
-      () => gameState.displayArrows,
-      (isDisplayed) => {
-        this.arrowManager.updateVisibility(isDisplayed, this.position);
-      }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.displayArrows,
+        (isDisplayed) => {
+          this.arrowManager.updateVisibility(isDisplayed, this.position);
+        }
+      )
     );
-    watch(
-      () => gameState.displayCannons,
-      (visible) => {
-        if (this.cannonsMod) this.cannonsMod.visible = visible;
-      }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.displayCannons,
+        (visible) => {
+          if (this.cannonsMod) this.cannonsMod.visible = visible;
+        }
+      )
     );
-    watch(
-      () => gameState.displayBottle,
-      (visible) => {
-        if (this.bottleMod) {
-          this.bottleMod.visible = visible;
-          if (visible === true) {
-            this.boatGroup.scale.set(0.75, 0.75, 0.75);
-          } else {
-            this.boatGroup.scale.set(1, 1, 1);
+    this.stopWatchers.push(
+      watch(
+        () => gameState.displayBottle,
+        (visible) => {
+          if (this.bottleMod) {
+            this.bottleMod.visible = visible;
+            if (visible === true) {
+              this.boatGroup.scale.set(0.75, 0.75, 0.75);
+            } else {
+              this.boatGroup.scale.set(1, 1, 1);
+            }
           }
         }
-      }
+      )
     );
-    watch(
-      () => gameState.userPositionHistory.length,
-      () => {
-        if (gameState.displayArrows) {
-          this.arrowManager.updateVisibility(true, this.position);
+    this.stopWatchers.push(
+      watch(
+        () => gameState.userPositionHistory.length,
+        () => {
+          if (gameState.displayArrows) {
+            this.arrowManager.updateVisibility(true, this.position);
+          }
         }
-      }
+      )
     );
-    watch(
-      () => gameState.userPosition,
-      (newPosition) => {
-        this.setPosition(newPosition);
-        this.updatePositionShift();
-        this.arrowManager.updateVisibility(gameState.displayArrows, this.position);
-      },
-      { deep: true }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.userPosition,
+        (newPosition) => {
+          this.setPosition(newPosition);
+          this.updatePositionShift();
+          this.arrowManager.updateVisibility(gameState.displayArrows, this.position);
+        },
+        { deep: true }
+      )
     );
-    gameEvents.on('boat:shoot_cannons', () => {
+    this.shootCannonsHandler = () => {
       if (!this.cannonsMod) return;
       const cannonLeft = this.cannonsMod.getObjectByName('cannon-left');
       const cannonRight = this.cannonsMod.getObjectByName('cannon-right');
@@ -238,7 +254,8 @@ export class Player {
           );
         }
       }
-    });
+    };
+    gameEvents.on('boat:shoot_cannons', this.shootCannonsHandler);
     this.setPhase(gameState.currentPhase);
     this.setPosition(gameState.userPosition);
   }
@@ -338,6 +355,12 @@ export class Player {
   }
 
   public destroy(): void {
+    this.stopWatchers.forEach((stop) => stop());
+    this.stopWatchers = [];
+    if (this.shootCannonsHandler) {
+      gameEvents.off('boat:shoot_cannons', this.shootCannonsHandler);
+      this.shootCannonsHandler = null;
+    }
     this.boatGroup.removeFromParent();
     this.birdGroup.removeFromParent();
     this.playerGroup.removeFromParent();

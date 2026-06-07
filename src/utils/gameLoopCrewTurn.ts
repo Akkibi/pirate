@@ -28,6 +28,7 @@ import {
 } from './uiFlowStore';
 import {
   getTreasureCardDefinition,
+  getTreasureCardTitle,
   getTreasurePhaseLabel,
   toTreasureCardView,
   type TreasureCardInstance,
@@ -60,6 +61,11 @@ type CrewMovementCheckpoint =
   | 'crew.revealDefenseCards'
   | 'crew.revealCorsair'
   | 'crew.revealIsland';
+
+type TileRevealCheckpoint = Extract<
+  CrewMovementCheckpoint,
+  'crew.revealCalmSea' | 'crew.revealEncounter' | 'crew.revealIsland' | 'crew.revealCorsair'
+>;
 
 type ShowCheckpointScreen = (
   checkpoint: GameCheckpoint,
@@ -120,11 +126,22 @@ function getAdjustedDiceResult(step: 1 | -1): number {
 }
 
 function formatRemainingMoves(count: number): string {
-  return `Il te reste ${count} mouvement${count > 1 ? 's' : ''}.`;
+  const unit = count > 1 ? gameText.units.movementPlural : gameText.units.movementSingular;
+
+  return appRemainingMovesText(count, unit);
 }
 
 function formatRhumBottleCount(count: number): string {
-  return `${count} bouteille${Math.abs(count) > 1 ? 's' : ''} de rhum`;
+  const unit =
+    Math.abs(count) > 1 ? gameText.units.rhumBottlePlural : gameText.units.rhumBottleSingular;
+
+  return `${count} ${unit}`;
+}
+
+function appRemainingMovesText(count: number, unit: string): string {
+  return gameText.units.movementSingular === 'mouvement'
+    ? `Il te reste ${count} ${unit}.`
+    : `You have ${count} ${unit} left.`;
 }
 
 function getCrewText() {
@@ -146,12 +163,7 @@ function isCrewMovementCheckpoint(
   );
 }
 
-function getTileRevealCheckpoint(
-  tileState: BoardTileState
-): Extract<
-  CrewMovementCheckpoint,
-  'crew.revealCalmSea' | 'crew.revealEncounter' | 'crew.revealIsland' | 'crew.revealCorsair'
-> {
+function getTileRevealCheckpoint(tileState: BoardTileState): TileRevealCheckpoint {
   if (tileState === 'water') {
     return 'crew.revealCalmSea';
   }
@@ -167,18 +179,29 @@ function getTileRevealCheckpoint(
   return 'crew.revealEncounter';
 }
 
+function isTileRevealCheckpoint(
+  checkpoint: CrewMovementCheckpoint
+): checkpoint is TileRevealCheckpoint {
+  return (
+    checkpoint === 'crew.revealCalmSea' ||
+    checkpoint === 'crew.revealEncounter' ||
+    checkpoint === 'crew.revealIsland' ||
+    checkpoint === 'crew.revealCorsair'
+  );
+}
+
 function getTileRevealLabel(tileState: BoardTileState): string {
   switch (tileState) {
     case 'monster':
-      return 'monstre';
+      return gameText.units.tileMonster;
     case 'typhon':
-      return 'typhon';
+      return gameText.units.tileTyphoon;
     case 'island':
-      return 'île';
+      return gameText.units.tileIsland;
     case 'corsair':
-      return 'corsaires';
+      return gameText.units.tileCorsair;
     default:
-      return 'mer calme';
+      return gameText.units.tileWater;
   }
 }
 
@@ -228,15 +251,15 @@ function getTreasureCardDisabledReason(
   const definition = getTreasureCardDefinition(card.cardId);
 
   if (!definition.playable) {
-    return 'Non jouable';
+    return gameText.common.notPlayable;
   }
 
   if (gameState.usedTreasureThisTurn) {
-    return 'Déjà jouée ce tour';
+    return gameText.common.alreadyPlayedThisTurn;
   }
 
   if (definition.phase !== phase) {
-    return `Jouable en ${getTreasurePhaseLabel(definition.phase)}`;
+    return `${gameText.common.playableIn} ${getTreasurePhaseLabel(definition.phase)}`;
   }
 
   if (
@@ -244,11 +267,11 @@ function getTreasureCardDisabledReason(
     context?.tileState !== 'monster' &&
     context?.tileState !== 'typhon'
   ) {
-    return 'Pas de danger à éliminer';
+    return gameText.common.noDangerToEliminate;
   }
 
   if (card.cardId === 'bombe-artisanale' && gameState.currentRhum <= 0) {
-    return 'Pas assez de rhum';
+    return gameText.common.notEnoughRhum;
   }
 
   return undefined;
@@ -306,7 +329,7 @@ async function chooseTreasureCardForPhase(
     },
     props: {
       chrome: getChromeForTreasurePhase(phase),
-      secondaryButtonLabel: 'Annuler',
+      secondaryButtonLabel: gameText.common.cancel,
       cards: gameState.crewHand.map((card) => {
         const disabledReason = getTreasureCardDisabledReason(card, phase, context);
         const view = toTreasureCardView(card, {
@@ -413,21 +436,21 @@ async function resolveEquippedDefense(
     const equipmentChoice = await showScreen({
       type: 'top-message-lower-button-cards',
       content: {
-        title: 'Quel équipement utiliser ?',
-        body: 'Les deux jetons peuvent réagir à ce monstre.',
+        title: gameText.reveal.equipmentChoice.title,
+        body: gameText.reveal.equipmentChoice.body,
       },
       props: {
         chrome: AFTERNOON_CHROME,
         cards: [
           {
             id: 'bottle',
-            title: 'Bateau en bouteille',
-            caption: 'Absorbe le choc. Le monstre reste sur la case.',
+            title: gameText.treasureCards['bateau-en-bouteille'].title,
+            caption: gameText.reveal.equipmentChoice.bottleCaption,
           },
           {
             id: 'cannon',
-            title: 'Poudre à canon',
-            caption: 'Élimine le monstre définitivement.',
+            title: gameText.treasureCards['poudre-a-canon'].title,
+            caption: gameText.reveal.equipmentChoice.cannonCaption,
           },
         ],
       },
@@ -441,12 +464,12 @@ async function resolveEquippedDefense(
       await showScreen({
         type: 'full-message-button',
         content: {
-          title: 'Poudre à canon !',
-          body: 'Le monstre est éliminé. Aucun rhum n’est perdu.',
+          title: gameText.reveal.powder.title,
+          body: gameText.reveal.powder.body,
         },
         props: {
           chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: 'Suivant',
+          primaryButtonLabel: gameText.common.next,
         },
       });
     } else {
@@ -456,12 +479,12 @@ async function resolveEquippedDefense(
       await showScreen({
         type: 'full-message-button',
         content: {
-          title: 'Bateau en bouteille !',
-          body: 'Le danger est absorbé. Aucun rhum n’est perdu.',
+          title: gameText.reveal.bottle.title,
+          body: gameText.reveal.bottle.body,
         },
         props: {
           chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: 'Suivant',
+          primaryButtonLabel: gameText.common.next,
         },
       });
     }
@@ -479,12 +502,12 @@ async function resolveEquippedDefense(
     await showScreen({
       type: 'full-message-button',
       content: {
-        title: 'Bateau en bouteille !',
-        body: 'Le danger est absorbé. Aucun rhum n’est perdu.',
+        title: gameText.reveal.bottle.title,
+        body: gameText.reveal.bottle.body,
       },
       props: {
         chrome: AFTERNOON_CHROME,
-        primaryButtonLabel: 'Suivant',
+        primaryButtonLabel: gameText.common.next,
       },
     });
 
@@ -502,12 +525,12 @@ async function resolveEquippedDefense(
     await showScreen({
       type: 'full-message-button',
       content: {
-        title: 'Poudre à canon !',
-        body: 'Le monstre est éliminé. Aucun rhum n’est perdu.',
+        title: gameText.reveal.powder.title,
+        body: gameText.reveal.powder.body,
       },
       props: {
         chrome: AFTERNOON_CHROME,
-        primaryButtonLabel: 'Suivant',
+        primaryButtonLabel: gameText.common.next,
       },
     });
 
@@ -546,7 +569,7 @@ async function diceCardsOptions(
           primaryButtonLabel: crewText.afterRoll.noMovementButton,
           zeroResultButtonLabel: crewText.afterRoll.noMovementButton,
           movingResultButtonLabel: crewText.afterRoll.moveButton,
-          secondaryButtonLabel: hasMorningCard ? 'Utiliser une carte' : undefined,
+          secondaryButtonLabel: hasMorningCard ? gameText.common.useCard : undefined,
           openHandOnSecondary: hasMorningCard,
         },
       },
@@ -683,12 +706,12 @@ async function handleCrewTileReveal(
         {
           type: 'top-message-lower-button',
           content: {
-            title: 'Île déjà explorée',
-            body: 'La cale et les trésors ont déjà été récupérés ici.',
+            title: gameText.reveal.island.exhaustedTitle,
+            body: gameText.reveal.island.exhaustedBody,
           },
           props: {
             chrome: AFTERNOON_CHROME,
-            primaryButtonLabel: 'Suivant',
+            primaryButtonLabel: gameText.common.next,
           },
         },
         {
@@ -713,7 +736,7 @@ async function handleCrewTileReveal(
         type: 'top-message-lower-button',
         content: {
           title: gameText.reveal.island.title,
-          body: `Tu recharges ${formatRhumBottleCount(gainedRhum)} en pillant l’île.`,
+          body: `${gameText.reveal.island.gainedBodyPrefix} ${formatRhumBottleCount(gainedRhum)} ${gameText.reveal.island.gainedBodySuffix}`,
         },
         props: {
           chrome: AFTERNOON_CHROME,
@@ -745,12 +768,12 @@ async function handleCrewTileReveal(
       await showScreen({
         type: 'full-message-button',
         content: {
-          title: 'Trésor récupéré',
-          body: `${getTreasureCardDefinition(drawnCards[0]!.cardId).title} rejoint votre main.`,
+          title: gameText.reveal.treasureRecovered.title,
+          body: `${getTreasureCardTitle(drawnCards[0]!.cardId)} ${gameText.reveal.treasureRecovered.bodySuffix}`,
         },
         props: {
           chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: 'Suivant',
+          primaryButtonLabel: gameText.common.next,
         },
       });
     } else if (drawnCards.length > 1) {
@@ -838,7 +861,7 @@ async function handleCrewTileReveal(
               ? { ...AFTERNOON_CHROME, canUseCards: true }
               : AFTERNOON_CHROME,
           primaryButtonLabel: equippedDefenseRevealBody
-            ? 'Suivant'
+            ? gameText.common.next
             : hasAfternoonCard
               ? gameText.reveal.encounterGeneric.primaryButton
               : gameText.reveal.encounterGeneric.secondaryButton,
@@ -891,11 +914,11 @@ async function handleCrewTileReveal(
           type: 'full-message-button',
           content: {
             title: gameText.reveal.bomb.title,
-            body: `Tu élimines définitivement le ${getTileRevealLabel(tileState)} en sacrifiant 1 bouteille de rhum. Retirez-le du plateau.`,
+            body: `${gameText.reveal.bomb.bodyPrefix} ${getTileRevealLabel(tileState)} ${gameText.reveal.bomb.bodySuffix}`,
           },
           props: {
             chrome: AFTERNOON_CHROME,
-            primaryButtonLabel: 'Suivant',
+            primaryButtonLabel: gameText.common.next,
           },
         });
 
@@ -934,7 +957,7 @@ async function handleCrewTileReveal(
       },
       props: {
         chrome: AFTERNOON_CHROME,
-        primaryButtonLabel: 'Suivant',
+        primaryButtonLabel: gameText.common.next,
       },
     },
     {
@@ -1044,6 +1067,20 @@ async function runCrewMovementPhase(
     startAt = getTileRevealCheckpoint(tileState);
   }
 
+  if (isTileRevealCheckpoint(startAt)) {
+    const currentTileState = getCurrentTileState();
+    const currentTileCheckpoint = getTileRevealCheckpoint(currentTileState);
+
+    if (
+      currentTileCheckpoint !== startAt ||
+      !tileState ||
+      getTileRevealCheckpoint(tileState) !== startAt
+    ) {
+      tileState = currentTileState;
+      startAt = currentTileCheckpoint;
+    }
+  }
+
   return handleCrewTileReveal(
     showCheckpointScreen,
     startAt,
@@ -1136,7 +1173,7 @@ export async function runCrewTurn({
       content: crewText.morningIntro,
       props: {
         chrome: MORNING_CHROME,
-        primaryButtonLabel: 'Mesurer le vent',
+        primaryButtonLabel: crewText.diceRoll.primaryButton,
       },
     });
     startAt = 'crew.diceRoll';

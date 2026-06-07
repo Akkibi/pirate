@@ -1,12 +1,13 @@
 import * as THREE from 'three/webgpu';
 import { BOARD_TILE_COUNT_X, BOARD_TILE_COUNT_Y, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
-import { watch } from 'vue';
+import { watch, type WatchStopHandle } from 'vue';
 
 export class Corsair {
   private corsairGroup: THREE.Group;
   private isDisplayedInMap: boolean;
   private isDisplayed: boolean;
+  private stopWatchers: WatchStopHandle[] = [];
 
   constructor(scene: THREE.Scene) {
     this.corsairGroup = new THREE.Group();
@@ -25,23 +26,29 @@ export class Corsair {
   }
 
   public destroy(): void {
+    this.stopWatchers.forEach((stop) => stop());
+    this.stopWatchers = [];
     this.corsairGroup.removeFromParent();
     this.corsairGroup.clear();
   }
 
   public initWatchers(): void {
-    watch(
-      () => gameState.displayCorsair,
-      (isDisplayed) => {
-        this.displayCorsair(isDisplayed);
-      }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.displayCorsair,
+        (isDisplayed) => {
+          this.displayCorsair(isDisplayed);
+        }
+      )
     );
-    watch(
-      () => gameState.corsairPosition,
-      (newPosition) => {
-        this.setPosition(newPosition);
-      },
-      { deep: true }
+    this.stopWatchers.push(
+      watch(
+        () => gameState.corsairPosition,
+        (newPosition) => {
+          this.setPosition(newPosition);
+        },
+        { deep: true }
+      )
     );
     this.displayCorsair(gameState.displayCorsair);
     this.setPosition(gameState.corsairPosition);

@@ -6,13 +6,10 @@ import { Tile, type TileStateType } from './tile';
 import { objectPool } from './instancedModelManger';
 import { modelLoader } from './modelLoader';
 import {
-  type BoardTileSnapshot,
-  type BoardTileState,
   type PhaseType,
   ensureCorsairAwayFromBoat,
   gameState,
-  randomizeCorsairAwayFromBoat,
-  setBoardTiles,
+  initializeNewBoardState,
 } from '../utils/gameStore';
 import { watch } from 'vue';
 import { gameEvents } from '../events/gameEvents';
@@ -20,10 +17,6 @@ import type { SceneManager } from './sceneManager';
 import { createWaterMaterial } from './shaders/waterMaterial';
 import { createExhaustedIslandMaterial, createIslandMaterial } from './shaders/islandMaterial';
 import { createTyphonMaterial } from './shaders/typhonMaterial';
-
-const TILE_AMOUNT_X = 5;
-const TILE_AMOUNT_Y = 7;
-const MONSTER_POOL_KEYS = ['monster_baleine', 'monster_pieuvre', 'monster_serpent'] as const;
 
 const tileTypes = [
   {
@@ -236,26 +229,12 @@ export class MapManager {
     const hasSavedBoard = gameState.boardTiles.length > 0;
 
     if (!hasSavedBoard) {
-      const startPosition = new THREE.Vector2(
-        Math.round(Math.random() * 4),
-        Math.round(Math.random() * 6)
-      );
-
-      gameState.userPositionHistory.splice(0, gameState.userPositionHistory.length);
-      gameState.userPosition = startPosition;
-      randomizeCorsairAwayFromBoat();
+      initializeNewBoardState();
     } else {
       ensureCorsairAwayFromBoat();
     }
 
-    // generate board tiles
-    const boardTiles = hasSavedBoard ? gameState.boardTiles : this.createBoardTiles();
-
-    if (!hasSavedBoard) {
-      setBoardTiles(boardTiles);
-    }
-
-    boardTiles.forEach((boardTile) => {
+    gameState.boardTiles.forEach((boardTile) => {
       const tile = new Tile(
         new THREE.Vector2(boardTile.x, boardTile.y),
         boardTile.state,
@@ -264,81 +243,6 @@ export class MapManager {
       this.tiles.push(tile);
       this.mapGroup.add(tile.tileGroup);
     });
-  }
-
-  private createBoardTiles(): BoardTileSnapshot[] {
-    const boardTiles: BoardTileSnapshot[] = [];
-
-    for (let x = 0; x < TILE_AMOUNT_X; x++) {
-      for (let y = 0; y < TILE_AMOUNT_Y; y++) {
-        boardTiles.push({
-          x,
-          y,
-          state: 'water',
-        });
-      }
-    }
-
-    this.positionGroup('island', boardTiles);
-    this.positionGroup('typhon', boardTiles);
-    this.positionGroup('monster', boardTiles);
-
-    boardTiles.forEach((tile) => {
-      if (tile.state === 'monster') {
-        tile.monsterType = MONSTER_POOL_KEYS[Math.floor(Math.random() * MONSTER_POOL_KEYS.length)];
-      }
-    });
-
-    // place water at the spot of boat
-
-    boardTiles.forEach((tile) => {
-      if (gameState.userPosition.x === tile.x && gameState.userPosition.y === tile.y) {
-        tile.state = 'water';
-      }
-    });
-
-    return boardTiles;
-  }
-
-  private positionGroup(group: BoardTileState, boardTiles: BoardTileSnapshot[]): void {
-    const totalCount = group === 'island' ? 9 : Math.round(Math.random()) + 8; // 8 or 9
-    const blackCount = 4;
-    const whiteCount = totalCount - blackCount; // 4 or 5
-
-    const getPool = (parity: number) => boardTiles.filter((t) => (t.x + t.y) % 2 === parity);
-
-    const tryPlace = (pool: BoardTileSnapshot[]): boolean => {
-      for (let attempt = 0; attempt < 10; attempt++) {
-        const candidate =
-          pool[Math.floor(Math.random() * pool.length)] ?? ({} as BoardTileSnapshot);
-
-        if (candidate.state !== 'water') continue;
-
-        const sameTypeNeighbors = boardTiles.filter(
-          (t) =>
-            t.state === group &&
-            ((Math.abs(t.x - candidate.x) === 1 && t.y === candidate.y) ||
-              (Math.abs(t.y - candidate.y) === 1 && t.x === candidate.x))
-        ).length;
-
-        if (sameTypeNeighbors < 2) {
-          candidate.state = group;
-          return true;
-        }
-      }
-      return false;
-    };
-
-    const blackPool = getPool(0);
-    const whitePool = getPool(1);
-
-    for (let i = 0; i < blackCount; i++) {
-      if (!tryPlace(blackPool)) break;
-    }
-
-    for (let i = 0; i < whiteCount; i++) {
-      if (!tryPlace(whitePool)) break;
-    }
   }
 
   public displayEntities() {

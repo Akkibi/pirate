@@ -85,6 +85,7 @@ const props = withDefaults(
     undoLabel?: string;
     onUndoClick?: ButtonHandler;
     sideChromeLayout?: boolean;
+    buttonsOnLastRow?: boolean;
   }>(),
   {
     message: '',
@@ -97,6 +98,7 @@ const props = withDefaults(
     undoLabel: 'Undo',
     onUndoClick: undefined,
     sideChromeLayout: false,
+    buttonsOnLastRow: false,
   }
 );
 
@@ -132,19 +134,12 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(
-  () => hasPrimaryButton.value && hasSecondaryButton.value && shouldShowUndo.value
+  () => hasPrimaryButton.value && (hasSecondaryButton.value || shouldShowUndo.value)
 );
 const buttonRowCount = computed(() => {
-  if (normalButtonCount.value === 0) {
-    return shouldShowUndo.value ? 1 : 0;
-  }
-
-  if (normalButtonsShareFirstRow.value) {
-    return 1 + Number(shouldShowUndo.value);
-  }
-
-  return Math.min(2, normalButtonCount.value + Number(shouldShowUndo.value));
+  return normalButtonCount.value + Number(shouldShowUndo.value) > 0 ? 1 : 0;
 });
+const buttonRowClass = computed(() => (props.buttonsOnLastRow ? 'row-start-8' : 'row-start-7'));
 const parchmentClasses = computed(() => [
   'row-span-2 row-start-1',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-start-3 col-span-4',
@@ -152,27 +147,23 @@ const parchmentClasses = computed(() => [
 const cardsAreaClasses = computed(() => [
   'row-start-3 flex min-h-0 items-stretch justify-center',
   props.sideChromeLayout ? 'col-start-2 col-span-6' : 'col-span-8',
-  buttonRowCount.value >= 2
-    ? 'row-span-4'
-    : buttonRowCount.value === 1
-      ? 'row-span-5'
-      : 'row-span-6',
+  buttonRowCount.value === 0 ? 'row-span-6' : props.buttonsOnLastRow ? 'row-span-5' : 'row-span-4',
 ]);
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalRightButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} ${hasSecondaryButton.value || shouldShowUndo.value ? 'row-start-7' : 'row-start-8'}`,
+    ? `${normalRightButtonClasses.value} ${buttonRowClass.value}`
+    : `${normalFullButtonClasses.value} ${buttonRowClass.value}`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'pointer-events-auto transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalLeftButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} ${shouldShowUndo.value ? 'row-start-7' : 'row-start-8'}`,
+    ? `${normalLeftButtonClasses.value} ${buttonRowClass.value}`
+    : `${normalFullButtonClasses.value} ${buttonRowClass.value}`,
 ]);
 const undoButtonClasses = computed(() => [
-  'col-span-2 row-start-8 transition-opacity duration-300',
-  props.sideChromeLayout ? 'col-start-2' : 'col-start-1',
+  `${buttonRowClass.value} transition-opacity duration-300`,
+  normalButtonsShareFirstRow.value ? normalLeftButtonClasses.value : normalFullButtonClasses.value,
 ]);
 
 function clearButtonsTimer() {
