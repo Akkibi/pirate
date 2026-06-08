@@ -22,6 +22,7 @@ import { gameEvents } from '../events/gameEvents';
 import { ParticleSystemManager } from './particleSystemManager';
 import { ArrowManager } from './arrowManager';
 import { playSound } from '../utils/soundManager';
+import { Bird } from './bird';
 
 const _teal = new THREE.Color(0x008c74);
 const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
@@ -31,7 +32,7 @@ export class Player {
   private position: THREE.Vector2;
   private playerGroup: THREE.Group;
   private boatGroup: THREE.Group;
-  private birdGroup: THREE.Group;
+  private bird: Bird;
   private arrowManager: ArrowManager;
   private cannonsMod: THREE.Object3D | null = null;
   private bottleMod: THREE.Object3D | null = null;
@@ -44,14 +45,13 @@ export class Player {
     this.sceneManager = sceneManager;
     this.playerGroup = new THREE.Group();
     this.boatGroup = new THREE.Group();
-    this.birdGroup = new THREE.Group();
     this.animationTime = 0;
 
     const arrowGroup = new THREE.Group();
     this.playerGroup.add(arrowGroup);
     this.arrowManager = new ArrowManager(sceneManager, arrowGroup);
 
-    this.playerGroup.add(this.boatGroup, this.birdGroup);
+    this.playerGroup.add(this.boatGroup);
     this.position = new THREE.Vector2();
     scene.add(this.playerGroup);
 
@@ -115,10 +115,7 @@ export class Player {
     this.boatGroup.add(bottle);
     this.bottleMod = bottle;
 
-    const bird = modelLoader.get('./models/bird.glb').scene.clone();
-    this.birdGroup.add(bird);
-    this.birdGroup.scale.multiplyScalar(0.5);
-    this.playerGroup.add(this.birdGroup);
+    this.bird = new Bird(this.playerGroup);
 
     this.arrowManager.load();
     this.initWatchers();
@@ -339,9 +336,7 @@ export class Player {
     this.boatGroup.rotation.z = Math.sin(this.animationTime * 0.0005) * 0.2;
     this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
-    this.birdGroup.rotation.y += 0.0002 * delta;
-    this.birdGroup.position.y = Math.sin(time * 0.001) * 0.1 + 0.75;
-    this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;
+    this.bird.update(time, delta);
 
     if (gameState.displayArrows) {
       const camera = this.sceneManager.camera.getNative();
@@ -361,8 +356,8 @@ export class Player {
       gameEvents.off('boat:shoot_cannons', this.shootCannonsHandler);
       this.shootCannonsHandler = null;
     }
+    this.bird.destroy();
     this.boatGroup.removeFromParent();
-    this.birdGroup.removeFromParent();
     this.playerGroup.removeFromParent();
     this.playerGroup.clear();
     this.arrowManager.destroy();

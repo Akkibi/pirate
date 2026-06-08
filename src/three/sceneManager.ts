@@ -81,7 +81,7 @@ export class SceneManager {
 
     this.particleSystemManager = ParticleSystemManager.getInstance();
     this.particleSystemManager.setScene(this.scene);
-    this.particleSystemManager.setTexture('/images/point.png');
+    this.particleSystemManager.setTexture('/images/point.webp');
   }
 
   private destroyGameScene(): void {

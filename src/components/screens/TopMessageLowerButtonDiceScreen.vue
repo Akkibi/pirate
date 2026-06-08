@@ -20,26 +20,26 @@
     <div class="dice-stage" aria-hidden="true">
       <div class="dice-cube text-amber-100" :style="diceStyle">
         <div class="dice-face dice-face--front">
-          <img class="dice-face-image" src="/images/dice/de0.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/de0.webp" alt="" />
         </div>
         <div class="dice-face dice-face--right">
-          <img class="dice-face-image" src="/images/dice/de1.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/de1.webp" alt="" />
         </div>
         <div class="dice-face dice-face--top">
-          <img class="dice-face-image" src="/images/dice/de1.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/de1.webp" alt="" />
         </div>
         <div class="dice-face dice-face--bottom">
-          <img class="dice-face-image" src="/images/dice/de2.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/de2.webp" alt="" />
         </div>
         <div class="dice-face dice-face--left">
-          <img class="dice-face-image" src="/images/dice/de2.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/de2.webp" alt="" />
         </div>
         <div class="dice-face dice-face--back">
-          <img class="dice-face-image" src="/images/dice/d3.png" alt="" />
+          <img class="dice-face-image" src="/images/dice/d3.webp" alt="" />
         </div>
       </div>
       <div
-        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 w-70 h-14 bg-black/20 -z-10 rounded-[50%]"
+        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 w-50 h-14 bg-black/20 blur-md -z-10 rounded-[50%]"
       ></div>
     </div>
   </div>
@@ -396,6 +396,7 @@ onBeforeUnmount(() => {
   height: 100%;
   border-radius: inherit;
   object-fit: cover;
+  border: 5px solid white;
 }
 
 .dice-face--front {
