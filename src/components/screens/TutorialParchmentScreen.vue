@@ -126,18 +126,18 @@ onMounted(() => {
 
 <style scoped>
 :deep(.tutorial-parchment) {
-  padding: clamp(1rem, 3vw, 2.4rem) clamp(1.2rem, 4vw, 4.4rem);
+  padding: clamp(0.8rem, 2.4vmin, 2.2rem) clamp(4.2rem, 9.5vw, 7rem);
   text-align: center;
 }
 
 .tutorial-card {
-  display: flex;
+  display: grid;
   width: min(100%, 58rem);
   height: 100%;
   max-height: 100%;
   min-height: 0;
-  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1fr);
-  gap: clamp(1rem, 3vw, 2.6rem);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+  gap: clamp(0.75rem, 2.4vw, 2.2rem);
   align-items: center;
   justify-content: center;
   color: #61220e;
@@ -146,9 +146,11 @@ onMounted(() => {
 
 .tutorial-title {
   min-width: 0;
-  font-size: clamp(2.7rem, 6.2vw, 6.4rem);
+  font-size: clamp(2rem, 6.8vmin, 5.2rem);
   line-height: 1;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
   text-wrap: balance;
   background-color: #371412;
   color: transparent;
@@ -161,10 +163,11 @@ onMounted(() => {
 .tutorial-body {
   max-width: min(100%, 51rem);
   min-width: 0;
-  font-size: clamp(1rem, 1.9vw, 2.2rem);
+  font-size: clamp(0.95rem, 3.1vmin, 1.75rem);
   font-weight: 900;
-  line-height: 1.08;
-  overflow-wrap: anywhere;
+  line-height: 1.12;
+  overflow-wrap: break-word;
+  hyphens: auto;
   text-wrap: pretty;
 }
 
@@ -173,30 +176,34 @@ onMounted(() => {
   gap: 0.2rem;
   margin: 0;
   /* padding-left: clamp(1.15rem, 2vw, 2rem); */
-  font-size: clamp(0.95rem, 1.75vw, 2rem);
+  font-size: clamp(0.9rem, 2.7vmin, 1.5rem);
   font-weight: 900;
-  line-height: 1.08;
-  overflow-wrap: anywhere;
+  line-height: 1.12;
+  overflow-wrap: break-word;
+  hyphens: auto;
   text-wrap: pretty;
 }
 
 .tutorial-caption {
   max-width: min(100%, 36rem);
   min-width: 0;
-  font-size: clamp(0.7rem, 1.05vw, 1rem);
+  font-size: clamp(0.7rem, 1.9vmin, 1rem);
   font-weight: 900;
   line-height: 1.1;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   text-wrap: pretty;
 }
 
 .tutorial-square-image {
-  width: 100%;
-  height: 80%;
+  width: min(100%, 34rem);
+  height: auto;
+  max-height: min(100%, 62dvh);
   border-radius: 23px;
   aspect-ratio: 1;
   object-fit: contain;
   object-position: top;
+  justify-self: center;
 }
 
 .tutorial-copy {
@@ -205,17 +212,57 @@ onMounted(() => {
   min-width: 0;
   max-height: 100%;
   gap: clamp(0.55rem, 1.5vw, 1rem);
+  overflow: hidden auto;
+  scrollbar-width: none;
 }
 
-@media (max-width: 760px) {
+.tutorial-copy::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-height: 520px) {
+  :deep(.tutorial-parchment) {
+    padding: clamp(0.45rem, 1.6vmin, 0.8rem) clamp(3.5rem, 10vw, 5.5rem);
+  }
+
+  .tutorial-card {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+    gap: clamp(0.55rem, 1.8vw, 1rem);
+  }
+
+  .tutorial-title {
+    font-size: clamp(1.55rem, 7.2vmin, 2.6rem);
+  }
+
+  .tutorial-body,
+  .tutorial-list {
+    font-size: clamp(0.78rem, 3.35vmin, 1.05rem);
+    line-height: 1.08;
+  }
+
+  .tutorial-caption {
+    font-size: clamp(0.62rem, 2.55vmin, 0.85rem);
+  }
+
+  .tutorial-square-image {
+    max-height: min(100%, 54dvh);
+    border-radius: 14px;
+  }
+
+  .tutorial-copy {
+    gap: clamp(0.3rem, 1.2vmin, 0.55rem);
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
   .tutorial-card {
     grid-template-columns: minmax(0, 1fr);
     text-align: center;
   }
 
   .tutorial-square-image {
-    width: min(100%, 18rem);
-    height: auto;
+    width: min(100%, 15rem);
+    max-height: 34dvh;
     justify-self: center;
   }
 
