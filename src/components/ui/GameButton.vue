@@ -4,7 +4,7 @@
     type="button"
     :class="buttonClasses"
     :disabled="disabled"
-    @click="handleClick"
+    @pointerdown="handleClick"
   >
     <div class="button-shadow"></div>
     <span class="button-background-wrapper" aria-hidden="true">
@@ -97,12 +97,11 @@ const buttonClasses = computed(() => [
 function handleClick() {
   if (!props.disabled) {
     playSound('uiClick');
+    buttonRef.value?.classList.add('is-active');
+    window.setTimeout(() => {
+      props.onClick?.();
+    }, 150);
   }
-
-  buttonRef.value?.classList.add('is-active');
-  window.setTimeout(() => {
-    props.onClick?.();
-  }, 150);
 }
 </script>
 
@@ -216,7 +215,7 @@ function handleClick() {
   filter: drop-shadow(0 0.22rem 0 rgba(38, 14, 3, 0.55));
 }
 
-.game-button--revealed:not(:disabled):active {
+.game-button--revealed:not(:disabled).is-active {
   transform: translate3d(0, 1vh, 0) scaleX(0.9) scaleY(0.9);
   opacity: 0.7;
 }
@@ -387,28 +386,28 @@ function handleClick() {
 }
 
 .game-button:not(:disabled):hover .button-background,
-.game-button:not(:disabled):active .button-background {
+.game-button:not(:disabled).is-active .button-background {
   box-shadow:
     inset 3px 3px 0px rgba(0, 0, 0, 0.4),
     inset -3px -3px 0 rgba(255, 224, 133, 0.4);
 }
 
 .game-button:not(:disabled):hover .button-background-wrapper,
-.game-button:not(:disabled):active .button-background-wrapper {
+.game-button:not(:disabled).is-active .button-background-wrapper {
   background: var(--button-bg-hover);
 }
 
 .game-button:not(:disabled):hover .button-bevel-light,
-.game-button:not(:disabled):active .button-bevel-light {
+.game-button:not(:disabled).is-active .button-bevel-light {
   background: rgba(0, 0, 0, 0.5);
 }
 .game-button:not(:disabled):hover .button-bevel-shadow,
-.game-button:not(:disabled):active .button-bevel-shadow {
+.game-button:not(:disabled).is-active .button-bevel-shadow {
   background: rgba(255, 230, 150, 0.5);
 }
 
 .game-button:not(:disabled):hover .text-message,
-.game-button:not(:disabled):active .text-message {
+.game-button:not(:disabled).is-active .text-message {
   transform: translateY(0px);
   /*text-shadow: 1px -1px 0 rgba(31, 10, 2, 0.8);*/
 }

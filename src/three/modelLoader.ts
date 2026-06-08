@@ -1,6 +1,5 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { gameState } from '../utils/gameStore';
 
 const ALL_MODELS = [
   './models/water.glb',
@@ -34,9 +33,7 @@ class ModelLoader {
     return ModelLoader.instance;
   }
 
-  async preloadAll(): Promise<void> {
-    gameState.loadingProgress = 0;
-
+  async preloadAll(onProgress?: (progress: number) => void): Promise<void> {
     const fileSizes = await Promise.all(
       ALL_MODELS.map(async (path) => {
         try {
@@ -55,10 +52,10 @@ class ModelLoader {
     const updateProgress = () => {
       if (totalBytes > 0) {
         const loaded = bytesLoaded.reduce((a, b) => a + b, 0);
-        gameState.loadingProgress = Math.round((loaded / totalBytes) * 100);
+        onProgress?.(Math.round((loaded / totalBytes) * 100));
       } else {
         // Fallback for CDNs (e.g. Vercel) that don't return content-length headers
-        gameState.loadingProgress = Math.round((modelsLoaded / ALL_MODELS.length) * 100);
+        onProgress?.(Math.round((modelsLoaded / ALL_MODELS.length) * 100));
       }
     };
 

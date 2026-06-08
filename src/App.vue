@@ -14,7 +14,7 @@ import TopMessageLowerButtonCardsScreen from './components/screens/TopMessageLow
 import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowerButtonDiceScreen.vue';
 import { initGame } from './main';
 import { hasSavedGameProgress, saveGameProgress } from './utils/gameProgress';
-import { modelLoader } from './three/modelLoader';
+import { preloadManager } from './utils/preloadManager';
 import {
   clearScreen,
   currentScreen,
@@ -30,7 +30,7 @@ import {
   requestTreasureCardSelection,
 } from './utils/treasureCardSelection';
 import { gameState } from './utils/gameStore';
-import { playSound, startBackgroundMusic } from './utils/soundManager';
+import { initAudio, playSound, startBackgroundMusic } from './utils/soundManager';
 import { gameText } from './content/gameText';
 import DebugControls from './components/debugControls.vue';
 
@@ -45,8 +45,9 @@ const settingsOpen = ref(false);
 const gameMenuOpen = ref(false);
 
 onMounted(() => {
+  initAudio();
   startBackgroundMusic();
-  void modelLoader.preloadAll();
+  void preloadManager.preloadAll();
 });
 
 const screenComponentMap = {

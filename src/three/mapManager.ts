@@ -18,6 +18,7 @@ import { createWaterMaterial } from './shaders/waterMaterial';
 import { createExhaustedIslandMaterial, createIslandMaterial } from './shaders/islandMaterial';
 import { createTyphonMaterial } from './shaders/typhonMaterial';
 import { createFogMaterial } from './shaders/fogMaterial';
+import { createSmokeMaterial } from './shaders/smokeMaterial';
 
 const tileTypes = [
   {
@@ -114,6 +115,11 @@ export class MapManager {
 
     const environment = modelLoader.get('./models/environement.glb').scene.clone();
     environment.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    environment.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = createSmokeMaterial(child.material as THREE.Material);
+      }
+    });
     this.mapGroup.add(environment);
 
     objectPool.init(scene, tileTypes).then(() => {
