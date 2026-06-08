@@ -6,7 +6,7 @@ import gsap from 'gsap';
 
 export const cameraPositions = {
   focused: new THREE.Vector3(-10, 3.5, 0),
-  overview: new THREE.Vector3(-5, 8.5, 0),
+  overview: new THREE.Vector3(-2, 8.5, 0),
   gameplay: new THREE.Vector3(-5, 4, 0),
 };
 

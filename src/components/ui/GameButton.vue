@@ -1,9 +1,17 @@
 <template>
-  <button type="button" :class="buttonClasses" :disabled="disabled" @click="handleClick">
+  <button
+    ref="buttonRef"
+    type="button"
+    :class="buttonClasses"
+    :disabled="disabled"
+    @click="handleClick"
+  >
+    <div class="button-shadow"></div>
     <span class="button-background-wrapper" aria-hidden="true">
       <span class="button-background" />
       <span class="button-bevel-shadow" />
       <span class="button-bevel-light" />
+      <span class="button-glow"></span>
     </span>
     <span class="rivet rivet-top-left" aria-hidden="true" />
     <span class="rivet rivet-top-right" aria-hidden="true" />
@@ -45,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
 
@@ -68,6 +76,8 @@ const props = withDefaults(
   }
 );
 
+const buttonRef = ref<HTMLElement | null>(null);
+
 const resolvedLabel = computed(() => {
   if (props.label) {
     return props.label;
@@ -89,13 +99,25 @@ function handleClick() {
     playSound('uiClick');
   }
 
-  void requestAnimationFrame(() => {
+  buttonRef.value?.classList.add('is-active');
+  window.setTimeout(() => {
     props.onClick?.();
-  });
+  }, 150);
 }
 </script>
 
 <style scoped lang="css">
+.button-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  inset: calc(-1 * var(--button-border-width));
+  background: var(--button-border);
+  mask: var(--button-scoop-mask);
+  -webkit-mask: var(--button-scoop-mask);
+}
+
 .game-button {
   --button-bg: #472422;
   --button-bg-hover: #371412;
@@ -174,13 +196,14 @@ function handleClick() {
 .game-button::before {
   position: absolute;
   inset: calc(-1 * var(--button-border-width));
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  background: var(--button-border);
+  background: rgba(0, 0, 0, 0.1);
+  mix-blend-mode: soft-light;
   content: '';
+  transform: translate3d(3px, 3px, 0);
   -webkit-mask: var(--button-scoop-mask);
   mask: var(--button-scoop-mask);
-  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
   transition: filter 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -195,6 +218,7 @@ function handleClick() {
 
 .game-button--revealed:not(:disabled):active {
   transform: translate3d(0, 1vh, 0) scaleX(0.9) scaleY(0.9);
+  opacity: 0.7;
 }
 
 .game-button--revealed:disabled {
@@ -210,7 +234,7 @@ function handleClick() {
   transform: translate3d(0, 0.45rem, 0) scaleY(0.78);
   transform-origin: center bottom;
   transition:
-    opacity 220ms ease,
+    opacity 200ms ease,
     transform 360ms cubic-bezier(0.16, 0.92, 0.18, 1.08);
   transition-delay: 0ms;
   -webkit-mask: var(--button-scoop-mask);
@@ -261,6 +285,13 @@ function handleClick() {
   mix-blend-mode: soft-light;
 }
 
+.button-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 200, 200, 0.2) 0%, transparent 70%);
+  mix-blend-mode: soft-light;
+}
+
 .rivet {
   position: absolute;
   z-index: 20;
@@ -271,12 +302,23 @@ function handleClick() {
   background: var(--button-border);
   box-shadow:
     inset -1px -1px 0px rgba(80, 43, 5, 0.55),
-    0 1px 2px rgba(0, 0, 0, 0.55);
+    inset 1px 1px 0px rgba(255, 255, 255, 0.25);
   opacity: 0;
   transform: translate3d(0, 0.2rem, 0) scale(0.55);
-  transition:
-    opacity 160ms ease,
-    transform 260ms cubic-bezier(0.16, 0.92, 0.18, 1.1);
+  transition: opacity 160ms ease;
+}
+
+.rivet::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.1);
+  mix-blend-mode: soft-light;
+  content: '';
+  transform: translate3d(2px, 2px, 0);
+  transition: filter 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .game-button--revealed .rivet {

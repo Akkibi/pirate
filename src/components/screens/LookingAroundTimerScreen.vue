@@ -1,29 +1,17 @@
 <template>
   <div :class="timerClasses">
-    <div class="mt-6 flex flex-col items-center gap-2">
+    <div class="mt-6 flex flex-col items-center gap-2 origin-center" ref="timerRef">
       <!-- Number at top -->
       <Transition name="ticker" mode="out-in">
         <span
           :key="currentStep"
-          class="text-5xl font-bold font-mono tabular-nums leading-none"
-          style="
-            color: #fff3cb;
-            text-shadow:
-              -2px -2px 0 #000,
-              0 -2px 0 #000,
-              2px -2px 0 #000,
-              2px 0 0 #000,
-              2px 2px 0 #000,
-              0 2px 0 #000,
-              -2px 2px 0 #000,
-              -2px 0 0 #000;
-          "
+          class="timer-number text-5xl font-bold font-mono tabular-nums leading-none"
           >{{ currentStep }}</span
         >
       </Transition>
 
       <!-- Clock face -->
-      <div class="relative w-32 h-32">
+      <div class="timer-clock relative w-32 h-32">
         <svg viewBox="0 0 100 100" class="w-full h-full">
           <!-- Outer bezel -->
           <circle cx="50" cy="50" r="48" fill="#472422" stroke="#f1b730" stroke-width="2" />
@@ -53,7 +41,7 @@
             :stroke-dasharray="circumference"
             :stroke-dashoffset="dashOffset"
             transform="rotate(-90 50 50)"
-            style="transition: stroke-dashoffset 0.6s ease-out"
+            style="transition: stroke-dashoffset 1s linear"
           />
 
           <!-- Tick marks at each step position -->
@@ -81,7 +69,7 @@
             :style="{
               transform: `rotate(${needleRotation}deg)`,
               transformOrigin: '50px 50px',
-              transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+              transition: 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1.2)',
             }"
           />
           <!-- Needle tail (counterweight) -->
@@ -96,7 +84,7 @@
             :style="{
               transform: `rotate(${needleRotation}deg)`,
               transformOrigin: '50px 50px',
-              transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+              transition: 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1.2)',
             }"
           />
 
@@ -110,7 +98,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import gsap from 'gsap';
 import type { ButtonHandler } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
 
@@ -135,6 +124,7 @@ const emit = defineEmits<{
   (event: 'finished'): void;
 }>();
 
+const timerRef = ref<HTMLElement | null>(null);
 const currentStep = ref(5);
 const timerClasses = computed(() => [
   'countdown-timer row-span-2 flex items-start justify-baseline',
@@ -158,13 +148,24 @@ function tickCountdown() {
   clearCountdownTimer();
 
   countdownTimer = window.setTimeout(() => {
-    if (currentStep.value === 1) {
+    if (currentStep.value === 0) {
       emit('finished');
       void props.onComplete?.();
       return;
     }
 
     currentStep.value -= 1;
+    if (currentStep.value == 0 && timerRef.value) {
+      gsap
+        .timeline()
+        .to(timerRef.value, { rotation: -8, duration: 0.07, ease: 'power2.out' })
+        .to(timerRef.value, { rotation: 7, duration: 0.07, ease: 'power2.inOut' })
+        .to(timerRef.value, { rotation: -6, duration: 0.07, ease: 'power2.inOut' })
+        .to(timerRef.value, { rotation: 5, duration: 0.07, ease: 'power2.inOut' })
+        .to(timerRef.value, { rotation: -3, duration: 0.06, ease: 'power2.inOut' })
+        .to(timerRef.value, { rotation: 0, duration: 0.1, ease: 'power2.out' })
+        .to(timerRef.value, { y: '50vh', opacity: 0, duration: 0.25, ease: 'bounce.in' });
+    }
     tickCountdown();
   }, props.stepDuration);
 }
@@ -203,29 +204,41 @@ watch(
   }
 );
 
+onMounted(() => {
+  if (timerRef.value) {
+    gsap.fromTo(
+      timerRef.value,
+      { y: '60vh', opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.55, ease: 'back.out(1.3)', clearProps: 'opacity' }
+    );
+  }
+});
+
 onBeforeUnmount(() => {
   clearCountdownTimer();
 });
 </script>
 
 <style scoped>
+.timer-number {
+  background-color: rgba(255, 244, 205, 1);
+  color: transparent;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  background-clip: text;
+  filter: contrast(200%) drop-shadow(-2px -2px 0 #000) drop-shadow(2px -2px 0 #000)
+    drop-shadow(2px 2px 0 #000) drop-shadow(-2px 2px 0 #000);
+}
+
+.timer-clock {
+  filter: drop-shadow(3px 3px 0 rgba(38, 14, 3, 0.25)) drop-shadow(0 0 20px rgba(241, 183, 48, 0.5));
+}
+
 .ticker-enter-active {
   animation: tick-in 0.12s ease-out;
 }
 .ticker-leave-active {
   animation: tick-out 0.12s ease-in;
-}
-
-.dark-text-outline {
-  text-shadow:
-    -2px -2px 0 #000,
-    0 -2px 0 #000,
-    2px -2px 0 #000,
-    2px 0 0 #000,
-    2px 2px 0 #000,
-    0 2px 0 #000,
-    -2px 2px 0 #000,
-    -2px 0 0 #000;
 }
 
 @keyframes tick-in {

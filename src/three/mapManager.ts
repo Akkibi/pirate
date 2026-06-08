@@ -17,6 +17,7 @@ import type { SceneManager } from './sceneManager';
 import { createWaterMaterial } from './shaders/waterMaterial';
 import { createExhaustedIslandMaterial, createIslandMaterial } from './shaders/islandMaterial';
 import { createTyphonMaterial } from './shaders/typhonMaterial';
+import { createFogMaterial } from './shaders/fogMaterial';
 
 const tileTypes = [
   {
@@ -75,7 +76,7 @@ const tileTypes = [
       opacity: Parameters<typeof createTyphonMaterial>[0]
     ) => createTyphonMaterial(opacity),
   },
-  { name: 'fog', url: './models/fog.glb' },
+  { name: 'fog', url: './models/fog.glb', materialBuilder: createFogMaterial },
 ];
 
 export class MapManager {

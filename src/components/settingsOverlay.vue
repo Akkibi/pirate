@@ -37,6 +37,16 @@
               <span>{{ gameText.settings.soundEffects }}</span>
             </label>
 
+            <label class="settings-overlay__check-row">
+              <input
+                class="settings-overlay__checkbox"
+                type="checkbox"
+                :checked="gameState.performanceMode"
+                @change="handlePerformanceModeChange"
+              />
+              <span>{{ gameText.settings.performanceMode }}</span>
+            </label>
+
             <label class="settings-overlay__select-row">
               <span>{{ gameText.settings.language }}</span>
               <select
@@ -74,6 +84,7 @@ import {
   stopSoundEffects,
 } from '../utils/soundManager';
 import GameButton from './ui/GameButton.vue';
+import { gameState } from '../utils/gameStore';
 
 const emit = defineEmits<{
   close: [];
@@ -115,6 +126,10 @@ function handleSoundEffectsChange(event: unknown): void {
   } else {
     stopSoundEffects();
   }
+}
+
+function handlePerformanceModeChange(event: unknown): void {
+  gameState.performanceMode = isChecked(event);
 }
 
 function handleLanguageChange(event: unknown): void {

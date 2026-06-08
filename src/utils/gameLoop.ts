@@ -97,6 +97,7 @@ export class GameLoop {
       gameState.turnCount++;
       gameState.usedTreasureThisTurn = false;
       gameState.tequilaTonight = false;
+      gameState.focusedView = false;
 
       gameState.entitiesVisible = false;
 
@@ -505,7 +506,8 @@ export class GameLoop {
     });
 
     if (gameOverAction.action === 'primary') {
-      gameState.entitiesVisible = true;
+      gameState.revealMap = true;
+      gameState.focusedView = true;
       gameState.displayCorsair = true;
       gameState.cameraFocusPosition = null;
 

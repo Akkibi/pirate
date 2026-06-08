@@ -135,6 +135,7 @@ const translations = {
       language: 'Langue',
       french: 'Français',
       english: 'English',
+      performanceMode: 'Mode performance',
       closeLabel: 'Fermer les paramètres',
     },
     gameMenu: {
@@ -550,6 +551,7 @@ const translations = {
       language: 'Language',
       french: 'Français',
       english: 'English',
+      performanceMode: 'Performance mode',
       closeLabel: 'Close settings',
     },
     gameMenu: {

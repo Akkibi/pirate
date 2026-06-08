@@ -22,6 +22,7 @@ export class Tile {
   private isHistory: boolean;
   private stopWatcher: (() => void) | null = null;
   private stopExhaustedIslandWatcher: (() => void) | null = null;
+  private stopRevealMapWatcher: (() => void) | null = null;
   private pendingTimeout: ReturnType<typeof setTimeout> | null = null;
   private activeTween: gsap.core.Tween | null = null;
   private isTileShared: boolean = false;
@@ -63,16 +64,7 @@ export class Tile {
           gameState.userPosition.x === this.position.x &&
           gameState.userPosition.y === this.position.y
         ) {
-          this.isHistory = true;
-          console.log('history tile', this.position);
-
-          this.pendingTimeout = setTimeout(() => {
-            this.pendingTimeout = null;
-            this.isHidden = false;
-            this.updateObject(false);
-            this.setTileVisited();
-            this.updatePositionShift();
-          }, 300);
+          this.setTileVisited();
         } else {
           this.updatePositionShift();
         }
@@ -90,10 +82,25 @@ export class Tile {
         this.syncIslandVisualState();
       }
     );
+
+    this.stopRevealMapWatcher = watch(
+      () => gameState.revealMap,
+      (revealMap) => {
+        if (revealMap) {
+          this.setTileVisited();
+        }
+      }
+    );
   }
 
   private setTileVisited() {
-    // add a path on the tile
+    this.isHistory = true;
+    this.pendingTimeout = setTimeout(() => {
+      this.pendingTimeout = null;
+      this.isHidden = false;
+      this.updateObject(false);
+      this.updatePositionShift();
+    }, 300);
   }
 
   private updatePositionShift() {
@@ -193,6 +200,8 @@ export class Tile {
     this.stopWatcher = null;
     this.stopExhaustedIslandWatcher?.();
     this.stopExhaustedIslandWatcher = null;
+    this.stopRevealMapWatcher?.();
+    this.stopRevealMapWatcher = null;
 
     // Cancel pending delayed updateObject call
     if (this.pendingTimeout !== null) {
@@ -226,6 +235,7 @@ export class Tile {
   }
 
   private updateObject(isHidden: boolean) {
+    console.log('[Tile] updateObject', this.position.x, this.position.y, isHidden);
     this.tileGroup.remove(...this.tileGroup.children);
 
     // release previous instance

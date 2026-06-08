@@ -70,6 +70,8 @@ interface StoreInterface {
   gameStarted: boolean;
   debugMode: boolean;
   demoMode: boolean;
+  revealMap: boolean;
+  performanceMode: boolean;
 }
 
 export interface GameStateSnapshot {
@@ -112,6 +114,7 @@ export interface GameStateSnapshot {
   gameResult: GameResult;
   gameStartedAt: number;
   demoMode?: boolean;
+  revealMap: false;
 }
 
 export const gameState = reactive({
@@ -154,6 +157,8 @@ export const gameState = reactive({
   gameStarted: false,
   debugMode: false,
   demoMode: false,
+  revealMap: false,
+  performanceMode: false,
 } as StoreInterface);
 
 function createDefaultGameStateSnapshot(): GameStateSnapshot {
@@ -194,6 +199,7 @@ function createDefaultGameStateSnapshot(): GameStateSnapshot {
     gameResult: null,
     gameStartedAt: Date.now(),
     demoMode: false,
+    revealMap: false,
   };
 }
 
@@ -249,6 +255,7 @@ export function createGameStateSnapshot(): GameStateSnapshot {
     gameResult: gameState.gameResult,
     gameStartedAt: gameState.gameStartedAt,
     demoMode: gameState.demoMode,
+    revealMap: false,
   };
 }
 
@@ -335,6 +342,7 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
   gameState.gameResult = snapshot.gameResult ?? null;
   gameState.gameStartedAt = snapshot.gameStartedAt ?? Date.now();
   gameState.demoMode = snapshot.demoMode ?? false;
+  gameState.revealMap = false;
 }
 
 export function resetGameState(): void {

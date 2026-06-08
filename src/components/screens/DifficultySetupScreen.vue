@@ -137,7 +137,9 @@ function confirm() {
   display: flex;
   align-items: center;
   gap: clamp(0.55rem, 4vmin, 1.7rem);
-  background-color: #371412;
+  /*background-color: #371412;*/
+  background: radial-gradient(circle at center, #472422 0%, #371412 70%);
+
   color: rgba(255, 244, 205, 1);
   -webkit-mask-image: url(/images/parchment/phase_parent.svg);
   -webkit-mask-size: 100% 100%;

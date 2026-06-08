@@ -65,6 +65,7 @@ export class SceneManager {
     }
 
     this.initWatchers();
+    this.initPerformanceWatcher();
   }
 
   private initGameScene(): void {
@@ -132,6 +133,19 @@ export class SceneManager {
     );
   }
 
+  private updatePixelRatio(): void {
+    const ratio = gameState.performanceMode ? 0.5 : 0.8;
+    this.renderer.setPixelRatio(window.devicePixelRatio * ratio);
+  }
+
+  private initPerformanceWatcher(): void {
+    watch(
+      () => gameState.performanceMode,
+      () => this.updatePixelRatio(),
+      { immediate: true }
+    );
+  }
+
   private startElements(): void {
     this.camera.start();
   }
@@ -140,7 +154,6 @@ export class SceneManager {
     await this.renderer.init();
     console.log('Using WebGPU:', this.renderer.backend.renderer);
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setPixelRatio(window.devicePixelRatio * 0.7);
   }
 
   private handleWindowResize(): void {
