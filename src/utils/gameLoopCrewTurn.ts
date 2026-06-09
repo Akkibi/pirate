@@ -756,6 +756,14 @@ async function handleCrewTileReveal(
       gameState.gameResult = 'won';
       playSound('captain');
       discardTreasureCards(drawnCards.filter((card) => card.cardId !== 'capitaine'));
+      await showScreen({
+        type: 'captain-celebration',
+        props: {
+          imageSrc: '/images/cards/capitaine.webp',
+          imageAlt: gameText.gameOver.captainCardAlt,
+          primaryButtonLabel: gameText.gameOver.endMatchButton,
+        },
+      });
       return {
         remainingMoves,
         endTurn: true,
@@ -823,11 +831,10 @@ async function handleCrewTileReveal(
     await showCheckpointScreen(
       'crew.revealCorsair',
       {
-        type: 'full-message-button',
-        content: gameText.reveal.corsair,
+        type: 'corsair-defeat-transition',
         props: {
-          chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: gameText.reveal.corsair.primaryButton,
+          imageSrc: '/images/corsaires.webp',
+          imageAlt: gameText.reveal.corsair.imageAlt,
         },
       },
       {

@@ -50,37 +50,6 @@ function formatActionCount(count: number): string {
   return `${count} ${unit}`;
 }
 
-function formatCaseCount(count: number): string {
-  const unit = count > 1 ? gameText.units.casePlural : gameText.units.caseSingular;
-
-  return `${count} ${unit}`;
-}
-
-function formatCorsairPositionFromBoat(): string {
-  const corsairText = gameText.turn2Plus.parrot.corsairLocation;
-  const deltaX = gameState.corsairPosition.x - gameState.userPosition.x;
-  const deltaY = gameState.corsairPosition.y - gameState.userPosition.y;
-  const relativeParts: string[] = [];
-
-  if (deltaY !== 0) {
-    relativeParts.push(
-      `${formatCaseCount(Math.abs(deltaY))} ${deltaY > 0 ? corsairText.right : corsairText.left}`
-    );
-  }
-
-  if (deltaX !== 0) {
-    relativeParts.push(
-      `${formatCaseCount(Math.abs(deltaX))} ${deltaX > 0 ? corsairText.up : corsairText.down}`
-    );
-  }
-
-  if (relativeParts.length === 0) {
-    return corsairText.onBoat;
-  }
-
-  return `${corsairText.relativePrefix} ${relativeParts.join(corsairText.relativeJoin)} ${corsairText.fromBoatSuffix}`;
-}
-
 export async function runParrotTurn({
   showCheckpointScreen,
   waitForEvent,
@@ -334,12 +303,11 @@ export async function runParrotTurn({
                 remainingParrotActions > 0
                   ? gameText.turn2Plus.parrot.corsairLocation.remainingActionsBody
                   : gameText.turn2Plus.parrot.corsairLocation.lastActionBody,
-              caption: formatCorsairPositionFromBoat(),
             },
             props: {
               chrome: PARROT_CHROME,
               primaryButtonLabel:
-                remainingParrotActions > 1
+                remainingParrotActions > 0
                   ? gameText.common.next
                   : gameText.turn1.parrot.helpCrew.primaryButton,
             },
@@ -364,16 +332,16 @@ export async function runParrotTurn({
       await showCheckpointScreen(
         'parrot.helpCrew',
         {
-          type: 'full-message-button',
+          type: 'help-crew',
           content: {
             title: gameText.turn1.parrot.helpCrew.title,
             body: gameText.turn1.parrot.helpCrew.body,
-            caption: gameText.turn1.parrot.helpCrew.caption,
+            footer: gameText.turn1.parrot.helpCrew.details.footer,
           },
           props: {
             chrome: PARROT_CHROME,
             primaryButtonLabel:
-              remainingParrotActions > 1
+              !isFirstTurn && remainingParrotActions > 0
                 ? gameText.common.next
                 : gameText.turn1.parrot.helpCrew.primaryButton,
           },

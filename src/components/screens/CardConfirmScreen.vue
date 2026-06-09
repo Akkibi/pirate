@@ -109,7 +109,7 @@ const confirmButtonLayoutClasses = computed(() =>
 <style scoped>
 .screen-message-title {
   font-size: var(--ui-message-title-size);
-  line-height: 0.95;
+  line-height: 1.05;
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
 }
 

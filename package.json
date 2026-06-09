@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "gsap": "^3.14.2",
+    "js-confetti": "^0.13.1",
     "mitt": "^3.0.1",
     "stats.js": "^0.17.0",
     "vue": "^3.5.25",

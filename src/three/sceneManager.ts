@@ -13,46 +13,6 @@ import Stats from 'stats.js';
 import { createMenuBackground } from './menuBackground';
 import { DecorativeClouds } from './decorativeClouds';
 
-const DEFAULT_RENDER_PIXEL_RATIO_SCALE = 0.7;
-const IOS_STANDALONE_RENDER_PIXEL_RATIO_SCALE = 0.45;
-const IOS_STANDALONE_RENDER_PIXEL_RATIO_MAX = 1.35;
-
-function isIosDevice(): boolean {
-  const userAgent = window.navigator.userAgent;
-  const platform = window.navigator.platform;
-  const maxTouchPoints = window.navigator.maxTouchPoints;
-
-  return /iP(hone|ad|od)/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1);
-}
-
-function isStandaloneDisplayMode(): boolean {
-  const standaloneNavigator = window.navigator as typeof window.navigator & {
-    standalone?: boolean;
-  };
-
-  return (
-    Boolean(standaloneNavigator.standalone) ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.matchMedia('(display-mode: fullscreen)').matches
-  );
-}
-
-function getRenderPixelRatio(): number {
-  const devicePixelRatio = window.devicePixelRatio || 1;
-
-  if (isIosDevice() && isStandaloneDisplayMode()) {
-    return Math.max(
-      1,
-      Math.min(
-        devicePixelRatio * IOS_STANDALONE_RENDER_PIXEL_RATIO_SCALE,
-        IOS_STANDALONE_RENDER_PIXEL_RATIO_MAX
-      )
-    );
-  }
-
-  return devicePixelRatio * DEFAULT_RENDER_PIXEL_RATIO_SCALE;
-}
-
 export class SceneManager {
   private scene: THREE.Scene;
   private menuScene: THREE.Scene;
@@ -193,22 +153,16 @@ export class SceneManager {
   async init(): Promise<void> {
     await this.renderer.init();
     console.log('Using WebGPU:', this.renderer.backend.renderer);
-    this.applyRendererSize(this.width, this.height);
+    this.renderer.setSize(this.width, this.height);
+    this.renderer.setPixelRatio(window.devicePixelRatio * 0.7);
   }
 
   private handleWindowResize(): void {
     const newWidth = this.canvas.parentElement?.clientWidth || this.width;
     const newHeight = this.canvas.parentElement?.clientHeight || this.height;
 
-    this.width = newWidth;
-    this.height = newHeight;
     this.camera.updateAspect(newWidth, newHeight);
-    this.applyRendererSize(newWidth, newHeight);
-  }
-
-  private applyRendererSize(width: number, height: number): void {
-    this.renderer.setPixelRatio(getRenderPixelRatio());
-    this.renderer.setSize(width, height);
+    this.renderer.setSize(newWidth, newHeight);
   }
 
   private onCanvasClick(event: MouseEvent): void {
