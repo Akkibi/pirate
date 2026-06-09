@@ -516,6 +516,7 @@ export class GameLoop {
         props: {
           showParchment: false,
           primaryButtonLabel: gameText.gameOver.primaryButton,
+          primaryButtonOnLastRow: true,
         },
       });
     }

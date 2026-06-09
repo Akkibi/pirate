@@ -79,6 +79,7 @@ const props = withDefaults(
     onSecondaryButtonClick?: ButtonHandler;
     showUndo?: boolean;
     undoLabel?: string;
+    primaryButtonOnLastRow?: boolean;
     onUndoClick?: ButtonHandler;
     sideChromeLayout?: boolean;
   }>(),
@@ -91,6 +92,7 @@ const props = withDefaults(
     onSecondaryButtonClick: undefined,
     showUndo: false,
     undoLabel: 'Undo',
+    primaryButtonOnLastRow: false,
     onUndoClick: undefined,
     sideChromeLayout: false,
   }
@@ -112,6 +114,9 @@ const normalRightButtonClasses = computed(() =>
   props.sideChromeLayout ? 'col-start-5 col-span-3' : 'col-start-5 col-span-4'
 );
 const normalButtonsShareFirstRow = computed(() => hasSecondaryButton.value || props.showUndo);
+const primaryButtonRowClass = computed(() =>
+  props.primaryButtonOnLastRow ? 'row-start-8' : 'row-start-7'
+);
 const parchmentClasses = computed(() => [
   props.sideChromeLayout
     ? 'col-start-2 col-span-6 row-start-1 row-span-6'
@@ -120,8 +125,8 @@ const parchmentClasses = computed(() => [
 const primaryButtonClasses = computed(() => [
   'transition-opacity duration-300',
   normalButtonsShareFirstRow.value
-    ? `${normalRightButtonClasses.value} row-start-7`
-    : `${normalFullButtonClasses.value} row-start-7`,
+    ? `${normalRightButtonClasses.value} ${primaryButtonRowClass.value}`
+    : `${normalFullButtonClasses.value} ${primaryButtonRowClass.value}`,
 ]);
 const secondaryButtonClasses = computed(() => [
   'transition-opacity duration-300',

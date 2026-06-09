@@ -42,6 +42,7 @@ type BaseButtonProps = {
   secondaryButtonLabel?: string;
   showUndo?: boolean;
   undoLabel?: string;
+  primaryButtonOnLastRow?: boolean;
   openHandOnPrimary?: boolean;
   openHandOnSecondary?: boolean;
   primaryButtonOnClick?: () => void;
