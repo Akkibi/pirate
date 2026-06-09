@@ -284,7 +284,7 @@ export class Tile {
     objectPool.updatePosition(
       'fog',
       this.fogIdx,
-      new THREE.Vector3(this.position.x, 0, this.position.y)
+      new THREE.Vector3(this.position.x, -10, this.position.y)
     );
     objectPool.updateScale('fog', this.fogIdx, new THREE.Vector3(0.5, 0.5, 0.5));
   }

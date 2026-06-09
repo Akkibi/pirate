@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import gsap from 'gsap';
 import type { ButtonHandler } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
@@ -98,12 +98,6 @@ const buttonClasses = computed(() => [
   props.variant === 'undo' ? 'gap-2 text-left' : '',
   props.disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
 ]);
-
-onMounted(() => {
-  if (buttonRef.value) {
-    gsap.fromTo(buttonRef.value, { rotateX: 45 }, { rotateX: 0, duration: 1, ease: 'expo.out' });
-  }
-});
 
 function handleClick() {
   if (!props.disabled) {

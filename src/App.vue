@@ -313,13 +313,9 @@ function resumeGame() {
 }
 
 watch(started, (value) => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        startedDelayed.value = value;
-      });
-    });
-  });
+  window.setTimeout(() => {
+    startedDelayed.value = value;
+  }, 100);
 });
 
 function openSettings() {
