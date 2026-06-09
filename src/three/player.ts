@@ -40,6 +40,7 @@ export class Player {
   private animationTime: number;
   private stopWatchers: WatchStopHandle[] = [];
   private shootCannonsHandler: (() => void) | null = null;
+  private isInTyphon: boolean = false;
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -261,8 +262,10 @@ export class Player {
     if (!tileType) return;
     const isMonsterTile = tileType.state == 'monster';
     const isTileShared = isMonsterTile || tileType.state == 'island';
+    const isTyphonTile = tileType.state == 'typhon';
 
     if ((gameState.entitiesVisible || tileType.entitiesHidden) && isTileShared) {
+      this.isInTyphon = isTyphonTile;
       gsap.to(this.boatGroup.position, {
         duration: 1,
         ease: 'sin.inOut',
@@ -270,6 +273,7 @@ export class Player {
         z: -0.2,
       });
     } else {
+      this.isInTyphon = isTyphonTile;
       gsap.to(this.boatGroup.position, {
         duration: 1,
         ease: 'sin.inOut',
@@ -285,7 +289,7 @@ export class Player {
         .fromTo(
           this.boatGroup.rotation,
           { z: 0 },
-          { duration: 0.2, ease: 'expo.out', delay: 0.25, z: Math.PI * 0.5 }
+          { duration: 0.2, ease: 'expo.out', delay: 0.7, z: Math.PI * 0.5 }
         )
         .to(this.boatGroup.rotation, {
           duration: 2,
@@ -312,21 +316,55 @@ export class Player {
     }
 
     this.position.set(clampedPosition.x, clampedPosition.y);
+    const tl = gsap.timeline({ overwrite: true });
 
-    gsap.to(this.playerGroup.position, {
+    tl.to(this.playerGroup.position, {
       x: this.position.x,
-      y: this.playerGroup.position.y,
       z: this.position.y,
-      duration: 2,
+      duration: 2.5,
       ease: 'expo.out',
-      overwrite: true,
-    });
+    })
+      .to(this.boatGroup.position, { y: 0.3, duration: 0.3, ease: 'circ.out' }, '0')
+      .to(this.boatGroup.position, { y: 0.15, duration: 0.3, ease: 'sine.in' }, '>')
+      .to(
+        this.boatGroup.position,
+        {
+          y: 0,
+          duration: 0.3,
+          ease: 'back.out',
+        },
+        '>'
+      )
+      .to(this.boatGroup.scale, { y: 1.1, duration: 0.5, ease: 'circ.out' }, '0')
+      .to(
+        this.boatGroup.scale,
+        {
+          y: 0.9,
+          duration: 0.3,
+          ease: 'sine.in',
+          onUpdate: () => {
+            this.waterSplash();
+          },
+        },
+        '>'
+      )
+      .to(
+        this.boatGroup.scale,
+        {
+          y: 1,
+          duration: 0.2,
+          ease: 'sine.out',
+        },
+        '>'
+      );
+
+    tl.play();
   }
 
   public update(time: number, delta: number) {
     this.animationTime += delta;
 
-    this.boatGroup.rotation.y += 0.0001 * delta;
+    this.boatGroup.rotation.y += 0.0001 * delta * (this.isInTyphon ? 10 : 1);
     this.boatGroup.rotation.z = Math.sin(this.animationTime * 0.0005) * 0.2;
     this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
@@ -355,6 +393,41 @@ export class Player {
     this.playerGroup.removeFromParent();
     this.playerGroup.clear();
     this.arrowManager.destroy();
+  }
+
+  private waterSplash(): void {
+    const splashPosition = new THREE.Vector3();
+    this.boatGroup.getWorldPosition(splashPosition);
+
+    const psm = ParticleSystemManager.getInstance();
+
+    const worldQuat = new THREE.Quaternion();
+    this.boatGroup.getWorldQuaternion(worldQuat);
+    const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(worldQuat);
+
+    for (const side of [-1, 1]) {
+      const sideDir = rightVec.clone().multiplyScalar(side);
+      const spawnPos = splashPosition.clone().addScaledVector(sideDir, 0.06 + Math.random() * 0.04);
+      const spread = 0.8;
+
+      for (let i = 0; i < 2; i++) {
+        const velocity = new THREE.Vector3(
+          sideDir.x * (0.4 + Math.random() * 0.6) + (Math.random() - 0.5) * spread,
+          0.1 + Math.random() * 0.2,
+          sideDir.z * (0.4 + Math.random() * 0.6) + (Math.random() - 0.5) * spread
+        ).multiplyScalar(0.0014 + Math.random() * 0.0008);
+
+        psm.addParticle(
+          spawnPos.clone(),
+          velocity,
+          200 + Math.random() * 100,
+          new THREE.Vector2(0.018, 0.009),
+          -Math.atan2(velocity.z, velocity.x),
+          new THREE.Color(0x55cfb6),
+          0.5 + Math.random() * 0.5
+        );
+      }
+    }
   }
 
   public handleArrowClick(mousePosition: THREE.Vector2, camera: THREE.Camera): void {

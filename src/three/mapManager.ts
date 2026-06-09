@@ -196,6 +196,15 @@ export class MapManager {
         }
       )
     );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.corsairPosition,
+        () => {
+          this.tiles.forEach((tile) => tile.updatePositionShift());
+        },
+        { deep: true }
+      )
+    );
   }
 
   private syncTileStates(): void {
@@ -263,6 +272,7 @@ export class MapManager {
         return;
       }
 
+      this.tiles.forEach((tile) => tile.updatePositionShift());
       this.sceneManager.corsair.displayCorsairInMap(true);
 
       gameEvents.emit('parrot:map_revealed', {});

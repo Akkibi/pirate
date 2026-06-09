@@ -64,12 +64,16 @@ export class Tile {
 
     const poolKey = this.activePoolKey ?? this.poolKey;
 
-    if (
-      !this.isTileShared &&
-      (this.isHistory || gameState.userPosition.equals(this.position)) &&
-      gameState.userPosition.x === this.position.x &&
-      gameState.userPosition.y === this.position.y
-    ) {
+    const playerOnTile =
+      gameState.userPosition.x === this.position.x && gameState.userPosition.y === this.position.y;
+    const corsairOnTile =
+      gameState.entitiesVisible &&
+      !this.isHidden &&
+      gameState.corsairPosition.x === this.position.x &&
+      gameState.corsairPosition.y === this.position.y;
+    const shouldShift = playerOnTile || corsairOnTile;
+
+    if (!this.isTileShared && shouldShift) {
       instanceTween.to(this.poolKey, this.idx, {
         x: this.position.x - 0.2,
         z: this.position.y + 0.2,
@@ -77,7 +81,7 @@ export class Tile {
         ease: 'expo.out',
       });
 
-      if (this.state === 'monster') {
+      if (playerOnTile && this.state === 'monster') {
         const posProxy = { y: 0 };
         gsap.to(posProxy, {
           y: 0.5,
@@ -118,7 +122,7 @@ export class Tile {
 
       this.isTileShared = true;
       return;
-    } else if (this.isTileShared) {
+    } else if (this.isTileShared && !shouldShift) {
       instanceTween.to(poolKey, this.idx, {
         x: this.position.x,
         z: this.position.y,

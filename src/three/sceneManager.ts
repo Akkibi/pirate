@@ -76,7 +76,7 @@ export class SceneManager {
     this.scene.add(this.decorativeClouds.cloudGroup);
 
     this.player = new Player(this, this.scene);
-    this.corsair = new Corsair(this.scene);
+    this.corsair = new Corsair(this, this.scene);
     this.mapManager = new MapManager(this, this.scene);
 
     this.particleSystemManager = ParticleSystemManager.getInstance();

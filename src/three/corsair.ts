@@ -2,14 +2,20 @@ import * as THREE from 'three/webgpu';
 import { BOARD_TILE_COUNT_X, BOARD_TILE_COUNT_Y, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
 import { watch, type WatchStopHandle } from 'vue';
+import gsap from 'gsap';
+import type { SceneManager } from './sceneManager';
 
 export class Corsair {
   private corsairGroup: THREE.Group;
   private isDisplayedInMap: boolean;
   private isDisplayed: boolean;
   private stopWatchers: WatchStopHandle[] = [];
+  private sceneManager: SceneManager;
+  private baseX: number = 0;
+  private baseZ: number = 0;
 
-  constructor(scene: THREE.Scene) {
+  constructor(sceneManager: SceneManager, scene: THREE.Scene) {
+    this.sceneManager = sceneManager;
     this.corsairGroup = new THREE.Group();
 
     scene.add(this.corsairGroup);
@@ -46,31 +52,74 @@ export class Corsair {
         () => gameState.corsairPosition,
         (newPosition) => {
           this.setPosition(newPosition);
+          this.updatePositionShift();
         },
         { deep: true }
       )
     );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.entitiesVisible,
+        () => {
+          this.updatePositionShift();
+        }
+      )
+    );
     this.displayCorsair(gameState.displayCorsair);
     this.setPosition(gameState.corsairPosition);
+    // updatePositionShift not called here — mapManager isn't ready yet
   }
 
   private setPosition(newPosition: THREE.Vector2): void {
     const maxX = BOARD_TILE_COUNT_X - 1;
     const maxZ = BOARD_TILE_COUNT_Y - 1;
-    this.corsairGroup.position.x = Math.max(0, Math.min(maxX, newPosition.x));
-    this.corsairGroup.position.z = Math.max(0, Math.min(maxZ, newPosition.y));
+    this.baseX = Math.max(0, Math.min(maxX, newPosition.x));
+    this.baseZ = Math.max(0, Math.min(maxZ, newPosition.y));
+    this.corsairGroup.position.x = this.baseX;
+    this.corsairGroup.position.z = this.baseZ;
+  }
+
+  private updatePositionShift(): void {
+    if (!this.sceneManager.mapManager) return;
+
+    const tileState = this.sceneManager.mapManager.getTileState(
+      new THREE.Vector2(this.baseX, this.baseZ)
+    );
+    const isSharedTile =
+      tileState &&
+      (tileState.state === 'island' || tileState.state === 'monster') &&
+      !tileState.entitiesHidden;
+
+    if (gameState.entitiesVisible && isSharedTile) {
+      gsap.to(this.corsairGroup.position, {
+        x: this.baseX + 0.2,
+        z: this.baseZ - 0.2,
+        duration: 1,
+        ease: 'sin.inOut',
+        overwrite: true,
+      });
+    } else {
+      gsap.to(this.corsairGroup.position, {
+        x: this.baseX,
+        z: this.baseZ,
+        duration: 1,
+        ease: 'sin.inOut',
+        overwrite: true,
+      });
+    }
   }
 
   private displayCorsair(isDisplayed: boolean): void {
-    // display the corsair based on isDisplayed
     this.isDisplayed = isDisplayed;
     this.updateDisplay(isDisplayed, this.isDisplayedInMap);
   }
 
   public displayCorsairInMap(isDisplayedInMap: boolean): void {
-    // display the corsair based on isDisplayed
     this.isDisplayedInMap = isDisplayedInMap;
     this.updateDisplay(this.isDisplayed, isDisplayedInMap);
+    if (isDisplayedInMap) {
+      this.updatePositionShift();
+    }
   }
 
   private updateDisplay(isDisplayed: boolean, isDisplayedInMap: boolean): void {
