@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 import * as THREE from 'three/webgpu';
 import type { TreasureCardInstance } from './treasureCards';
+import { demo_map } from './demo_map';
 
 export type PhaseType = 'crew' | 'parrot';
 export type BoardTileState = 'monster' | 'typhon' | 'water' | 'island' | 'corsair';
@@ -546,6 +547,20 @@ export function initializeNewBoardState(): void {
   );
   randomizeCorsairAwayFromBoat();
   setBoardTiles(createInitialBoardTiles());
+}
+
+export function initializeDemoBoardState() {
+  gameState.userPosition.set(2, 3);
+  gameState.userPositionHistory.splice(
+    0,
+    gameState.userPositionHistory.length,
+    new THREE.Vector2(2, 3)
+  );
+
+  gameState.corsairPosition.set(4, 6);
+
+  const boardData = demo_map as BoardTileSnapshot[];
+  setBoardTiles(boardData);
 }
 
 export function randomizeCorsairAwayFromBoat(): void {

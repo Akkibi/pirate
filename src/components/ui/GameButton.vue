@@ -1,59 +1,64 @@
 <template>
-  <button
-    ref="buttonRef"
-    type="button"
-    :class="buttonClasses"
-    :disabled="disabled"
-    @pointerdown="handleClick"
+  <div
+    class="relative h-full w-full flex flex-center items-center button-wrapper perspective-normal"
   >
-    <div class="button-shadow"></div>
-    <span class="button-background-wrapper" aria-hidden="true">
-      <span class="button-background" />
-      <span class="button-bevel-shadow" />
-      <span class="button-bevel-light" />
-      <span class="button-glow"></span>
-    </span>
-    <span class="rivet rivet-top-left" aria-hidden="true" />
-    <span class="rivet rivet-top-right" aria-hidden="true" />
-    <span class="rivet rivet-bottom-left" aria-hidden="true" />
-    <span class="rivet rivet-bottom-right" aria-hidden="true" />
-    <span
-      v-if="variant === 'undo'"
-      class="button-icon relative z-20 flex h-5 w-5 items-center justify-center"
+    <button
+      ref="buttonRef"
+      type="button"
+      :class="buttonClasses"
+      :disabled="disabled"
+      @pointerdown="handleClick"
     >
-      <slot name="icon">
-        <svg
-          class="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            d="M9 7L4 12L9 17"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M20 12H4"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </slot>
-    </span>
-    <span class="text-message relative z-20 flex-1 text-center">
-      <slot>{{ resolvedLabel }}</slot>
-    </span>
-  </button>
+      <div class="button-shadow"></div>
+      <span class="button-background-wrapper" aria-hidden="true">
+        <span class="button-background" />
+        <span class="button-bevel-shadow" />
+        <span class="button-bevel-light" />
+        <span class="button-glow"></span>
+      </span>
+      <span class="rivet rivet-top-left" aria-hidden="true" />
+      <span class="rivet rivet-top-right" aria-hidden="true" />
+      <span class="rivet rivet-bottom-left" aria-hidden="true" />
+      <span class="rivet rivet-bottom-right" aria-hidden="true" />
+      <span
+        v-if="variant === 'undo'"
+        class="button-icon absolute z-20 flex h-5 w-5 items-center justify-center left-0 translate-x-full"
+      >
+        <slot name="icon">
+          <svg
+            class="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M9 7L4 12L9 17"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M20 12H4"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </slot>
+      </span>
+      <span class="text-message relative z-20 flex-1 text-center">
+        <slot>{{ resolvedLabel }}</slot>
+      </span>
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import gsap from 'gsap';
 import type { ButtonHandler } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
 
@@ -87,12 +92,18 @@ const resolvedLabel = computed(() => {
 });
 
 const buttonClasses = computed(() => [
-  'game-button relative flex h-full min-h-0 w-full items-center justify-center overflow-visible',
+  'game-button relative flex h-full min-h-0 w-full items-center justify-center overflow-visible perspective-normal',
   `game-button--${props.variant}`,
   props.revealed ? 'game-button--revealed' : 'game-button--concealed',
   props.variant === 'undo' ? 'gap-2 text-left' : '',
   props.disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
 ]);
+
+onMounted(() => {
+  if (buttonRef.value) {
+    gsap.fromTo(buttonRef.value, { rotateX: 45 }, { rotateX: 0, duration: 1, ease: 'expo.out' });
+  }
+});
 
 function handleClick() {
   if (!props.disabled) {
@@ -100,6 +111,7 @@ function handleClick() {
     buttonRef.value?.classList.add('is-active');
     window.setTimeout(() => {
       props.onClick?.();
+      buttonRef.value?.classList.remove('is-active');
     }, 150);
   }
 }
@@ -244,7 +256,7 @@ function handleClick() {
 .game-button--revealed .button-background-wrapper {
   opacity: 1;
   transform: translate3d(0, 0, 0) scaleY(1);
-  transition-delay: 110ms, 110ms;
+  /*transition-delay: 110ms, 110ms;*/
 }
 
 .button-bevel-light,
@@ -373,10 +385,7 @@ function handleClick() {
   transition: all 260ms cubic-bezier(0.16, 0.92, 0.18, 1.1);
 
   background-color: rgba(255, 244, 205, 1);
-  color: transparent;
-  text-shadow:
-    -1px -1px 1px rgba(0, 0, 0, 0.5),
-    1px 1px 1px rgba(255, 255, 255, 0.5);
+  /*color: transparent;*/
   -webkit-background-clip: text;
   -moz-background-clip: text;
   background-clip: text;
@@ -409,7 +418,6 @@ function handleClick() {
 .game-button:not(:disabled):hover .text-message,
 .game-button:not(:disabled).is-active .text-message {
   transform: translateY(0px);
-  /*text-shadow: 1px -1px 0 rgba(31, 10, 2, 0.8);*/
 }
 
 .game-button:focus-visible {

@@ -17,7 +17,7 @@ const NOISE_SPEED_Z = 0.25;
 const SMOKE_MIN = 0.05;
 const SMOKE_MAX = 0.5;
 
-const _smokeColor = new THREE.Color(0x000000);
+const _smokeColor = new THREE.Color(0x303535);
 const SMOKE_COLOR = vec3(_smokeColor.r, _smokeColor.g, _smokeColor.b);
 
 export function createSmokeMaterial(
@@ -42,15 +42,18 @@ export function createSmokeMaterial(
   // remap [-1,1] noise to [SMOKE_MIN, SMOKE_MAX] blend factor
   const smokeFactor = clamp(
     noise
-      .mul(float(0.5))
-      .add(float(0.5))
+      // .mul(float(0.5))
+      // .add(float(0.5))
       .mul(float(SMOKE_MAX - SMOKE_MIN))
       .add(float(SMOKE_MIN)),
     SMOKE_MIN,
     SMOKE_MAX
   );
 
-  mat.outputNode = vec4(mix(diffuseColor.rgb, SMOKE_COLOR, smokeFactor), diffuseColor.a);
+  mat.outputNode = vec4(
+    mix(diffuseColor.rgb.mul(float(0.9)), SMOKE_COLOR, smokeFactor),
+    diffuseColor.a
+  );
 
   mat.transparent = false;
   mat.depthWrite = true;

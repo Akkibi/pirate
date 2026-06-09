@@ -234,7 +234,6 @@ export class MapManager {
 
   public generateMap(): void {
     const hasSavedBoard = gameState.boardTiles.length > 0;
-
     if (!hasSavedBoard) {
       initializeNewBoardState();
     } else {
