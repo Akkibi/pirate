@@ -160,7 +160,7 @@ onMounted(() => {
 .full-message-copy :deep(.screen-message-title) {
   max-width: min(100%, 78rem);
   font-size: var(--ui-full-message-title-size);
-  line-height: 0.78;
+  line-height: 1.05;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }

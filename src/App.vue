@@ -12,6 +12,9 @@ import LookingAroundTimerScreen from './components/screens/LookingAroundTimerScr
 import TopMessageLowerButtonScreen from './components/screens/TopMessageLowerButtonScreen.vue';
 import TopMessageLowerButtonCardsScreen from './components/screens/TopMessageLowerButtonCardsScreen.vue';
 import TopMessageLowerButtonDiceScreen from './components/screens/TopMessageLowerButtonDiceScreen.vue';
+import HelpCrewScreen from './components/screens/HelpCrewScreen.vue';
+import CaptainCelebrationScreen from './components/screens/CaptainCelebrationScreen.vue';
+import CorsairDefeatTransitionScreen from './components/screens/CorsairDefeatTransitionScreen.vue';
 import { initGame } from './main';
 import { hasSavedGameProgress, saveGameProgress } from './utils/gameProgress';
 import { preloadManager } from './utils/preloadManager';
@@ -59,6 +62,9 @@ const screenComponentMap = {
   'top-message-lower-button': TopMessageLowerButtonScreen,
   'top-message-lower-button-cards': TopMessageLowerButtonCardsScreen,
   'top-message-lower-button-dice': TopMessageLowerButtonDiceScreen,
+  'help-crew': HelpCrewScreen,
+  'captain-celebration': CaptainCelebrationScreen,
+  'corsair-defeat-transition': CorsairDefeatTransitionScreen,
 } as const;
 
 const activeScreenComponent = computed(() => {
@@ -224,6 +230,37 @@ const activeScreenProps = computed<Record<string, unknown> | null>(() => {
             : () => resolveScreen({ action: 'secondary' }),
         onUndoClick: () => resolveScreen({ action: 'undo' }),
       };
+
+    case 'help-crew':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
+      };
+
+    case 'captain-celebration':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        onPrimaryButtonClick: screen.props.primaryButtonOnClick
+          ? screen.props.primaryButtonOnClick
+          : screen.props.openHandOnPrimary
+            ? requestChromeHandOverlay
+            : () => resolveScreen({ action: 'primary' }),
+      };
+
+    case 'corsair-defeat-transition':
+      return {
+        ...withoutChrome(screen.props),
+        sideChromeLayout: usesSideChromeLayout.value,
+        onComplete: screen.props.onComplete
+          ? screen.props.onComplete
+          : () => resolveScreen({ action: 'timer-complete' }),
+      };
   }
 
   return null;
@@ -297,6 +334,11 @@ function closeSettings() {
 function openGameMenu() {
   playSound('uiClick');
   gameMenuOpen.value = true;
+}
+
+function toggleDebugMode() {
+  playSound('uiClick');
+  gameState.debugMode = !gameState.debugMode;
 }
 
 function closeGameMenu() {
@@ -385,6 +427,16 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         class="resource-stable pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-40 flex flex-row h-full items-start justify-end gap-2 self-start"
       >
         <button
+          v-if="started && isDev"
+          class="top-menu-button top-menu-button--debug"
+          type="button"
+          :aria-pressed="gameState.debugMode"
+          aria-label="Debug controls"
+          @click="toggleDebugMode"
+        >
+          D
+        </button>
+        <button
           v-if="started"
           class="top-menu-button"
           type="button"
@@ -455,7 +507,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
         </template>
       </component>
 
-      <DebugControls v-if="started && !UIShown && isDev" />
+      <DebugControls v-if="started && gameState.debugMode && isDev" />
       <div
         class="w-[5vh] h-[5vh] bg-black absolute z-10 -translate-x-1/2 -translate-y-1/2 rotate-45"
       ></div>
@@ -506,7 +558,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 .screen-message-title {
   max-width: min(100%, 64rem);
   font-size: var(--ui-message-title-size);
-  line-height: 0.88;
+  line-height: 1.05;
   /*color: #472422;*/
   overflow-wrap: anywhere;
   /*filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));*/
@@ -566,7 +618,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   min-width: 0;
   font-size: clamp(1.9rem, 4vw, 4.5rem);
   font-weight: 900;
-  line-height: 0.95;
+  line-height: 1.05;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
@@ -625,7 +677,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 .portrait-rotation-title {
   max-width: 18rem;
   font-size: clamp(2.4rem, 12vw, 4.8rem);
-  line-height: 0.85;
+  line-height: 1.05;
   color: #f7ddb1;
 }
 
@@ -669,5 +721,11 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-width: 2.4;
+}
+
+.top-menu-button--debug {
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
 }
 </style>

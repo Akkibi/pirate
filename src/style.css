@@ -63,7 +63,7 @@
       --ui-parchment-end-width: clamp(2rem, 6.6vmin, 2.65rem);
       --ui-parchment-surface-pad-x: clamp(0.28rem, 1vmin, 0.5rem);
       --ui-parchment-surface-pad-y: clamp(0.2rem, 0.8vmin, 0.4rem);
-      --ui-parchment-content-pad: clamp(0.28rem, 1vmin, 0.55rem);
+      --ui-parchment-content-pad: clamp(1rem, 1vmin, 0.55rem);
       --ui-parchment-text-pad-y: clamp(0.45rem, 1.4vmin, 0.75rem);
       --ui-parchment-text-bg: clamp(1.7rem, 9vmin, 3.25rem);
 

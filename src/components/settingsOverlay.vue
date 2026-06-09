@@ -165,7 +165,7 @@ function handleLanguageChange(event: unknown): void {
 
 .settings-overlay__panel {
   position: relative;
-  width: min(88vw, 42rem);
+  width: min(88vw, 50rem);
   height: min(78vh, 30rem);
   min-height: 18rem;
 }

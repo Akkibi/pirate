@@ -216,10 +216,24 @@ const translations = {
         },
         helpCrew: {
           title: 'Tu peux désormais aider l’Équipage',
-          body: 'Place des éléments en respectant les règles de placement.',
+          body: 'Place les éléments en respectant les règles. Choisis une des possibilités suivantes :',
           caption:
-            'Choisissez une des possibilités suivantes : placer au maximum 1 monstre + 1 île + 1 typhon ; placer 2 monstres ou 2 îles ou 2 typhons ; déplacer 1 monstre ou 1 île ou 1 typhon ; échanger 2 éléments entre eux. En plus de cela, vous pouvez indiquer la dernière position connue de la frégate corsaire.',
+            '\nplacer au maximum 1 monstre + 1 île + 1 typhon ; \nplacer 2 monstres ou 2 îles ou 2 typhons ; \ndéplacer 1 monstre ou 1 île ou 1 typhon ; \néchanger 2 éléments entre eux. En plus de cela, vous pouvez indiquer la dernière position connue de la frégate corsaire.',
           primaryButton: 'Passer le téléphone à l’Équipage',
+          details: {
+            placeTitle: 'Placer',
+            oneMonster: '1 monstre',
+            oneIsland: '1 île',
+            oneTyphoon: '1 typhon',
+            twoMonsters: '2 monstres',
+            twoIslands: '2 îles',
+            twoTyphoons: '2 typhons',
+            moveTitle: 'Déplacer un élément',
+            swapTitle: 'Échanger deux éléments entre eux',
+            or: 'ou',
+            footer:
+              'En plus de cela vous pouvez indiquer la dernière position connue des corsaires.',
+          },
         },
       },
       crew: frenchCrewText,
@@ -361,6 +375,7 @@ const translations = {
       corsair: {
         title: 'Les corsaires vous capturent et vous exilent.',
         body: '',
+        imageAlt: 'Portrait des corsaires',
         primaryButton: 'Suivant',
       },
       lootChoice: {
@@ -428,6 +443,8 @@ const translations = {
       lostRhumBody: 'L’Équipage n’a plus de rhum et renonce à l’expédition.',
       elapsedTimeLabel: 'Temps écoulé',
       rhumConsumedLabel: 'Rhum consommé',
+      captainCardAlt: 'Carte Capitaine',
+      endMatchButton: 'Terminer la partie',
       revealMapButton: 'Voir la carte complète',
       primaryButton: 'Retour au menu principal',
     },
@@ -632,10 +649,23 @@ const translations = {
         },
         helpCrew: {
           title: 'You can now help the Crew',
-          body: 'Place elements while respecting the placement rules.',
+          body: 'Place elements while respecting the placement rules. Choose one of the following options:',
           caption:
             'Choose one option: place up to 1 monster + 1 island + 1 typhoon; place 2 monsters, 2 islands, or 2 typhoons; move 1 monster, island, or typhoon; swap 2 elements. You may also indicate the last known position of the corsair frigate.',
           primaryButton: 'Pass the phone to the Crew',
+          details: {
+            placeTitle: 'Place',
+            oneMonster: '1 monster',
+            oneIsland: '1 island',
+            oneTyphoon: '1 typhoon',
+            twoMonsters: '2 monsters',
+            twoIslands: '2 islands',
+            twoTyphoons: '2 typhoons',
+            moveTitle: 'Move one element',
+            swapTitle: 'Swap two elements',
+            or: 'or',
+            footer: 'You may also indicate the last known position of the corsairs.',
+          },
         },
       },
       crew: englishCrewText,
@@ -776,6 +806,7 @@ const translations = {
       corsair: {
         title: 'The corsairs capture and exile you.',
         body: '',
+        imageAlt: 'Portrait of the corsairs',
         primaryButton: 'Next',
       },
       lootChoice: {
@@ -843,6 +874,8 @@ const translations = {
       lostRhumBody: 'The Crew has no rum left and gives up the expedition.',
       elapsedTimeLabel: 'Elapsed time',
       rhumConsumedLabel: 'Rum consumed',
+      captainCardAlt: 'Captain card',
+      endMatchButton: 'End match',
       revealMapButton: 'Reveal the full map',
       primaryButton: 'Back to main menu',
     },

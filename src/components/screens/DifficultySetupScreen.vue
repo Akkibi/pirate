@@ -107,7 +107,7 @@ function confirm() {
 .difficulty-title {
   max-width: min(100%, 54rem);
   font-size: clamp(1.45rem, 7vmin, 4.5rem);
-  line-height: 0.85;
+  line-height: 1.05;
   overflow-wrap: anywhere;
   background-color: #371412;
   color: transparent;

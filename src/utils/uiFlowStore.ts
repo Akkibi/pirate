@@ -122,6 +122,34 @@ export type UIScreen =
           movingResultButtonLabel?: string;
           onRollComplete?: (value: number) => void;
         };
+    }
+  | {
+      type: 'help-crew';
+      content?: ScreenContent;
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          primaryButtonLabel: string;
+        };
+    }
+  | {
+      type: 'captain-celebration';
+      content?: ScreenContent;
+      props: BaseButtonProps &
+        ScreenChromeProps & {
+          imageSrc: string;
+          imageAlt: string;
+          primaryButtonLabel: string;
+        };
+    }
+  | {
+      type: 'corsair-defeat-transition';
+      content?: ScreenContent;
+      props: ScreenChromeProps & {
+        imageSrc: string;
+        imageAlt: string;
+        duration?: number;
+        onComplete?: () => void;
+      };
     };
 
 type ActiveUIScreen = UIScreen & {

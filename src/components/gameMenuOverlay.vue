@@ -12,7 +12,7 @@
     ></button>
 
     <div class="game-menu-overlay__panel">
-      <Parchment size="sm" surface-class="h-full" content-class="game-menu-overlay__content">
+      <Parchment size="md" surface-class="h-full" content-class="game-menu-overlay__content">
         <div class="game-menu-overlay__inner">
           <h2 class="game-menu-overlay__title font-title">{{ gameText.gameMenu.title }}</h2>
 
@@ -112,7 +112,7 @@ function openSettings(): void {
   padding-inline: clamp(2rem, 8vmin, 4.5rem);
   text-align: center;
   font-size: clamp(3.2rem, 12vmin, 5.6rem);
-  line-height: 0.85;
+  line-height: 1.05;
   background-color: var(--game-menu-title-color);
   color: transparent;
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
