@@ -145,7 +145,6 @@ onBeforeUnmount(() => {
 .captain-celebration-confetti {
   position: relative;
   overflow: hidden;
-  background: rgba(12, 8, 5, 0.34);
   box-shadow: inset 0 0 8rem rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
