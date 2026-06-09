@@ -57,8 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import gsap from 'gsap';
+import { computed, ref } from 'vue';
 import type { ButtonHandler } from '../../types/ui';
 import { playSound } from '../../utils/soundManager';
 
