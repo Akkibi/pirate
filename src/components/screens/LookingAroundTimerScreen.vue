@@ -221,11 +221,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .timer-number {
-  background-color: rgba(255, 244, 205, 1);
-  color: transparent;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  background-clip: text;
+  color: rgba(255, 244, 205, 1);
   -webkit-text-stroke: 4px rgba(38, 14, 3);
   paint-order: stroke fill;
 }
