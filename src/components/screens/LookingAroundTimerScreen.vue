@@ -226,8 +226,8 @@ onBeforeUnmount(() => {
   -webkit-background-clip: text;
   -moz-background-clip: text;
   background-clip: text;
-  filter: contrast(200%) drop-shadow(-2px -2px 0 #000) drop-shadow(2px -2px 0 #000)
-    drop-shadow(2px 2px 0 #000) drop-shadow(-2px 2px 0 #000);
+  -webkit-text-stroke: 4px rgba(38, 14, 3);
+  paint-order: stroke fill;
 }
 
 .timer-clock {
