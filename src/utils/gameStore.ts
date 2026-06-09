@@ -24,6 +24,8 @@ export interface BoardPositionSnapshot {
   y: number;
 }
 
+const tileKey = (x: number, y: number) => `${x}:${y}`;
+
 const BOARD_DIRECTION_DELTAS: Record<BoardDirection, BoardPositionSnapshot> = {
   left: { x: 0, y: -1 },
   right: { x: 0, y: 1 },
@@ -54,7 +56,7 @@ interface StoreInterface {
   displayCannons: boolean;
   displayBottle: boolean;
   arrowClicked: string | null;
-  boardTiles: BoardTileSnapshot[];
+  boardTiles: Map<string, BoardTileSnapshot>;
   exhaustedIslandPositions: BoardPositionSnapshot[];
   greyedIslandPositions: BoardPositionSnapshot[];
   treasureDeck: TreasureCardInstance[];
@@ -141,7 +143,7 @@ export const gameState = reactive({
   displayBottle: false,
   displayCannons: false,
   arrowClicked: null,
-  boardTiles: [],
+  boardTiles: new Map(),
   exhaustedIslandPositions: [],
   greyedIslandPositions: [],
   treasureDeck: [],
@@ -231,7 +233,7 @@ export function createGameStateSnapshot(): GameStateSnapshot {
     })),
     entitiesVisible: gameState.entitiesVisible,
     arrowClicked: null,
-    boardTiles: gameState.boardTiles.map((tile) => ({
+    boardTiles: [...gameState.boardTiles.values()].map((tile) => ({
       x: tile.x,
       y: tile.y,
       state: tile.state,
@@ -287,16 +289,15 @@ export function applyGameStateSnapshot(snapshot: GameStateSnapshot): void {
     })
   );
   gameState.entitiesVisible = snapshot.entitiesVisible;
-  gameState.boardTiles.splice(
-    0,
-    gameState.boardTiles.length,
-    ...(snapshot.boardTiles ?? []).map((tile) => ({
+  gameState.boardTiles.clear();
+  (snapshot.boardTiles ?? []).forEach((tile) => {
+    gameState.boardTiles.set(tileKey(tile.x, tile.y), {
       x: tile.x,
       y: tile.y,
       state: tile.state,
       monsterType: tile.monsterType,
-    }))
-  );
+    });
+  });
   gameState.exhaustedIslandPositions.splice(
     0,
     gameState.exhaustedIslandPositions.length,
@@ -612,7 +613,8 @@ export function moveCorsairOneStep(): void {
 }
 
 export function setBoardTiles(tiles: BoardTileSnapshot[]): void {
-  gameState.boardTiles.splice(0, gameState.boardTiles.length, ...tiles);
+  gameState.boardTiles.clear();
+  tiles.forEach((tile) => gameState.boardTiles.set(tileKey(tile.x, tile.y), tile));
 }
 
 export function setRhumCapacity(maxRhum: number): void {
@@ -705,18 +707,12 @@ export function setBoardTileStateAtPosition(
   position: Pick<THREE.Vector2, 'x' | 'y'>,
   state: BoardTileState
 ): void {
-  const matchingTile = gameState.boardTiles.find(
-    (tile) => tile.x === position.x && tile.y === position.y
-  );
+  const tile = gameState.boardTiles.get(tileKey(position.x, position.y));
+  if (!tile) return;
 
-  if (!matchingTile) {
-    return;
-  }
-
-  matchingTile.state = state;
-
+  tile.state = state;
   if (state !== 'monster') {
-    matchingTile.monsterType = undefined;
+    tile.monsterType = undefined;
   }
 }
 
@@ -755,9 +751,5 @@ export function formatBoardCoordinate(position: Pick<THREE.Vector2, 'x' | 'y'>):
 export function getBoardTileStateAtPosition(
   position: Pick<THREE.Vector2, 'x' | 'y'>
 ): BoardTileState | null {
-  const matchingTile = gameState.boardTiles.find(
-    (tile) => tile.x === position.x && tile.y === position.y
-  );
-
-  return matchingTile?.state ?? null;
+  return gameState.boardTiles.get(tileKey(position.x, position.y))?.state ?? null;
 }

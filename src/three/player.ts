@@ -122,7 +122,6 @@ export class Player {
 
     this.playerGroup.position.x = gameState.userPosition.x;
     this.playerGroup.position.z = gameState.userPosition.y;
-    // set to random int position between 0 and 5 and 0 and 7
   }
 
   private initWatchers(): void {
@@ -264,7 +263,6 @@ export class Player {
     const isTileShared = isMonsterTile || tileType.state == 'island';
 
     if ((gameState.entitiesVisible || tileType.entitiesHidden) && isTileShared) {
-      // this.boatGroup.position.set(0.25, 0, -0.25);
       gsap.to(this.boatGroup.position, {
         duration: 1,
         ease: 'sin.inOut',
@@ -272,7 +270,6 @@ export class Player {
         z: -0.2,
       });
     } else {
-      // this.boatGroup.position.set(0, 0, 0);
       gsap.to(this.boatGroup.position, {
         duration: 1,
         ease: 'sin.inOut',
@@ -301,10 +298,7 @@ export class Player {
     }
   }
 
-  private setPhase(phase: PhaseType): void {
-    // Implement phase-specific camera settings here
-    console.log(phase);
-  }
+  private setPhase(_phase: PhaseType): void {}
 
   public setPosition(position: THREE.Vector2): void {
     const clampedPosition = clampBoardPosition(position);

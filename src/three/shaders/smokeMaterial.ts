@@ -39,13 +39,8 @@ export function createSmokeMaterial(
   );
 
   const noise = mx_fractal_noise_float(samplePos, 4, 2.0, 0.5);
-  // remap [-1,1] noise to [SMOKE_MIN, SMOKE_MAX] blend factor
   const smokeFactor = clamp(
-    noise
-      // .mul(float(0.5))
-      // .add(float(0.5))
-      .mul(float(SMOKE_MAX - SMOKE_MIN))
-      .add(float(SMOKE_MIN)),
+    noise.mul(float(SMOKE_MAX - SMOKE_MIN)).add(float(SMOKE_MIN)),
     SMOKE_MIN,
     SMOKE_MAX
   );

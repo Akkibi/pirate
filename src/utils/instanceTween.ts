@@ -1,6 +1,6 @@
 import { gsap } from 'gsap';
 import * as THREE from 'three/webgpu';
-import { objectPool } from '../three/instancedModelManger';
+import { objectPool } from '../three/instancedModelManager';
 
 const _tempMatrix = new THREE.Matrix4();
 const _tempPos = new THREE.Vector3();

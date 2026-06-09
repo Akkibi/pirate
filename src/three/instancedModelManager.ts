@@ -49,19 +49,10 @@ export class InstancedModelManager {
   ): Promise<void> {
     this.scene = scene;
 
-    // if there are existing instances free them and remove them
-    if (this.pools.size > 0) {
-      console.log('[objectPool] re-init: clearing', this.pools.size, 'existing pool(s)');
-    }
-    for (const [name, pool] of this.pools) {
-      console.log(
-        `[objectPool] disposing pool "${name}", active indices:`,
-        pool.activeIndices.size
-      );
+    for (const [, pool] of this.pools) {
       scene.remove(pool.mesh);
-      // Only dispose the merged geometry (owned by this pool).
-      // Do NOT dispose materials — they are shared references from the modelLoader
-      // cache and must remain valid for the next init cycle.
+      // Do NOT dispose materials — shared references from the modelLoader cache
+      // must remain valid for the next init cycle.
       pool.mesh.geometry.dispose();
     }
     this.pools.clear();
@@ -78,18 +69,11 @@ export class InstancedModelManager {
       gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
-          // Clone geometry so we don't mutate the original
           const geo = mesh.geometry.clone();
-
-          // Apply the mesh's world transform to the geometry so that
-          // relative positions/rotations/scales within the GLTF are baked in
+          // Bake world transform so relative offsets within the GLTF are preserved
           geo.applyMatrix4(mesh.matrixWorld);
-
-          // Ensure all geometries share the same set of attributes for merging.
-          // mergeGeometries requires matching attribute keys across all geometries.
           geometries.push(geo);
 
-          // Collect materials (we'll pick a strategy below)
           const mat = mesh.material;
           if (Array.isArray(mat)) {
             materials.push(...mat);
@@ -110,8 +94,7 @@ export class InstancedModelManager {
       if (geometries.length === 1) {
         mergedGeometry = geometries[0] ?? new THREE.BufferGeometry();
       } else {
-        // Normalize attributes: ensure every geometry has the same attributes.
-        // Remove attributes that aren't shared by all geometries.
+        // Drop attributes not shared by all geometries — mergeGeometries requires identical keys
         const attributeSets = geometries.map((g) => new Set(Object.keys(g.attributes)));
         const commonAttributes = attributeSets.reduce((acc, set) => {
           return new Set([...acc].filter((attr) => set.has(attr)));
@@ -123,8 +106,6 @@ export class InstancedModelManager {
               geo.deleteAttribute(key);
             }
           }
-          // Remove index if some geometries are indexed and others aren't —
-          // mergeGeometries handles indexed vs non-indexed, but consistent is safer.
         }
 
         const merged = mergeGeometries(geometries, false);
@@ -135,9 +116,6 @@ export class InstancedModelManager {
         mergedGeometry = merged;
       }
 
-      // For the material: if there's only one unique material, use it directly.
-      // Otherwise, use the first material (or create a combined approach).
-      // A simple strategy: deduplicate by reference, and if multiple remain, use the first one.
       const uniqueMaterials = [...new Set(materials)];
       const finalMaterial: THREE.Material | THREE.Material[] | undefined =
         uniqueMaterials.length === 1
@@ -146,14 +124,6 @@ export class InstancedModelManager {
             ? uniqueMaterials[0] // fallback: use first material for the merged mesh
             : new THREE.MeshStandardMaterial();
 
-      console.log(
-        `generateInstances of "${config.name}": merged ${geometries.length} meshes, ` +
-          `${uniqueMaterials.length} unique material(s)`,
-        gltf,
-        config
-      );
-
-      // Per-instance opacity attribute
       const opacityData = new Float32Array(maxInstances).fill(1.0);
       mergedGeometry.setAttribute(
         'instanceOpacity',
@@ -162,25 +132,21 @@ export class InstancedModelManager {
 
       const opacityAttr = attribute('instanceOpacity');
 
-      // Resolve the final material: use the builder when provided, otherwise
-      // fall back to the GLTF material with default opacity wiring.
       let resolvedMaterial: THREE.Material;
       if (config.materialBuilder) {
         resolvedMaterial = config.materialBuilder(finalMaterial ?? null, opacityAttr);
       } else {
         resolvedMaterial = finalMaterial ?? new THREE.MeshStandardMaterial();
         resolvedMaterial.transparent = true;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (resolvedMaterial as any).opacityNode = opacityAttr;
+        (resolvedMaterial as THREE.MeshBasicNodeMaterial).opacityNode = opacityAttr;
       }
 
       const instancedMesh = new THREE.InstancedMesh(mergedGeometry, resolvedMaterial, maxInstances);
-      instancedMesh.count = 0; // start with nothing visible
+      instancedMesh.count = 0;
       instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       instancedMesh.frustumCulled = false;
       instancedMesh.name = `instanced_${config.name}`;
 
-      // Initialize all transforms to zero-scale (hidden)
       for (let i = 0; i < maxInstances; i++) {
         DUMMY.position.set(0, 0, 0);
         DUMMY.rotation.set(0, 0, 0);
@@ -192,9 +158,10 @@ export class InstancedModelManager {
 
       scene.add(instancedMesh);
 
+      // Fill descending so pop() yields the lowest index first
       const freeIndices: number[] = [];
       for (let i = maxInstances - 1; i >= 0; i--) {
-        freeIndices.push(i); // stack: pop gives lowest indices first
+        freeIndices.push(i);
       }
 
       this.pools.set(config.name, {
@@ -244,8 +211,6 @@ export class InstancedModelManager {
       console.warn(`Index ${index} is not active in pool "${name}"`);
       return;
     }
-
-    // Hide by zeroing scale
     DUMMY.position.set(0, 0, 0);
     DUMMY.rotation.set(0, 0, 0);
     DUMMY.scale.set(0, 0, 0);
@@ -255,8 +220,6 @@ export class InstancedModelManager {
 
     pool.activeIndices.delete(index);
     pool.freeIndices.push(index);
-
-    // Shrink count if possible
     this.recalculateCount(pool);
   }
 
@@ -320,11 +283,9 @@ export class InstancedModelManager {
   }
 
   dispose(): void {
-    console.log('[objectPool] dispose: removing', this.pools.size, 'pool(s) from scene');
     for (const [, pool] of this.pools) {
       this.scene?.remove(pool.mesh);
-      // Only dispose the merged geometry (owned by this pool).
-      // Do NOT dispose materials — they are shared references from the modelLoader cache.
+      // Do NOT dispose materials — shared modelLoader cache references
       pool.mesh.geometry.dispose();
     }
     this.pools.clear();
@@ -342,7 +303,6 @@ export class InstancedModelManager {
 
   private getPool(name: string): InstancePool {
     const pool = this.pools.get(name);
-    // console.log(`Getting pool "${name}"`, pool);
     if (!pool) throw new Error(`Unknown pool: "${name}"`);
     return pool;
   }

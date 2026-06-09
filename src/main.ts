@@ -23,7 +23,6 @@ export async function initGame(options?: { resume?: boolean; demo?: boolean }) {
 
   resetGameState();
   gameState.demoMode = options?.demo ?? false;
-  console.log('gameState.demoMode', gameState.demoMode);
   if (gameState.demoMode) {
     initializeDemoBoardState();
   } else {

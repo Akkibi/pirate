@@ -6,7 +6,7 @@ import { gsap } from 'gsap';
 import { Player } from './player';
 import { gameState } from '../utils/gameStore';
 import { Corsair } from './corsair';
-import { objectPool } from './instancedModelManger';
+import { objectPool } from './instancedModelManager';
 import { ParticleSystemManager } from './particleSystemManager';
 import { watch } from 'vue';
 import Stats from 'stats.js';
@@ -152,7 +152,6 @@ export class SceneManager {
 
   async init(): Promise<void> {
     await this.renderer.init();
-    console.log('Using WebGPU:', this.renderer.backend.renderer);
     this.renderer.setSize(this.width, this.height);
     this.renderer.setPixelRatio(window.devicePixelRatio * 0.7);
   }
@@ -193,8 +192,6 @@ export class SceneManager {
       this.corsair.update(timeSeconds);
       this.camera.update(timeSeconds);
       this.particleSystemManager.update(deltaTime);
-    } else {
-      // animate the menu shader
     }
   };
 

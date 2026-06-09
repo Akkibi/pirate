@@ -3,7 +3,7 @@ import { Line2NodeMaterial } from 'three/webgpu';
 import { Line2 } from 'three/examples/jsm/lines/webgpu/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Tile, type TileStateType } from './tile';
-import { objectPool } from './instancedModelManger';
+import { objectPool } from './instancedModelManager';
 import { modelLoader } from './modelLoader';
 import {
   type PhaseType,
@@ -141,6 +141,7 @@ export class MapManager {
         () => gameState.userPosition,
         (newPosition) => {
           gameState.userPositionHistory.push(newPosition.clone());
+          this.setPlayerPosition(newPosition);
         },
         { deep: true }
       )
@@ -151,15 +152,6 @@ export class MapManager {
         (newPhase) => {
           this.setPhase(newPhase);
         }
-      )
-    );
-    this.stopWatchers.push(
-      watch(
-        () => gameState.userPosition,
-        (newPosition) => {
-          this.setPlayerPosition(newPosition);
-        },
-        { deep: true }
       )
     );
     this.stopWatchers.push(
@@ -177,7 +169,7 @@ export class MapManager {
     this.stopWatchers.push(
       watch(
         () =>
-          gameState.boardTiles
+          [...gameState.boardTiles.values()]
             .map((tile) => `${tile.x}:${tile.y}:${tile.state}:${tile.monsterType ?? ''}`)
             .join('|'),
         () => {
@@ -185,20 +177,31 @@ export class MapManager {
         }
       )
     );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.greyedIslandPositions,
+        () => {
+          this.tiles.forEach((tile) => tile.syncIslandVisualState());
+        },
+        { deep: true }
+      )
+    );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.revealMap,
+        (revealMap) => {
+          if (revealMap) {
+            this.tiles.forEach((tile) => tile.setTileVisited());
+          }
+        }
+      )
+    );
   }
 
   private syncTileStates(): void {
-    const tileSnapshots = new Map(
-      gameState.boardTiles.map((tile) => [`${tile.x}:${tile.y}`, tile] as const)
-    );
-
     this.tiles.forEach((tile) => {
-      const snapshot = tileSnapshots.get(`${tile.position.x}:${tile.position.y}`);
-
-      if (!snapshot) {
-        return;
-      }
-
+      const snapshot = gameState.boardTiles.get(`${tile.position.x}:${tile.position.y}`);
+      if (!snapshot) return;
       tile.setState(snapshot.state, snapshot.monsterType);
     });
   }
@@ -233,7 +236,7 @@ export class MapManager {
   }
 
   public generateMap(): void {
-    const hasSavedBoard = gameState.boardTiles.length > 0;
+    const hasSavedBoard = gameState.boardTiles.size > 0;
     if (!hasSavedBoard) {
       initializeNewBoardState();
     } else {
@@ -268,26 +271,23 @@ export class MapManager {
 
   public hideEntities() {
     this.revealRunId += 1;
-    console.log(gameState.userPositionHistory);
-
     this.sceneManager.corsair.displayCorsairInMap(false);
     this.tiles.forEach((tile) => {
       void tile.hide();
     });
   }
 
-  public setPhase(phase: PhaseType): void {
-    console.log(phase);
-    // if (phase === 'crew') {
-    //   this.displayEntities();
-    // } else {
-    //   this.hideEntities();
-    // }
-  }
+  public setPhase(_phase: PhaseType): void {}
 
-  public setPlayerPosition(_position: THREE.Vector2): void {
+  public setPlayerPosition(position: THREE.Vector2): void {
     this.tiles.forEach((tile) => {
       tile.setFogPosition();
+      tile.syncIslandVisualState();
+      if (!tile.isHistory && position.x === tile.position.x && position.y === tile.position.y) {
+        tile.setTileVisited();
+      } else {
+        tile.updatePositionShift();
+      }
     });
     this.rebuildPath();
   }

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { watch } from 'vue';
 import { gameText } from '../content/gameText';
 import { gameEvents, type GameEvents } from '../events/gameEvents';
 import {
@@ -82,16 +81,6 @@ class UndoNavigationError extends Error {
 export class GameLoop {
   private skipNextHistoryPushFor: GameCheckpoint | null = null;
 
-  initWatchers = () => {
-    watch(
-      () => gameState.diceResult,
-      (res) => {
-        console.log('diceResult', res);
-      },
-      { deep: true }
-    );
-  };
-
   async startTurn(): Promise<void> {
     try {
       gameState.turnCount++;
@@ -158,7 +147,6 @@ export class GameLoop {
     return new Promise((resolve) => {
       const handler = (payload: GameEvents[K]) => {
         if (fn) fn();
-        console.log('received', event);
         gameEvents.off(event as any, handler);
         resolve(payload);
       };

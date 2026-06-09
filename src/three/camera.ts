@@ -5,7 +5,7 @@ import { watch } from 'vue';
 import gsap from 'gsap';
 
 export const cameraPositions = {
-  focused: new THREE.Vector3(-3, 10, 0),
+  focused: new THREE.Vector3(-3, 12, 0),
   overview: new THREE.Vector3(-2, 10, 0),
   gameplay: new THREE.Vector3(-5, 4, 0),
 };
@@ -28,10 +28,6 @@ export class Camera {
     this.targetPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.globalPosition = new THREE.Vector2().copy(gameState.userPosition);
     this.phase = gameState.currentPhase;
-
-    // const helper = new THREE.PolarGridHelper(4, 2, 4, 4);
-    // helper.position.y = 0.1;
-    // this.cameraGroup.add(helper);
 
     this.cameraPositionGroup.add(this.camera);
     this.cameraGroup.add(this.cameraPositionGroup);
@@ -98,7 +94,6 @@ export class Camera {
   }
 
   setPhase(phase: PhaseType): void {
-    // Implement phase-specific camera settings here
     this.phase = phase;
     this.setPosition(gameState.cameraFocusPosition ?? this.globalPosition);
     this.updateView();
@@ -180,7 +175,7 @@ export class Camera {
       y: newPos.y,
       z: newPos.z,
       duration: 2,
-      ease: 'expo.Out',
+      ease: 'expo.out',
       overwrite: true,
     });
   }

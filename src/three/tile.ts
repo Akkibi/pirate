@@ -1,8 +1,7 @@
 import * as THREE from 'three/webgpu';
-import { objectPool } from './instancedModelManger';
+import { objectPool } from './instancedModelManager';
 import { gsap } from 'gsap';
 import { gameState, isIslandGreyed, type BoardTileState } from '../utils/gameStore';
-import { watch } from 'vue';
 import { instanceTween } from '../utils/instanceTween';
 export type TileStateType = BoardTileState;
 
@@ -19,10 +18,7 @@ export class Tile {
   private waterIdx: number;
   private fogDistance: number;
   private fogDistanceBuffer: number;
-  private isHistory: boolean;
-  private stopWatcher: (() => void) | null = null;
-  private stopExhaustedIslandWatcher: (() => void) | null = null;
-  private stopRevealMapWatcher: (() => void) | null = null;
+  public isHistory: boolean;
   private pendingTimeout: ReturnType<typeof setTimeout> | null = null;
   private activeTween: gsap.core.Tween | null = null;
   private isTileShared: boolean = false;
@@ -42,58 +38,18 @@ export class Tile {
     }
     this.fogDistanceBuffer = FOG_MIN_DISTANCE;
     this.tileGroup.position.set(position.x, 0, position.y);
-    console.log('new tile', this.state, position);
     this.updateObject(false);
     this.isHidden = false;
 
-    // add fog
     this.placeFog();
     if (gameState.entitiesVisible) {
       this.show();
     } else {
       this.hide();
     }
-
-    this.stopWatcher = watch(
-      () => gameState.userPosition,
-      () => {
-        this.setFogPosition();
-        this.syncIslandVisualState();
-        if (
-          !this.isHistory &&
-          gameState.userPosition.x === this.position.x &&
-          gameState.userPosition.y === this.position.y
-        ) {
-          this.setTileVisited();
-        } else {
-          this.updatePositionShift();
-        }
-      },
-      { deep: true }
-    );
-
-    this.stopExhaustedIslandWatcher = watch(
-      () => this.shouldUseExhaustedIslandPool(),
-      () => {
-        if (this.state !== 'island') {
-          return;
-        }
-
-        this.syncIslandVisualState();
-      }
-    );
-
-    this.stopRevealMapWatcher = watch(
-      () => gameState.revealMap,
-      (revealMap) => {
-        if (revealMap) {
-          this.setTileVisited();
-        }
-      }
-    );
   }
 
-  private setTileVisited() {
+  public setTileVisited() {
     this.isHistory = true;
     this.pendingTimeout = setTimeout(() => {
       this.pendingTimeout = null;
@@ -103,8 +59,7 @@ export class Tile {
     }, 300);
   }
 
-  private updatePositionShift() {
-    // if position match
+  public updatePositionShift() {
     if (this.idx === -1 || this.state === 'water' || this.state === 'typhon') return;
 
     const poolKey = this.activePoolKey ?? this.poolKey;
@@ -178,7 +133,7 @@ export class Tile {
     return this.state === 'island' && isIslandGreyed(this.position);
   }
 
-  private syncIslandVisualState(): void {
+  public syncIslandVisualState(): void {
     if (this.state !== 'island' || this.idx === -1) {
       return;
     }
@@ -195,21 +150,12 @@ export class Tile {
   }
 
   public destroy() {
-    // Stop the watcher FIRST so no further reactions fire during cleanup
-    this.stopWatcher?.();
-    this.stopWatcher = null;
-    this.stopExhaustedIslandWatcher?.();
-    this.stopExhaustedIslandWatcher = null;
-    this.stopRevealMapWatcher?.();
-    this.stopRevealMapWatcher = null;
-
-    // Cancel pending delayed updateObject call
+    // Stop watchers before cleanup so no further reactions fire during teardown
     if (this.pendingTimeout !== null) {
       clearTimeout(this.pendingTimeout);
       this.pendingTimeout = null;
     }
 
-    // Kill any running GSAP tween
     this.activeTween?.kill();
     this.activeTween = null;
 
@@ -230,23 +176,17 @@ export class Tile {
       objectPool.releaseInstance('fog', this.fogIdx);
       this.fogIdx = -1;
     }
-
-    console.log('[Tile] destroyed', this.position.x, this.position.y);
   }
 
   private updateObject(isHidden: boolean) {
-    console.log('[Tile] updateObject', this.position.x, this.position.y, isHidden);
     this.tileGroup.remove(...this.tileGroup.children);
 
-    // release previous instance
     if (this.idx !== -1) {
-      console.log('releasing tile', this.activePoolKey ?? this.poolKey, this.position);
       objectPool.releaseInstance(this.activePoolKey ?? this.poolKey, this.idx);
       this.idx = -1;
       this.activePoolKey = null;
     }
     if (this.waterIdx !== -1) {
-      console.log('releasing tile', 'water', this.position);
       objectPool.releaseInstance('water', this.waterIdx);
       this.waterIdx = -1;
     }
@@ -331,7 +271,6 @@ export class Tile {
   }
 
   smoothMoveFog(hideFog: boolean, oncomplete?: () => void): Promise<void> {
-    // Kill any previous tween before starting a new one
     this.activeTween?.kill();
     this.activeTween = null;
 
@@ -346,11 +285,9 @@ export class Tile {
           duration: 1,
           onUpdate: () => {
             const eased = ease(tween.progress());
-            const progress = eased * scale;
-            this.fogDistance = this.fogDistanceBuffer + progress;
+            this.fogDistance = this.fogDistanceBuffer + eased * scale;
             this.updateFog();
           },
-          // ease: 'bounce.inOut',
           onComplete: () => {
             this.activeTween = null;
             oncomplete?.();
@@ -366,11 +303,9 @@ export class Tile {
         duration: 2,
         onUpdate: () => {
           const eased = ease(tween.progress());
-          const progress = scale - eased * scale;
-          this.fogDistance = this.fogDistanceBuffer + progress;
+          this.fogDistance = this.fogDistanceBuffer + scale - eased * scale;
           this.updateFog();
         },
-        ease: 'bounce.inOut',
         onComplete: () => {
           this.activeTween = null;
           oncomplete?.();
@@ -417,23 +352,12 @@ export class Tile {
   }
 
   private updateFog() {
-    // if (this.isHistory) return;
     const playerPosition = gameState.userPosition;
-    // const isHistory = gameState.userPositionHistory.includes(this.position);
-
-    // circle distance
-    // const distance = Math.sqrt(
-    //   Math.pow(playerPosition.x - this.position.x, 2) +
-    //     Math.pow(playerPosition.y - this.position.y, 2)
-    // );
-
-    // diamond distance
+    // Manhattan distance matches the diamond-shaped fog reveal area
     const distance =
       Math.abs(playerPosition.x - this.position.x) + Math.abs(playerPosition.y - this.position.y);
 
     const calculatedAmount = -Math.max(0, 5 - distance / this.fogDistance);
-    // console.log(this.fogDistance, calculatedAmount);
-
     const opacity = Math.min(1, Math.max(0, 1.5 + calculatedAmount * 1.5));
 
     objectPool.updatePosition(

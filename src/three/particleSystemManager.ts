@@ -197,7 +197,6 @@ export class ParticleSystemManager {
   public reset(): void {
     this.particles = [];
     this.instancedMesh.count = 0;
-    console.log('All particles reset.');
   }
 
   /**
@@ -224,16 +223,8 @@ export class ParticleSystemManager {
 
       // If particle is still alive, update its instance data
       if (particle.lifetime > 0) {
-        // Update transform
         this.dummy.position.copy(particle.position);
-
-        // Make the particle rotate upwards
-        // this.dummy.quaternion.setFromAxisAngle(
-        //   new THREE.Vector3(1, 0, 0),
-        //   Math.PI / 2,
-        // );
         this.dummy.rotation.set(Math.PI / 2, 0, -particle.rotation);
-        // this.dummy.quaternion.copy(camera.quaternion);
 
         // Fade out particle as it approaches end of life
         const lifetimeRatio = particle.lifetime / particle.maxLifetime;
