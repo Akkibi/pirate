@@ -30,12 +30,12 @@ class PreloadManager {
     };
 
     await Promise.all([
-      modelLoader.preloadAll((p) => {
-        modelProgress = p;
-        updateProgress();
-      }),
       ImagesLoader.preloadAll((p) => {
         imageProgress = p;
+        updateProgress();
+      }),
+      modelLoader.preloadAll((p) => {
+        modelProgress = p;
         updateProgress();
       }),
     ]);
