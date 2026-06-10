@@ -316,7 +316,7 @@ export class Player {
     }
 
     this.position.set(clampedPosition.x, clampedPosition.y);
-    const tl = gsap.timeline({ overwrite: true });
+    const tl = gsap.timeline({ overwrite: 'auto' });
 
     tl.to(this.playerGroup.position, {
       x: this.position.x,
@@ -364,7 +364,7 @@ export class Player {
   public update(time: number, delta: number) {
     this.animationTime += delta;
 
-    this.boatGroup.rotation.y += 0.0001 * delta * (this.isInTyphon ? 10 : 1);
+    this.boatGroup.rotation.y += 0.0001 * delta * (this.isInTyphon ? -10 : 1);
     this.boatGroup.rotation.z = Math.sin(this.animationTime * 0.0005) * 0.2;
     this.boatGroup.position.y = Math.sin(time * 0.001) * 0.025 - 0.025;
 
