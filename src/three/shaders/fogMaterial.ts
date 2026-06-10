@@ -2,10 +2,15 @@ import * as THREE from 'three/webgpu';
 import {
   attribute,
   positionGeometry,
+  positionWorld,
   instanceIndex,
   time,
   float,
   vec3,
+  vec4,
+  mix,
+  clamp,
+  diffuseColor,
   mx_fractal_noise_float,
 } from 'three/tsl';
 import { atlasTexture } from '../atlasTexture';
@@ -13,6 +18,9 @@ import { atlasTexture } from '../atlasTexture';
 const NOISE_SCALE = 0.2;
 const NOISE_SPEED = 0.08;
 const AMPLITUDE = 0.3;
+
+const _teal = new THREE.Color(0x008c74);
+const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
 
 export function createFogMaterial(
   _originalMaterial: THREE.Material | null,
@@ -25,6 +33,9 @@ export function createFogMaterial(
   // mat.depthWrite = false;
   mat.side = THREE.DoubleSide;
   mat.opacityNode = instanceOpacityNode;
+
+  const factor = clamp(positionWorld.y.negate().div(0.25), 0, 1);
+  mat.outputNode = vec4(mix(diffuseColor.rgb, TEAL_COLOR, factor), diffuseColor.a);
 
   // positionNode runs before the instance matrix is applied, so modelWorldMatrix
   // does not carry per-instance translation here. Use instanceIndex instead:
