@@ -38,6 +38,7 @@ export class Player {
   private shootCannonsHandler: (() => void) | null = null;
   private isInTyphon: boolean = false;
   private isDead: boolean = false;
+  private targetScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -173,9 +174,13 @@ export class Player {
           if (this.bottleMod) {
             this.bottleMod.visible = visible;
             if (visible === true) {
-              this.boatGroup.scale.set(0.75, 0.75, 0.75);
+              const scale = new THREE.Vector3(0.75, 0.75, 0.75);
+              this.boatGroup.scale.copy(scale);
+              this.targetScale = scale;
             } else {
-              this.boatGroup.scale.set(1, 1, 1);
+              const defaultScale = new THREE.Vector3(1, 1, 1);
+              this.boatGroup.scale.copy(defaultScale);
+              this.targetScale = defaultScale;
             }
           }
         }
@@ -343,11 +348,15 @@ export class Player {
         },
         '>'
       )
-      .to(this.boatGroup.scale, { y: 1.1, duration: 0.5, ease: 'circ.out' }, '0')
+      .to(
+        this.boatGroup.scale,
+        { y: this.targetScale.y * 1.1, duration: 0.5, ease: 'circ.out' },
+        '0'
+      )
       .to(
         this.boatGroup.scale,
         {
-          y: 0.9,
+          y: this.targetScale.y * 0.9,
           duration: 0.3,
           ease: 'sine.in',
           onUpdate: () => {
@@ -359,7 +368,7 @@ export class Player {
       .to(
         this.boatGroup.scale,
         {
-          y: 1,
+          y: this.targetScale.y,
           duration: 0.2,
           ease: 'sine.out',
         },
