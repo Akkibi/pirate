@@ -8,26 +8,18 @@ import {
   vec3,
   mx_fractal_noise_float,
 } from 'three/tsl';
+import { atlasTexture } from '../atlasTexture';
 
 const NOISE_SCALE = 0.2;
 const NOISE_SPEED = 0.08;
 const AMPLITUDE = 0.3;
 
 export function createFogMaterial(
-  originalMaterial: THREE.Material | null,
+  _originalMaterial: THREE.Material | null,
   instanceOpacityNode: ReturnType<typeof attribute>
 ): THREE.MeshBasicNodeMaterial {
   const mat = new THREE.MeshBasicNodeMaterial();
-
-  // Preserve original GLTF appearance — color, texture, vertex colors unchanged.
-  // Only positionNode is added below; colorNode/outputNode are intentionally left
-  // unset so the default fragment pipeline runs exactly as it would without a builder.
-  if (originalMaterial) {
-    const orig = originalMaterial as THREE.MeshBasicMaterial;
-    mat.color.copy(orig.color);
-    mat.vertexColors = orig.vertexColors;
-    if (orig.map) mat.map = orig.map;
-  }
+  mat.map = atlasTexture;
 
   mat.transparent = true;
   // mat.depthWrite = false;

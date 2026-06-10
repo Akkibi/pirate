@@ -2,10 +2,7 @@ import * as THREE from 'three/webgpu';
 import {
   positionWorld,
   mix,
-  clamp,
-  vec3,
   vec4,
-  diffuseColor,
   normalWorld,
   cameraPosition,
   normalize,
@@ -16,6 +13,7 @@ import {
 import type { PhaseType } from '../utils/gameStore';
 import { clampBoardPosition, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
+import { createAtlasMaterial } from './shaders/atlasMaterial';
 import { watch, type WatchStopHandle } from 'vue';
 import gsap from 'gsap';
 import { gameEvents } from '../events/gameEvents';
@@ -24,8 +22,6 @@ import { ArrowManager } from './arrowManager';
 import { playSound } from '../utils/soundManager';
 import { Bird } from './bird';
 
-const _teal = new THREE.Color(0x008c74);
-const TEAL_COLOR = vec3(_teal.r, _teal.g, _teal.b);
 import type { SceneManager } from './sceneManager';
 
 export class Player {
@@ -57,19 +53,20 @@ export class Player {
     this.position = new THREE.Vector2();
     scene.add(this.playerGroup);
 
-    const boat = modelLoader.get('./models/boat.glb').scene.clone();
+    const boat = modelLoader.get('./models/models-no-texture/boat.glb').scene.clone();
     boat.scale.multiplyScalar(0.5);
     boat.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material) {
-        const orig = child.material as THREE.MeshBasicMaterial;
+      if (!(child instanceof THREE.Mesh)) return;
+      const orig = child.material as THREE.MeshStandardMaterial | THREE.MeshBasicMaterial;
+      if (orig.map) {
+        // Part has a sprite texture — keep it, just wrap in node material for pipeline consistency
         const mat = new THREE.MeshBasicNodeMaterial();
-        mat.color.copy(orig.color);
-        mat.vertexColors = orig.vertexColors;
-        if (orig.map) mat.map = orig.map;
-        const factor = clamp(positionWorld.y.negate().div(0.25), 0, 1);
-        mat.outputNode = vec4(mix(diffuseColor.rgb, TEAL_COLOR, factor), diffuseColor.a);
+        mat.map = orig.map;
         mat.side = THREE.DoubleSide;
         child.material = mat;
+      } else {
+        // No texture — apply atlas
+        child.material = createAtlasMaterial();
       }
     });
     this.boatGroup.add(boat);

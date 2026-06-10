@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { positionWorld, mix, clamp, vec3, vec4, diffuseColor, attribute, float } from 'three/tsl';
+import { atlasTexture } from '../atlasTexture';
 
 // sRGB hex → linear
 const _teal = new THREE.Color(0x008c74);
@@ -8,20 +9,11 @@ const _exhausted = new THREE.Color(0x777b75);
 const EXHAUSTED_COLOR = vec3(_exhausted.r, _exhausted.g, _exhausted.b);
 
 export function createIslandMaterial(
-  originalMaterial: THREE.Material | null,
+  _originalMaterial: THREE.Material | null,
   instanceOpacityNode: ReturnType<typeof attribute>
 ): THREE.MeshBasicNodeMaterial {
   const mat = new THREE.MeshBasicNodeMaterial();
-
-  // GLTF unlit materials (KHR_materials_unlit) produce MeshBasicMaterial, not
-  // MeshStandardMaterial. Cast broadly — color, map, and vertexColors exist on all
-  // mesh material types so we only copy what MeshBasicNodeMaterial actually uses.
-  if (originalMaterial) {
-    const orig = originalMaterial as THREE.MeshBasicMaterial;
-    mat.color.copy(orig.color);
-    mat.vertexColors = orig.vertexColors;
-    if (orig.map) mat.map = orig.map;
-  }
+  mat.map = atlasTexture;
 
   // Use outputNode instead of colorNode so the full default pipeline runs first:
   // (material.color × texture(map) × vertexColors).

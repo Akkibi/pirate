@@ -55,6 +55,7 @@ const IMAGES = {
   perroquet: '/images/perroquet.webp',
   point: '/images/point.webp',
   'screen-border': '/images/screen-border.webp',
+  atlas: '/models/atlas.webp',
 } as const;
 
 export type ImageKey = keyof typeof IMAGES;

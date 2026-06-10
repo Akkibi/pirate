@@ -41,7 +41,6 @@ export class SceneManager {
 
     this.menuScene = new THREE.Scene();
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x00ffff);
     this.activeScene = this.menuScene;
 
     this.camera = new Camera(this.scene, width, height);
@@ -70,6 +69,7 @@ export class SceneManager {
 
   private initGameScene(): void {
     this.seaSky = createSeaSkyBackground(this.camera.getNative());
+    this.seaSky.mesh.renderOrder = 2;
     this.scene.add(this.seaSky.mesh);
 
     this.decorativeClouds = new DecorativeClouds();

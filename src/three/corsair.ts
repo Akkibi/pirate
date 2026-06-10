@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { BOARD_TILE_COUNT_X, BOARD_TILE_COUNT_Y, gameState } from '../utils/gameStore';
 import { modelLoader } from './modelLoader';
+import { createAtlasMaterial } from './shaders/atlasMaterial';
 import { watch, type WatchStopHandle } from 'vue';
 import gsap from 'gsap';
 import type { SceneManager } from './sceneManager';
@@ -23,8 +24,20 @@ export class Corsair {
     this.isDisplayedInMap = false;
     this.isDisplayed = false;
 
-    const corsair = modelLoader.get('./models/corsair.glb').scene.clone();
+    const corsair = modelLoader.get('./models/models-no-texture/corsair.glb').scene.clone();
     corsair.scale.multiplyScalar(0.5);
+    corsair.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const orig = child.material as THREE.MeshStandardMaterial | THREE.MeshBasicMaterial;
+      if (orig.map) {
+        const mat = new THREE.MeshBasicNodeMaterial();
+        mat.map = orig.map;
+        mat.side = THREE.DoubleSide;
+        child.material = mat;
+      } else {
+        child.material = createAtlasMaterial({ side: THREE.DoubleSide });
+      }
+    });
     this.corsairGroup.add(corsair);
     this.corsairGroup.rotation.y = Math.PI;
 

@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { modelLoader } from './modelLoader';
+import { createAtlasMaterial } from './shaders/atlasMaterial';
 
 function cloneSkinnedScene(source: THREE.Object3D): THREE.Object3D {
   const sourceLookup = new Map<THREE.Object3D, THREE.Object3D>();
@@ -39,11 +40,14 @@ export class Bird {
   constructor(parentGroup: THREE.Group) {
     this.birdGroup = new THREE.Group();
 
-    const bird = cloneSkinnedScene(modelLoader.get('./models/bird.glb').scene);
+    const bird = cloneSkinnedScene(modelLoader.get('./models/models-no-texture/bird.glb').scene);
     this.birdGroup.add(bird);
     this.birdGroup.scale.multiplyScalar(0.4);
 
     bird.traverse((node) => {
+      if (node instanceof THREE.Mesh) {
+        node.material = createAtlasMaterial({ side: THREE.DoubleSide });
+      }
       if (!(node instanceof THREE.Bone)) return;
       if (node.name === 'left') this.wingLeft = node;
       if (node.name === 'right') this.wingRight = node;
@@ -54,7 +58,7 @@ export class Bird {
 
   public die(): void {
     this.isDead = true;
-    gsap.to(this.birdGroup, { y: 10, duration: 2, ease: 'sine.in' });
+    gsap.to(this.birdGroup.position, { y: 10, duration: 2, ease: 'sine.in' });
   }
 
   public update(time: number, delta: number): void {
