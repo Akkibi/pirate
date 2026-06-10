@@ -338,11 +338,6 @@ function openGameMenu() {
   gameMenuOpen.value = true;
 }
 
-function toggleDebugMode() {
-  playSound('uiClick');
-  gameState.debugMode = !gameState.debugMode;
-}
-
 function closeGameMenu() {
   playSound('uiClick');
   gameMenuOpen.value = false;
@@ -443,16 +438,6 @@ function handleChromeCardUse(cardInstanceId: string | number) {
       <div
         class="resource-stable pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-40 flex flex-row h-full items-start justify-end gap-2 self-start"
       >
-        <button
-          v-if="started && isDev"
-          class="top-menu-button top-menu-button--debug"
-          type="button"
-          :aria-pressed="gameState.debugMode"
-          aria-label="Debug controls"
-          @click="toggleDebugMode"
-        >
-          D
-        </button>
         <button
           v-if="started"
           class="top-menu-button"
@@ -738,11 +723,5 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-width: 2.4;
-}
-
-.top-menu-button--debug {
-  font-size: 0.82rem;
-  font-weight: 900;
-  line-height: 1;
 }
 </style>
