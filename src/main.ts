@@ -2,7 +2,7 @@ import { createApp } from 'vue';
 import './style.css';
 import App from './App.vue';
 import { GameLoop } from './utils/gameLoop';
-import { clearSavedGameProgress } from './utils/gameProgress';
+import { clearSavedGameProgress, restoreSavedGameProgress } from './utils/gameProgress';
 import {
   gameState,
   initializeDemoBoardState,
@@ -16,8 +16,10 @@ export async function initGame(options?: { resume?: boolean; demo?: boolean }) {
   const gameLoop = new GameLoop();
 
   if (options?.resume) {
+    const savedProgress = restoreSavedGameProgress();
+
     gameState.gameStarted = true;
-    await gameLoop.resumeFromSavedProgress();
+    await gameLoop.resumeFromSavedProgress(savedProgress);
     return;
   }
 

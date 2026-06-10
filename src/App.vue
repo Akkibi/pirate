@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onBeforeUnmount, onMounted, watch } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
 import SettingsOverlay from './components/settingsOverlay.vue';
@@ -36,6 +36,7 @@ import { gameState } from './utils/gameStore';
 import { initAudio, playSound, startBackgroundMusic } from './utils/soundManager';
 import { gameText } from './content/gameText';
 import DebugControls from './components/debugControls.vue';
+import { gameEvents } from './events/gameEvents';
 
 const isDev = import.meta.env.DEV;
 const started = ref(false);
@@ -50,7 +51,12 @@ const gameMenuOpen = ref(false);
 onMounted(() => {
   initAudio();
   startBackgroundMusic();
+  gameEvents.on('game:return_home', returnHomeAfterGameOver);
   void preloadManager.preloadAll();
+});
+
+onBeforeUnmount(() => {
+  gameEvents.off('game:return_home', returnHomeAfterGameOver);
 });
 
 const screenComponentMap = {
@@ -352,12 +358,22 @@ function saveGameAndReturnHome() {
     saveGameProgress(currentScreenProgress.value.checkpoint, currentScreenProgress.value.data);
   }
 
+  returnHome();
+}
+
+function returnHomeAfterGameOver() {
+  returnHome();
+  startBackgroundMusic();
+}
+
+function returnHome() {
   clearScreen();
 
   gameMenuOpen.value = false;
   settingsOpen.value = false;
   UIShown.value = true;
   started.value = false;
+  lastActiveScreenChrome.value = null;
   gameState.debugMode = false;
   gameState.gameStarted = false;
   canResume.value = hasSavedGameProgress();
