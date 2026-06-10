@@ -7,6 +7,7 @@ export type GameEvents = {
   'parrot:map_revealed': Record<string, never>;
   'boat:shoot_cannons': Record<string, never>;
   'scene:game': void;
+  'game:return_home': Record<string, never>;
 };
 
 export const gameEvents = mitt<GameEvents>();

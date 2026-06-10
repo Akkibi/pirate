@@ -48,10 +48,18 @@ const IMAGES = {
   'logo/bussole_aiguilles': '/images/logo/bussole_aiguilles.webp',
   'logo/bussole_epingle': '/images/logo/bussole_epingle.webp',
   'logo/captain_logo_withoutboussole2': '/images/logo/captain_logo_withoutboussole2.webp',
+  'masks/anchor': '/images/masks/anchor.svg',
+  'masks/wheel': '/images/masks/wheel.svg',
   'mise-en-place': '/images/mise-en-place.webp',
   'parchment/background': '/images/parchment/background.webp',
   'parchment/left_end': '/images/parchment/left_end.webp',
+  'parchment/phase_parent': '/images/parchment/phase_parent.svg',
   'parchment/right_end': '/images/parchment/right_end.webp',
+  'physical_assets/exchange': '/images/physical_assets/exchange.png',
+  'physical_assets/island': '/images/physical_assets/island.webp',
+  'physical_assets/move': '/images/physical_assets/move.png',
+  'physical_assets/octopus': '/images/physical_assets/octopus.webp',
+  'physical_assets/typhon': '/images/physical_assets/typhon.webp',
   perroquet: '/images/perroquet.webp',
   point: '/images/point.webp',
   'screen-border': '/images/screen-border.webp',
@@ -73,10 +81,18 @@ export class ImagesLoader {
         new Promise<void>((resolve, reject) => {
           const img = new Image();
           img.onload = () => {
-            this.cache.set(key, img);
-            loaded++;
-            onProgress?.(Math.round((loaded / total) * 100));
-            resolve();
+            void (async () => {
+              try {
+                await img.decode();
+              } catch {
+                // onload already confirmed the image is available.
+              }
+
+              this.cache.set(key, img);
+              loaded++;
+              onProgress?.(Math.round((loaded / total) * 100));
+              resolve();
+            })();
           };
           img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
           img.src = src;

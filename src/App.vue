@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onBeforeUnmount, onMounted, watch } from 'vue';
 import Canvas from './components/canvas.vue';
 import Landing from './components/landing.vue';
 import SettingsOverlay from './components/settingsOverlay.vue';
@@ -36,6 +36,7 @@ import { gameState } from './utils/gameStore';
 import { initAudio, playSound, startBackgroundMusic } from './utils/soundManager';
 import { gameText } from './content/gameText';
 import DebugControls from './components/debugControls.vue';
+import { gameEvents } from './events/gameEvents';
 
 const isDev = import.meta.env.DEV;
 const started = ref(false);
@@ -50,7 +51,12 @@ const gameMenuOpen = ref(false);
 onMounted(() => {
   initAudio();
   startBackgroundMusic();
+  gameEvents.on('game:return_home', returnHomeAfterGameOver);
   void preloadManager.preloadAll();
+});
+
+onBeforeUnmount(() => {
+  gameEvents.off('game:return_home', returnHomeAfterGameOver);
 });
 
 const screenComponentMap = {
@@ -332,11 +338,6 @@ function openGameMenu() {
   gameMenuOpen.value = true;
 }
 
-function toggleDebugMode() {
-  playSound('uiClick');
-  gameState.debugMode = !gameState.debugMode;
-}
-
 function closeGameMenu() {
   playSound('uiClick');
   gameMenuOpen.value = false;
@@ -352,12 +353,22 @@ function saveGameAndReturnHome() {
     saveGameProgress(currentScreenProgress.value.checkpoint, currentScreenProgress.value.data);
   }
 
+  returnHome();
+}
+
+function returnHomeAfterGameOver() {
+  returnHome();
+  startBackgroundMusic();
+}
+
+function returnHome() {
   clearScreen();
 
   gameMenuOpen.value = false;
   settingsOpen.value = false;
   UIShown.value = true;
   started.value = false;
+  lastActiveScreenChrome.value = null;
   gameState.debugMode = false;
   gameState.gameStarted = false;
   canResume.value = hasSavedGameProgress();
@@ -392,7 +403,12 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 </script>
 
 <template>
-  <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
+  <div
+    class="relative h-full w-full overflow-hidden bg-[#120c08]"
+    @contextmenu.capture.prevent
+    @dragstart.capture.prevent
+    @selectstart.capture.prevent
+  >
     <Canvas />
 
     <div class="portrait-rotation-screen" aria-live="polite">
@@ -422,16 +438,6 @@ function handleChromeCardUse(cardInstanceId: string | number) {
       <div
         class="resource-stable pointer-events-auto col-span-2 col-start-7 row-start-1 row-span-1 z-40 flex flex-row h-full items-start justify-end gap-2 self-start"
       >
-        <button
-          v-if="started && isDev"
-          class="top-menu-button top-menu-button--debug"
-          type="button"
-          :aria-pressed="gameState.debugMode"
-          aria-label="Debug controls"
-          @click="toggleDebugMode"
-        >
-          D
-        </button>
         <button
           v-if="started"
           class="top-menu-button"
@@ -717,11 +723,5 @@ function handleChromeCardUse(cardInstanceId: string | number) {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-width: 2.4;
-}
-
-.top-menu-button--debug {
-  font-size: 0.82rem;
-  font-weight: 900;
-  line-height: 1;
 }
 </style>

@@ -392,18 +392,10 @@ const translations = {
         title: 'Trésor récupéré',
         bodySuffix: 'rejoint votre main.',
       },
-      bottle: {
-        title: 'Bateau en bouteille !',
-        body: 'Le danger est absorbé. Aucun rhum n’est perdu.',
-      },
       bomb: {
         title: 'Lancer de bombe artisanale !',
         bodyPrefix: 'Tu élimines définitivement le',
         bodySuffix: 'en sacrifiant 1 bouteille de rhum.\nRetirez-le du plateau.',
-      },
-      powder: {
-        title: 'Poudre à canon !',
-        body: 'Le monstre est éliminé. Aucun rhum n’est perdu.',
       },
     },
     cards: {
@@ -823,18 +815,10 @@ const translations = {
         title: 'Treasure recovered',
         bodySuffix: 'joins your hand.',
       },
-      bottle: {
-        title: 'Ship in a bottle!',
-        body: 'The danger is absorbed. No rum is lost.',
-      },
       bomb: {
         title: 'Homemade bomb throw!',
         bodyPrefix: 'You permanently eliminate the',
         bodySuffix: 'by sacrificing 1 bottle of rum. Remove it from the board.',
-      },
-      powder: {
-        title: 'Gunpowder!',
-        body: 'The monster is eliminated. No rum is lost.',
       },
     },
     cards: {

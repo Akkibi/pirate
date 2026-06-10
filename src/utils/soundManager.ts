@@ -70,7 +70,7 @@ const SOUND_SOURCES: Record<SoundKey, string[]> = {
   rhumDefeat: ['/sounds/defaiterhum.mp3'],
   cards: ['/sounds/cartes.wav'],
   dice: ['/sounds/des.mp3'],
-  timer: ['/sounds/timer.mp3'],
+  timer: ['/sounds/timer_with_drin.mp3'],
   corsair: ['/sounds/fregate corsaire.mp3'],
   anchor: ['/sounds/jeter lancre.mp3'],
   tequila: ['/sounds/tequila.mp3'],
@@ -136,7 +136,6 @@ const PIRATE_REACTION_TRIGGER_KEYS = new Set<SoundKey>([
 ]);
 
 const PIRATE_REACTION_CHANCE = 0.12;
-const BACKGROUND_CROSSFADE_SECONDS = 3;
 const BACKGROUND_FADE_SECONDS = 2.4;
 
 // UI-critical sounds loaded first so they are ready before the first tap
@@ -147,6 +146,8 @@ const PRIORITY_SOUND_KEYS: SoundKey[] = [
   'dice',
   'parchmentSmall',
 ];
+
+const SCREEN_PERSISTENT_SOUND_KEYS = new Set<SoundKey>(['battle', 'captain', 'rhumDefeat']);
 
 const SOUND_VOLUME: Partial<Record<SoundKey, number>> = {
   background: 0.18,
@@ -193,7 +194,6 @@ type ActiveSound = {
 type BackgroundTrack = {
   audio: HTMLAudioElement;
   fadeFrame: number | null;
-  startedNext: boolean;
 };
 
 // === Web Audio API (SFX) ===
@@ -336,7 +336,6 @@ const activeSounds = new Map<SoundKey, Set<ActiveSound>>();
 const soundSourceIndexes = new Map<SoundKey, number>();
 const backgroundTracks = new Set<BackgroundTrack>();
 let backgroundAudio: BackgroundTrack | null = null;
-let backgroundMonitorFrame: number | null = null;
 let backgroundUnlockListenersAttached = false;
 
 function getSoundSource(key: SoundKey): string | null {
@@ -387,8 +386,9 @@ export function stopSound(key: SoundKey): void {
 }
 
 export function stopScreenSounds(): void {
-  for (const key of activeSounds.keys()) {
+  for (const key of [...activeSounds.keys()]) {
     if (key === 'uiClick' || key === 'rhumSelect') continue;
+    if (SCREEN_PERSISTENT_SOUND_KEYS.has(key)) continue;
     stopSound(key);
   }
 }
@@ -527,7 +527,7 @@ function createBackgroundTrack(): BackgroundTrack | null {
   if (!baseAudio) return null;
 
   const audio = baseAudio.cloneNode(true) as HTMLAudioElement;
-  audio.loop = false;
+  audio.loop = true;
   audio.preload = 'auto';
   audio.currentTime = 0;
   audio.volume = 0;
@@ -535,45 +535,26 @@ function createBackgroundTrack(): BackgroundTrack | null {
   const track: BackgroundTrack = {
     audio,
     fadeFrame: null,
-    startedNext: false,
   };
-
-  audio.addEventListener('ended', () => {
-    const shouldRestart = backgroundAudio === track;
-    cleanupBackgroundTrack(track);
-    if (shouldRestart) startBackgroundTrack();
-  });
 
   return track;
 }
 
 function startBackgroundTrack(): void {
-  const previousTrack = backgroundAudio;
   const nextTrack = createBackgroundTrack();
 
   if (!nextTrack) return;
 
   backgroundTracks.add(nextTrack);
-
-  if (!previousTrack) backgroundAudio = nextTrack;
+  backgroundAudio = nextTrack;
 
   void playHtmlAudio(nextTrack.audio).then((didPlay) => {
     if (!didPlay) {
-      if (previousTrack) {
-        previousTrack.startedNext = false;
-        cleanupBackgroundTrack(nextTrack);
-      }
+      cleanupBackgroundTrack(nextTrack);
       return;
     }
 
-    backgroundAudio = nextTrack;
     fadeBackgroundTrack(nextTrack, getBackgroundVolume(), BACKGROUND_FADE_SECONDS);
-
-    if (previousTrack && previousTrack !== nextTrack) {
-      fadeBackgroundTrack(previousTrack, 0, BACKGROUND_FADE_SECONDS, true);
-    }
-
-    scheduleBackgroundMonitor();
   });
 }
 
@@ -638,32 +619,6 @@ function cleanupBackgroundTrack(track: BackgroundTrack): void {
   if (backgroundAudio === track) backgroundAudio = null;
 }
 
-function scheduleBackgroundMonitor(): void {
-  if (typeof window === 'undefined' || backgroundMonitorFrame !== null) return;
-
-  const tick = () => {
-    backgroundMonitorFrame = null;
-    monitorBackgroundMusic();
-    if (backgroundTracks.size > 0) scheduleBackgroundMonitor();
-  };
-
-  backgroundMonitorFrame = window.requestAnimationFrame(tick);
-}
-
-function monitorBackgroundMusic(): void {
-  const currentTrack = backgroundAudio;
-  if (!currentTrack || currentTrack.audio.paused || currentTrack.startedNext) return;
-
-  const { currentTime, duration } = currentTrack.audio;
-
-  if (!Number.isFinite(duration) || duration <= BACKGROUND_CROSSFADE_SECONDS) return;
-
-  if (duration - currentTime <= BACKGROUND_CROSSFADE_SECONDS) {
-    currentTrack.startedNext = true;
-    startBackgroundTrack();
-  }
-}
-
 export function resumeBackgroundMusic(): void {
   if (!appSettings.musicEnabled) return;
 
@@ -681,12 +636,8 @@ export function resumeBackgroundMusic(): void {
       if (track === backgroundAudio && track.audio.volume === 0) {
         fadeBackgroundTrack(track, getBackgroundVolume(), BACKGROUND_FADE_SECONDS);
       }
-
-      scheduleBackgroundMonitor();
     });
   }
-
-  scheduleBackgroundMonitor();
 }
 
 function attachBackgroundUnlockListeners(): void {
@@ -700,11 +651,6 @@ function attachBackgroundUnlockListeners(): void {
 }
 
 export function stopBackgroundMusic(): void {
-  if (backgroundMonitorFrame !== null && typeof window !== 'undefined') {
-    window.cancelAnimationFrame(backgroundMonitorFrame);
-    backgroundMonitorFrame = null;
-  }
-
   for (const track of [...backgroundTracks]) {
     cleanupBackgroundTrack(track);
   }

@@ -202,6 +202,9 @@
     @apply m-0 overflow-hidden bg-slate-900 p-0 font-body text-white;
     overscroll-behavior: none;
     touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   html,
@@ -217,6 +220,24 @@
 
   #app {
     @apply w-screen overflow-hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #app *,
+  #app *::before,
+  #app *::after {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #app img,
+  #app svg,
+  #app canvas {
+    -webkit-user-drag: none;
+    user-drag: none;
   }
 
   h1,

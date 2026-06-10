@@ -117,9 +117,7 @@ export class GameLoop {
     }
   }
 
-  async resumeFromSavedProgress() {
-    const savedProgress = restoreSavedGameProgress();
-
+  async resumeFromSavedProgress(savedProgress = restoreSavedGameProgress()) {
     if (!savedProgress) {
       return this.startTurn();
     }
@@ -511,9 +509,6 @@ export class GameLoop {
 
     clearSavedGameProgress();
     resetGameState();
-
-    if (typeof window !== 'undefined') {
-      window.location.reload();
-    }
+    gameEvents.emit('game:return_home', {});
   }
 }

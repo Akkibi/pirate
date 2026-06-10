@@ -9,7 +9,6 @@ import { Corsair } from './corsair';
 import { objectPool } from './instancedModelManager';
 import { ParticleSystemManager } from './particleSystemManager';
 import { watch } from 'vue';
-import Stats from 'stats.js';
 import { createMenuBackground } from './menuBackground';
 import { DecorativeClouds } from './decorativeClouds';
 
@@ -30,7 +29,6 @@ export class SceneManager {
   public corsair!: Corsair;
   private particleSystemManager!: ParticleSystemManager;
   private decorativeClouds!: DecorativeClouds;
-  private stats: Stats;
   private gameSceneReady = false;
   private activeGameStartedAt: number | null = null;
 
@@ -56,12 +54,6 @@ export class SceneManager {
     this.handleCanvasClick = this.onCanvasClick.bind(this);
 
     createMenuBackground(this.menuScene);
-
-    this.stats = new Stats();
-    this.stats.dom.style.position = 'absolute';
-    if (import.meta.env.DEV) {
-      this.canvas.parentElement?.appendChild(this.stats.dom);
-    }
 
     this.initWatchers();
     this.initPerformanceWatcher();
@@ -184,9 +176,7 @@ export class SceneManager {
 
   private animate = (time: number, deltaTime: number) => {
     const timeSeconds = time * 1000;
-    this.stats.begin();
     this.renderer.render(this.activeScene, this.camera.getNative());
-    this.stats.end();
 
     if (this.activeScene === this.scene) {
       this.seaSky.update(timeSeconds);
@@ -208,7 +198,6 @@ export class SceneManager {
     // so WebGPU node cleanup doesn't crash on a dead context.
     objectPool.dispose();
     this.renderer.dispose();
-    this.stats.dom.remove();
   }
 
   getScene(): THREE.Scene {

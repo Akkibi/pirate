@@ -358,7 +358,7 @@ onBeforeUnmount(() => {
 .parchment-root--md {
   height: auto;
   min-height: 5rem;
-  max-width: 65vw;
+  max-width: vw;
 }
 
 .parchment-root--bg {
@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
 
 .parchment-content {
   height: 100%;
-  padding: var(--ui-parchment-content-pad) 2rem;
+  padding: var(--ui-parchment-content-pad) 4rem;
 }
 
 .parchment-text {

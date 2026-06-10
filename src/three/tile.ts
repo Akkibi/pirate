@@ -49,14 +49,30 @@ export class Tile {
     }
   }
 
-  public setTileVisited() {
+  public setTileVisited(options: { immediate?: boolean } = {}) {
     this.isHistory = true;
-    this.pendingTimeout = setTimeout(() => {
+
+    if (this.pendingTimeout !== null) {
+      clearTimeout(this.pendingTimeout);
       this.pendingTimeout = null;
+    }
+
+    const revealVisitedTile = () => {
+      this.pendingTimeout = null;
+      this.activeTween?.kill();
+      this.activeTween = null;
       this.isHidden = false;
+      this.parkFog();
       this.updateObject(false);
       this.updatePositionShift();
-    }, 300);
+    };
+
+    if (options.immediate) {
+      revealVisitedTile();
+      return;
+    }
+
+    this.pendingTimeout = setTimeout(revealVisitedTile, 300);
   }
 
   public updatePositionShift() {
@@ -225,12 +241,19 @@ export class Tile {
   private placeFog() {
     if (this.fogIdx !== -1) return;
     this.fogIdx = objectPool.reserveInstance('fog');
+    this.parkFog();
+    objectPool.updateScale('fog', this.fogIdx, new THREE.Vector3(0.5, 0.5, 0.5));
+  }
+
+  private parkFog(): void {
+    if (this.fogIdx === -1) return;
+
     objectPool.updatePosition(
       'fog',
       this.fogIdx,
       new THREE.Vector3(this.position.x, -10, this.position.y)
     );
-    objectPool.updateScale('fog', this.fogIdx, new THREE.Vector3(0.5, 0.5, 0.5));
+    objectPool.updateOpacity('fog', this.fogIdx, 0);
   }
 
   private placeTile() {
@@ -322,6 +345,8 @@ export class Tile {
 
   public hide(): Promise<void> {
     if (this.isHistory) {
+      this.parkFog();
+
       if (this.isHidden) {
         this.isHidden = false;
         this.updateObject(false);
@@ -337,6 +362,8 @@ export class Tile {
 
   public show(): Promise<void> {
     if (this.isHistory) {
+      this.parkFog();
+
       if (this.isHidden) {
         this.isHidden = false;
         this.updateObject(false);
@@ -352,6 +379,11 @@ export class Tile {
   }
 
   public setFogPosition(): void {
+    if (this.isHistory) {
+      this.parkFog();
+      return;
+    }
+
     this.updateFog();
   }
 

@@ -1,3 +1,4 @@
+import { nextTick } from 'vue';
 import { gameText } from '../content/gameText';
 import { type GameEvents } from '../events/gameEvents';
 import {
@@ -100,6 +101,26 @@ const EVENING_CHROME: ScreenChrome = {
   phase: 'soiree',
   showRhum: true,
 };
+const RHUM_DEFEAT_SINK_DELAY_MS = 2200;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function playRhumDefeatSequenceIfNeeded(): Promise<boolean> {
+  if (gameState.currentRhum > 0) {
+    return false;
+  }
+
+  await nextTick();
+
+  if (!checkRhumLoss()) {
+    return false;
+  }
+
+  await wait(RHUM_DEFEAT_SINK_DELAY_MS);
+  return true;
+}
 
 function getChromeForTreasurePhase(phase: TreasurePhase): ScreenChrome {
   switch (phase) {
@@ -465,32 +486,10 @@ async function resolveEquippedDefense(
       gameState.displayCannons = false;
       eliminateCurrentDangerTile();
       playSound('poudreACanon');
-      await showScreen({
-        type: 'full-message-button',
-        content: {
-          title: gameText.reveal.powder.title,
-          body: gameText.reveal.powder.body,
-        },
-        props: {
-          chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: gameText.common.next,
-        },
-      });
     } else {
       gameState.bottleTokenEquipped = false;
       gameState.displayBottle = false;
       playSound('bateauEnBouteille');
-      await showScreen({
-        type: 'full-message-button',
-        content: {
-          title: gameText.reveal.bottle.title,
-          body: gameText.reveal.bottle.body,
-        },
-        props: {
-          chrome: AFTERNOON_CHROME,
-          primaryButtonLabel: gameText.common.next,
-        },
-      });
     }
 
     return {
@@ -503,17 +502,6 @@ async function resolveEquippedDefense(
     gameState.bottleTokenEquipped = false;
     gameState.displayBottle = false;
     playSound('bateauEnBouteille');
-    await showScreen({
-      type: 'full-message-button',
-      content: {
-        title: gameText.reveal.bottle.title,
-        body: gameText.reveal.bottle.body,
-      },
-      props: {
-        chrome: AFTERNOON_CHROME,
-        primaryButtonLabel: gameText.common.next,
-      },
-    });
 
     return {
       remainingMoves,
@@ -526,17 +514,6 @@ async function resolveEquippedDefense(
     gameState.displayCannons = false;
     eliminateCurrentDangerTile();
     playSound('poudreACanon');
-    await showScreen({
-      type: 'full-message-button',
-      content: {
-        title: gameText.reveal.powder.title,
-        body: gameText.reveal.powder.body,
-      },
-      props: {
-        chrome: AFTERNOON_CHROME,
-        primaryButtonLabel: gameText.common.next,
-      },
-    });
 
     return {
       remainingMoves,
@@ -921,6 +898,14 @@ async function handleCrewTileReveal(
         eliminateCurrentDangerTile();
         playSound('bombeArtisanale');
 
+        if (await playRhumDefeatSequenceIfNeeded()) {
+          return {
+            remainingMoves,
+            endTurn,
+            gameOver: true,
+          };
+        }
+
         await showScreen({
           type: 'full-message-button',
           content: {
@@ -936,7 +921,6 @@ async function handleCrewTileReveal(
         return {
           remainingMoves,
           endTurn,
-          gameOver: checkRhumLoss(),
         };
       }
 
@@ -951,6 +935,14 @@ async function handleCrewTileReveal(
 
   const rhumLoss = tileState === 'monster' ? 2 : 1;
   spendRhum(rhumLoss);
+
+  if (await playRhumDefeatSequenceIfNeeded()) {
+    return {
+      remainingMoves,
+      endTurn,
+      gameOver: true,
+    };
+  }
 
   await showCheckpointScreen(
     'crew.revealDefenseCards',
@@ -980,7 +972,6 @@ async function handleCrewTileReveal(
   return {
     remainingMoves,
     endTurn,
-    gameOver: checkRhumLoss(),
   };
 }
 
@@ -1237,6 +1228,11 @@ export async function runCrewTurn({
     if (!gameState.tequilaTonight) {
       spendRhum(1);
       playSound('rhumNight');
+
+      if (await playRhumDefeatSequenceIfNeeded()) {
+        gameState.diceResult = null;
+        return true;
+      }
     }
 
     await showCheckpointScreen('crew.nightFalls', {
@@ -1249,11 +1245,6 @@ export async function runCrewTurn({
           : gameText.evening.rhumRound.primaryButton,
       },
     });
-
-    if (checkRhumLoss()) {
-      gameState.diceResult = null;
-      return true;
-    }
   }
 
   return false;
