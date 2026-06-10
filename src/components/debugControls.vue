@@ -1,6 +1,6 @@
 <template>
   <div
-    class="pointer-events-auto col-span-4 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end"
+    class="pointer-events-auto col-span-4 col-start-1 row-start-8 flex min-h-0 flex-wrap items-end gap-2 self-end z-50"
   >
     <button
       class="bg-slate-900 rounded-full min-w-20 p-1 px-3 text-white font-black"

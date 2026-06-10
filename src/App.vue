@@ -315,7 +315,7 @@ function resumeGame() {
 watch(started, (value) => {
   window.setTimeout(() => {
     startedDelayed.value = value;
-  }, 100);
+  }, 200);
 });
 
 function openSettings() {

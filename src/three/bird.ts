@@ -34,6 +34,7 @@ export class Bird {
   private birdGroup: THREE.Group;
   private wingLeft: THREE.Bone | null = null;
   private wingRight: THREE.Bone | null = null;
+  private isDead = false;
 
   constructor(parentGroup: THREE.Group) {
     this.birdGroup = new THREE.Group();
@@ -51,7 +52,14 @@ export class Bird {
     parentGroup.add(this.birdGroup);
   }
 
+  public die(): void {
+    this.isDead = true;
+    gsap.to(this.birdGroup, { y: 10, duration: 2, ease: 'sine.in' });
+  }
+
   public update(time: number, delta: number): void {
+    if (this.isDead) return;
+
     this.birdGroup.rotation.y += 0.0002 * delta;
     this.birdGroup.position.y = Math.sin(time * 0.001 - 2.25) * 0.1 + 1.25;
     this.birdGroup.rotation.z = Math.sin(time * 0.00113) * 0.1;

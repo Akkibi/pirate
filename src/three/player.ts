@@ -41,6 +41,7 @@ export class Player {
   private stopWatchers: WatchStopHandle[] = [];
   private shootCannonsHandler: (() => void) | null = null;
   private isInTyphon: boolean = false;
+  private isDead: boolean = false;
 
   constructor(sceneManager: SceneManager, scene: THREE.Scene) {
     this.sceneManager = sceneManager;
@@ -147,6 +148,17 @@ export class Player {
         () => gameState.displayArrows,
         (isDisplayed) => {
           this.arrowManager.updateVisibility(isDisplayed, this.position);
+        }
+      )
+    );
+    this.stopWatchers.push(
+      watch(
+        () => gameState.currentRhum,
+        (newRhum) => {
+          console.log('newRhum', newRhum);
+          if (newRhum === 0) {
+            this.die();
+          }
         }
       )
     );
@@ -362,6 +374,8 @@ export class Player {
   }
 
   public update(time: number, delta: number) {
+    if (this.isDead) return;
+
     this.animationTime += delta;
 
     this.boatGroup.rotation.y += 0.0001 * delta * (this.isInTyphon ? -10 : 1);
@@ -393,6 +407,35 @@ export class Player {
     this.playerGroup.removeFromParent();
     this.playerGroup.clear();
     this.arrowManager.destroy();
+  }
+
+  private die(): void {
+    // animate the ship going down to -0.5 on y axis
+    this.isDead = true;
+    gsap.to(this.boatGroup.position, { y: -0.5, duration: 2, ease: 'sine.inOut' });
+    this.bird.die();
+    // emit 50 black particles in all directions from the player's position
+    const randomX = Math.random() * 2 - 1;
+    const randomY = Math.random() * 2 - 1;
+    const randomZ = Math.random() * 2 - 1;
+    const psm = ParticleSystemManager.getInstance();
+
+    const sizeRandom = Math.random() * 0.4 + 0.1;
+    const color = new THREE.Color(0x000000);
+
+    const boatPosition = new THREE.Vector3();
+    this.boatGroup.getWorldPosition(boatPosition);
+
+    for (let i = 0; i < 100; i++) {
+      psm.addParticle(
+        boatPosition.clone(),
+        new THREE.Vector3(randomX, randomY, randomZ).multiplyScalar(0.01),
+        500,
+        new THREE.Vector2(sizeRandom, sizeRandom),
+        0,
+        color
+      );
+    }
   }
 
   private waterSplash(): void {
