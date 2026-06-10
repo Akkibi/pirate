@@ -649,8 +649,8 @@ onBeforeUnmount(() => {
 }
 
 .hand-stack-card--usable {
-  width: calc(var(--ui-hand-stack-width) * 4);
-  height: calc(var(--ui-hand-stack-height) * 4);
+  width: calc(var(--ui-hand-stack-width) * 3);
+  height: calc(var(--ui-hand-stack-height) * 3);
   transform: translate3d(calc(var(--hand-card-x) + 0.08rem), calc(var(--hand-card-y) - 0.22rem), 0)
     rotate(var(--hand-card-rotation)) scale(1.05);
 }
