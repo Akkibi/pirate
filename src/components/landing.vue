@@ -4,12 +4,13 @@
     :style="{
       maskImage: `url(${randomMask}), linear-gradient(black, black)`,
       maskSize: '10000vh, cover',
+      opacity: 0,
     }"
     ref="maskRef"
   ></div>
   <div
     ref="logoRef"
-    class="col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4"
+    class="relative col-span-8 col-start-1 row-span-4 row-start-1 flex items-center justify-center p-4"
   >
     <div class="landing-logo z-10" aria-label="Captain!">
       <div class="landing-logo__artwork">
@@ -24,6 +25,7 @@
         </div>
       </div>
     </div>
+    <div class="absolute bottom-0 right-64 text-2xl z-10">On fait avec les moyens du bord...</div>
   </div>
 
   <div
@@ -157,9 +159,10 @@ function exit(onSceneChange?: () => void) {
   if (maskRef.value) {
     tl.fromTo(
       maskRef.value,
-      { maskSize: '1000%, cover' },
+      { maskSize: '1000%, cover', opacity: 1 },
       {
         maskSize: '0.1%, cover',
+        opacity: 1,
         duration: 0.5,
         ease: 'expo.out',
       },
@@ -207,7 +210,6 @@ function startGame() {
 
 function startDemoGame() {
   emit('demo');
-  gameState.gameStarted = true;
 }
 
 function resumeGame() {
