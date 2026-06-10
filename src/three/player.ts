@@ -153,10 +153,9 @@ export class Player {
     );
     this.stopWatchers.push(
       watch(
-        () => gameState.currentRhum,
-        (newRhum) => {
-          console.log('newRhum', newRhum);
-          if (newRhum === 0) {
+        () => gameState.gameResult,
+        (gameResult) => {
+          if (gameResult === 'lost-rhum') {
             this.die();
           }
         }
@@ -410,6 +409,8 @@ export class Player {
   }
 
   private die(): void {
+    if (this.isDead) return;
+
     // animate the ship going down to -0.5 on y axis
     this.isDead = true;
     gsap.to(this.boatGroup.position, { y: -0.5, duration: 2, ease: 'sine.inOut' });
