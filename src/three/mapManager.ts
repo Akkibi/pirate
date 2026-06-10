@@ -80,6 +80,10 @@ const tileTypes = [
   { name: 'fog', url: './models/fog.glb', materialBuilder: createFogMaterial },
 ];
 
+function getPositionKey(position: Pick<THREE.Vector2, 'x' | 'y'>): string {
+  return `${position.x}:${position.y}`;
+}
+
 export class MapManager {
   private scene: THREE.Scene;
   private mapGroup: THREE.Group;
@@ -140,7 +144,17 @@ export class MapManager {
       watch(
         () => gameState.userPosition,
         (newPosition) => {
-          gameState.userPositionHistory.push(newPosition.clone());
+          const lastHistoryPosition =
+            gameState.userPositionHistory[gameState.userPositionHistory.length - 1];
+
+          if (
+            !lastHistoryPosition ||
+            lastHistoryPosition.x !== newPosition.x ||
+            lastHistoryPosition.y !== newPosition.y
+          ) {
+            gameState.userPositionHistory.push(newPosition.clone());
+          }
+
           this.setPlayerPosition(newPosition);
         },
         { deep: true }
@@ -261,6 +275,20 @@ export class MapManager {
       this.tiles.push(tile);
       this.mapGroup.add(tile.tileGroup);
     });
+
+    this.restoreVisitedTilesFromHistory();
+  }
+
+  private restoreVisitedTilesFromHistory(): void {
+    const visitedPositions = new Set(gameState.userPositionHistory.map(getPositionKey));
+
+    this.tiles.forEach((tile) => {
+      if (visitedPositions.has(getPositionKey(tile.position))) {
+        tile.setTileVisited({ immediate: true });
+      }
+    });
+
+    this.setPlayerPosition(gameState.userPosition);
   }
 
   public displayEntities() {
