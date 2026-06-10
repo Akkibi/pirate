@@ -855,6 +855,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
   animation: rhum-bottle-animation-frame var(--rhum-animation-cycle-duration) steps(1, end) infinite;
   animation-delay: var(--rhum-bottle-animation-delay);
+  will-change: background-image;
 }
 
 .rhum-meter-enter-active,

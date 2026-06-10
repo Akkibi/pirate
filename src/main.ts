@@ -9,6 +9,7 @@ import {
   initializeNewBoardState,
   resetGameState,
 } from './utils/gameStore';
+import { gameEvents } from './events/gameEvents';
 
 createApp(App).mount('#app');
 
@@ -18,6 +19,7 @@ export async function initGame(options?: { resume?: boolean; demo?: boolean }) {
   if (options?.resume) {
     gameState.gameStarted = true;
     await gameLoop.resumeFromSavedProgress();
+    gameEvents.emit('scene:game');
     return;
   }
 
@@ -32,4 +34,5 @@ export async function initGame(options?: { resume?: boolean; demo?: boolean }) {
   clearSavedGameProgress();
   gameState.gameStarted = true;
   await gameLoop.startTurn();
+  gameEvents.emit('scene:game');
 }

@@ -18,7 +18,6 @@ const IMAGES = {
   'arrow-right': '/images/arrow-right.webp',
   'arrow-up-red': '/images/arrow-up-red.webp',
   'arrow-up': '/images/arrow-up.webp',
-  background: '/images/background.webp',
   bg: '/images/bg.webp',
   boundstexture: '/images/boundstexture.webp',
   'cards/bateauenbouteille': '/images/cards/bateauenbouteille.webp',

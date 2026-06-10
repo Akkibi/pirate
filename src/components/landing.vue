@@ -207,7 +207,6 @@ function startGame() {
 
 function startDemoGame() {
   emit('demo');
-  gameState.gameStarted = true;
 }
 
 function resumeGame() {

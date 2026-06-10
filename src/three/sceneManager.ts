@@ -133,15 +133,16 @@ export class SceneManager {
     );
   }
 
-  private updatePixelRatio(): void {
-    const ratio = gameState.performanceMode ? 0.5 : 0.8;
-    this.renderer.setPixelRatio(window.devicePixelRatio * ratio);
+  private updatePerformanceSettings(): void {
+    const perf = gameState.performanceMode;
+    this.renderer.setPixelRatio(window.devicePixelRatio * (perf ? 0.5 : 0.8));
+    gsap.ticker.fps(perf ? 30 : 60);
   }
 
   private initPerformanceWatcher(): void {
     watch(
       () => gameState.performanceMode,
-      () => this.updatePixelRatio(),
+      () => this.updatePerformanceSettings(),
       { immediate: true }
     );
   }
@@ -177,6 +178,7 @@ export class SceneManager {
   public startAnimation(): void {
     window.addEventListener('resize', this.onWindowResize);
     document.addEventListener('click', this.handleCanvasClick);
+    gsap.ticker.fps(60);
     gsap.ticker.add(this.animate);
   }
 
