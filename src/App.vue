@@ -40,7 +40,7 @@ import { gameEvents } from './events/gameEvents';
 
 const isDev = import.meta.env.DEV;
 const started = ref(false);
-const startedDelayed = ref(false);
+const sceneReady = ref(false);
 const landingRef = ref<InstanceType<typeof Landing> | null>(null);
 const UIShown = ref(true);
 const canResume = ref(hasSavedGameProgress());
@@ -48,15 +48,21 @@ const handOverlayRequestKey = ref(0);
 const settingsOpen = ref(false);
 const gameMenuOpen = ref(false);
 
+function onSceneGame() {
+  sceneReady.value = true;
+}
+
 onMounted(() => {
   initAudio();
   startBackgroundMusic();
   gameEvents.on('game:return_home', returnHomeAfterGameOver);
+  gameEvents.on('scene:game', onSceneGame);
   void preloadManager.preloadAll();
 });
 
 onBeforeUnmount(() => {
   gameEvents.off('game:return_home', returnHomeAfterGameOver);
+  gameEvents.off('scene:game', onSceneGame);
 });
 
 const screenComponentMap = {
@@ -318,12 +324,6 @@ function resumeGame() {
   });
 }
 
-watch(started, (value) => {
-  window.setTimeout(() => {
-    startedDelayed.value = value;
-  }, 200);
-});
-
 function openSettings() {
   settingsOpen.value = true;
 }
@@ -368,6 +368,7 @@ function returnHome() {
   settingsOpen.value = false;
   UIShown.value = true;
   started.value = false;
+  sceneReady.value = false;
   lastActiveScreenChrome.value = null;
   gameState.debugMode = false;
   gameState.gameStarted = false;
@@ -456,7 +457,7 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 
       <Landing
         ref="landingRef"
-        v-if="!startedDelayed"
+        v-if="!sceneReady"
         :show-resume="canResume"
         @demo="startDemoGame"
         @resume="resumeGame"
