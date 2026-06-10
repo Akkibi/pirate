@@ -31,7 +31,7 @@ const tileTypes = [
   },
   {
     name: 'island',
-    url: './models/island.glb',
+    url: './models/models-no-texture/island.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -39,7 +39,7 @@ const tileTypes = [
   },
   {
     name: 'island_exhausted',
-    url: './models/island.glb',
+    url: './models/models-no-texture/island.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -47,7 +47,7 @@ const tileTypes = [
   },
   {
     name: 'monster_baleine',
-    url: './models/monsters/baleine.glb',
+    url: './models/models-no-texture/monsters/baleine.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -55,7 +55,7 @@ const tileTypes = [
   },
   {
     name: 'monster_pieuvre',
-    url: './models/monsters/pieuvre.glb',
+    url: './models/models-no-texture/monsters/pieuvre.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -63,7 +63,7 @@ const tileTypes = [
   },
   {
     name: 'monster_serpent',
-    url: './models/monsters/serpent.glb',
+    url: './models/models-no-texture/monsters/serpent.glb',
     materialBuilder: (
       orig: THREE.Material | null,
       opacity: Parameters<typeof createIslandMaterial>[1]
@@ -77,7 +77,7 @@ const tileTypes = [
       opacity: Parameters<typeof createTyphonMaterial>[0]
     ) => createTyphonMaterial(opacity),
   },
-  { name: 'fog', url: './models/fog.glb', materialBuilder: createFogMaterial },
+  { name: 'fog', url: './models/models-no-texture/fog.glb', materialBuilder: createFogMaterial },
 ];
 
 export class MapManager {
@@ -111,6 +111,9 @@ export class MapManager {
     // generate board and board environment
     const board = modelLoader.get('./models/board.glb').scene.clone();
     board.position.add(new THREE.Vector3(0.5, 0, 0.5));
+    board.traverse((child) => {
+      if (child instanceof THREE.Mesh) child.renderOrder = 0;
+    });
     this.mapGroup.add(board);
 
     const environment = modelLoader.get('./models/environement.glb').scene.clone();
@@ -118,16 +121,27 @@ export class MapManager {
     environment.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.material = createSmokeMaterial(child.material as THREE.Material);
+        child.renderOrder = 1;
       }
     });
     this.mapGroup.add(environment);
 
     objectPool.init(scene, tileTypes).then(() => {
-      // Island writes depth (depthWrite=true) and must render before water.
-      // Water (depthWrite=false) renders after and uses the depth test to correctly
-      // occlude submerged island geometry without blocking the see-through effect.
-      objectPool.getInstancedMesh('water').renderOrder = 1;
-      objectPool.getInstancedMesh('typhon').renderOrder = 1;
+      // Opaque objects (board=0, env=1, sky=2) render before any transparent tile.
+      // Island writes depth (depthWrite=true) and must render before water so the
+      // depth test correctly occludes submerged geometry without blocking see-through.
+      for (const name of [
+        'island',
+        'island_exhausted',
+        'monster_baleine',
+        'monster_pieuvre',
+        'monster_serpent',
+        'fog',
+      ]) {
+        objectPool.getInstancedMesh(name).renderOrder = 3;
+      }
+      objectPool.getInstancedMesh('water').renderOrder = 4;
+      objectPool.getInstancedMesh('typhon').renderOrder = 4;
       this.generateMap();
     });
 
