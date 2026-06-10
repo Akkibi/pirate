@@ -11,6 +11,7 @@ import { ParticleSystemManager } from './particleSystemManager';
 import { watch } from 'vue';
 import { createMenuBackground } from './menuBackground';
 import { DecorativeClouds } from './decorativeClouds';
+import { gameEvents } from '../events/gameEvents';
 
 export class SceneManager {
   private scene: THREE.Scene;
@@ -117,6 +118,7 @@ export class SceneManager {
           }
           this.activeScene = this.scene;
           this.startElements();
+          gameEvents.emit('scene:game');
         } else {
           this.activeScene = this.menuScene;
         }
