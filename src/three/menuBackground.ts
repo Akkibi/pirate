@@ -1,5 +1,17 @@
 import * as THREE from 'three/webgpu';
-import { time, sin, cos, vec2, vec3, mix, screenUV, uniform, texture } from 'three/tsl';
+import {
+  time,
+  sin,
+  cos,
+  vec2,
+  vec3,
+  mix,
+  screenUV,
+  uniform,
+  texture,
+  positionLocal,
+  vec4,
+} from 'three/tsl';
 
 export function createMenuBackground(scene: THREE.Scene): void {
   const uSpeed = uniform(5.0);
@@ -43,6 +55,15 @@ export function createMenuBackground(scene: THREE.Scene): void {
   const img = texture(bgTexture, imgUv);
   const finalColor = mix(img.rgb, vec3(0.0, 0.0, 0.0), pattern.mul(0.35));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (scene as any).backgroundNode = finalColor;
+  const material = new THREE.MeshBasicNodeMaterial();
+  material.colorNode = finalColor;
+  material.vertexNode = vec4(positionLocal.xy, 1.0, 1.0);
+  material.depthWrite = false;
+  material.depthTest = true;
+
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 9999;
+  scene.add(mesh);
 }
