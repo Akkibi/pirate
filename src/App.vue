@@ -408,7 +408,12 @@ function handleChromeCardUse(cardInstanceId: string | number) {
 </script>
 
 <template>
-  <div class="relative h-full w-full overflow-hidden bg-[#120c08]">
+  <div
+    class="relative h-full w-full overflow-hidden bg-[#120c08]"
+    @contextmenu.capture.prevent
+    @dragstart.capture.prevent
+    @selectstart.capture.prevent
+  >
     <Canvas />
 
     <div class="portrait-rotation-screen" aria-live="polite">
